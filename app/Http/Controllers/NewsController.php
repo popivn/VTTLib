@@ -31,7 +31,7 @@ class NewsController extends Controller
             $tag = NewsTag::where('slug', $request->tag)->first();
             if ($tag) {
                 $query->whereHas('tags', function ($q) use ($tag) {
-                    $q->where('tags.id', $tag->id);
+                    $q->where('news_tags.id', $tag->id);
                 });
             }
         }
@@ -64,7 +64,11 @@ class NewsController extends Controller
         // Get popular tags
         $popularTags = NewsTag::getPopularTags(15);
 
-        return view('site.pages.news-index', compact('news', 'featuredNews', 'categories', 'popularTags', 'menuItems', 'footerItems'));
+        $menuItems = \App\Models\SiteNode::getMenuItems('menu');
+        $footerItems = \App\Models\SiteNode::getMenuItems('footer');
+        $node = \App\Models\SiteNode::where('node_code', 'tin-tuc')->first() ?? new \App\Models\SiteNode(['node_code' => 'tin-tuc', 'display_name' => 'Tin tức', 'icon' => 'fas fa-newspaper']);
+
+        return view('site.pages.news-index', compact('news', 'featuredNews', 'categories', 'popularTags', 'menuItems', 'footerItems', 'node'));
     }
 
     /**
@@ -96,6 +100,7 @@ class NewsController extends Controller
 
         $menuItems = \App\Models\SiteNode::getMenuItems('menu');
         $footerItems = \App\Models\SiteNode::getMenuItems('footer');
+        $node = \App\Models\SiteNode::where('node_code', 'tin-tuc')->first() ?? new \App\Models\SiteNode(['node_code' => 'tin-tuc', 'display_name' => 'Tin tức', 'icon' => 'fas fa-newspaper']);
 
         return view('site.pages.news-show', compact(
             'news', 
@@ -103,7 +108,8 @@ class NewsController extends Controller
             'previousNews', 
             'nextNews',
             'menuItems',
-            'footerItems'
+            'footerItems',
+            'node'
         ));
     }
 
@@ -127,13 +133,19 @@ class NewsController extends Controller
 
         $menuItems = \App\Models\SiteNode::getMenuItems('menu');
         $footerItems = \App\Models\SiteNode::getMenuItems('footer');
+        $node = \App\Models\SiteNode::where('node_code', 'tin-tuc')->first() ?? new \App\Models\SiteNode(['node_code' => 'tin-tuc', 'display_name' => 'Tin tức', 'icon' => 'fas fa-newspaper']);
+        $categories = NewsCategory::active()->withCount('publishedNews')->orderBy('sort_order')->orderBy('name')->get();
+        $popularTags = NewsTag::getPopularTags(15);
 
         return view('site.pages.news-index', [
             'news' => $news,
             'category' => $category,
             'breadcrumb' => $breadcrumb,
             'menuItems' => $menuItems,
-            'footerItems' => $footerItems
+            'footerItems' => $footerItems,
+            'node' => $node,
+            'categories' => $categories,
+            'popularTags' => $popularTags
         ]);
     }
 
@@ -148,7 +160,7 @@ class NewsController extends Controller
 
         $news = News::where('status', 'published')
             ->whereHas('tags', function ($q) use ($tag) {
-                $q->where('tags.id', $tag->id);
+                $q->where('news_tags.id', $tag->id);
             })
             ->with(['category', 'author', 'tags'])
             ->orderBy('published_at', 'desc')
@@ -156,12 +168,18 @@ class NewsController extends Controller
 
         $menuItems = \App\Models\SiteNode::getMenuItems('menu');
         $footerItems = \App\Models\SiteNode::getMenuItems('footer');
+        $node = \App\Models\SiteNode::where('node_code', 'tin-tuc')->first() ?? new \App\Models\SiteNode(['node_code' => 'tin-tuc', 'display_name' => 'Tin tức', 'icon' => 'fas fa-newspaper']);
+        $categories = NewsCategory::active()->withCount('publishedNews')->orderBy('sort_order')->orderBy('name')->get();
+        $popularTags = NewsTag::getPopularTags(15);
 
         return view('site.pages.news-index', [
             'news' => $news,
             'tag' => $tag,
             'menuItems' => $menuItems,
-            'footerItems' => $footerItems
+            'footerItems' => $footerItems,
+            'node' => $node,
+            'categories' => $categories,
+            'popularTags' => $popularTags
         ]);
     }
 
@@ -178,12 +196,18 @@ class NewsController extends Controller
 
         $menuItems = \App\Models\SiteNode::getMenuItems('menu');
         $footerItems = \App\Models\SiteNode::getMenuItems('footer');
+        $node = \App\Models\SiteNode::where('node_code', 'tin-tuc')->first() ?? new \App\Models\SiteNode(['node_code' => 'tin-tuc', 'display_name' => 'Tin tức', 'icon' => 'fas fa-newspaper']);
+        $categories = NewsCategory::active()->withCount('publishedNews')->orderBy('sort_order')->orderBy('name')->get();
+        $popularTags = NewsTag::getPopularTags(15);
 
         return view('site.pages.news-index', [
             'news' => $news,
             'isFeatured' => true,
             'menuItems' => $menuItems,
-            'footerItems' => $footerItems
+            'footerItems' => $footerItems,
+            'node' => $node,
+            'categories' => $categories,
+            'popularTags' => $popularTags
         ]);
     }
 
@@ -217,13 +241,19 @@ class NewsController extends Controller
 
         $menuItems = \App\Models\SiteNode::getMenuItems('menu');
         $footerItems = \App\Models\SiteNode::getMenuItems('footer');
+        $node = \App\Models\SiteNode::where('node_code', 'tin-tuc')->first() ?? new \App\Models\SiteNode(['node_code' => 'tin-tuc', 'display_name' => 'Tin tức', 'icon' => 'fas fa-newspaper']);
+        $categories = NewsCategory::active()->withCount('publishedNews')->orderBy('sort_order')->orderBy('name')->get();
+        $popularTags = NewsTag::getPopularTags(15);
 
         return view('site.pages.news-index', [
             'news' => $news,
             'searchQuery' => $query,
             'suggestions' => $suggestions,
             'menuItems' => $menuItems,
-            'footerItems' => $footerItems
+            'footerItems' => $footerItems,
+            'node' => $node,
+            'categories' => $categories,
+            'popularTags' => $popularTags
         ]);
     }
 
@@ -274,7 +304,7 @@ class NewsController extends Controller
 
         if ($request->filled('tag_id')) {
             $query->whereHas('tags', function ($q) use ($request) {
-                $q->where('tags.id', $request->tag_id);
+                $q->where('news_tags.id', $request->tag_id);
             });
         }
 

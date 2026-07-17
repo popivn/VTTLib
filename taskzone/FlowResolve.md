@@ -1,48 +1,62 @@
-# Quy Trình Giải Quyết Vấn Đề & Code Cho AI Agent (Agent-Oriented Flow Resolve)
+# Quy Trình Làm Việc Của AI Agent (Workflows)
 
-Tài liệu này được tối ưu hóa để hướng dẫn AI Agent giải quyết vấn đề hiệu quả, lập kế hoạch chính xác, đọc đúng tệp tin cần thiết, tiết kiệm tối đa token và thực hiện công việc tuần tự trong một phiên làm việc.
+Tài liệu này định nghĩa 2 quy trình làm việc chuẩn cho AI Agent trong dự án (Giải quyết lỗi & Phát triển tính năng mới), kèm theo bộ quy chuẩn UI/UX bắt buộc.
 
 ---
 
-## 📊 Sơ Đồ Quy Trình Cho Agent
+## 📊 Sơ Đồ Các Quy Trình
 
+### 1. Quy Trình Giải Quyết Lỗi (Flow Resolve)
 ```mermaid
 graph TD
-    1[1. Xác định vấn đề & Khoanh vùng 5W1H] --> 2[2. Thu thập & Xác định danh sách File cần đọc]
-    2 --> 3[3. Phân tích nguyên nhân 5 Whys]
-    3 --> 4[4. Đề xuất các giải pháp code]
-    4 --> 5[5. Đánh giá & Chọn giải pháp tối ưu]
-    5 --> 6[6. Lập kế hoạch thực hiện chi tiết]
-    6 --> 7[7. Thực hiện Code tuần tự]
-    7 --> 8[8. Chạy Test & Đánh giá kết quả]
+    A1[1. Xác định vấn đề & 5W1H] --> A2[2. Thu thập & Giới hạn File cần đọc]
+    A2 --> A3[3. Phân tích nguyên nhân 5 Whys]
+    A3 --> A4[4. Đề xuất các giải pháp code]
+    A4 --> A5[5. Đánh giá & Chọn giải pháp]
+    A5 --> A6[6. Lập kế hoạch thực hiện]
+    A6 --> A7[7. Thực hiện Code tuần tự]
+    A7 --> A8[8. Chạy Test & Đánh giá kết quả]
 
-    style 1 fill:#f9f,stroke:#333,stroke-width:2px
-    style 2 fill:#ffe3e3,stroke:#333,stroke-width:2px
-    style 6 fill:#e3ffe3,stroke:#333,stroke-width:2px
-    style 7 fill:#d0f0c0,stroke:#333,stroke-width:2px
-    style 8 fill:#bbf,stroke:#333,stroke-width:2px
+    style A1 fill:#f9f,stroke:#333,stroke-width:2px
+    style A8 fill:#bbf,stroke:#333,stroke-width:2px
+```
+
+### 2. Quy Trình Phát Triển Tính Năng (Flow Develop)
+```mermaid
+graph TD
+    B1[1. Xác định yêu cầu] --> B2[2. Phân tích yêu cầu]
+    B2 --> B3[3. Thiết kế giải pháp]
+    B3 --> B4[4. Lập kế hoạch thực hiện]
+    B4 --> B5[5. Phát triển]
+    B5 --> B6[6. Kiểm thử]
+    B6 --> B7[7. Triển khai]
+
+    style B1 fill:#fcf,stroke:#333,stroke-width:2px
+    style B7 fill:#bfb,stroke:#333,stroke-width:2px
 ```
 
 ---
 
-## 📝 Mẫu Điền Thông Tin Hướng Dẫn Agent
+## 📝 MẪU ĐIỀN THÔNG TIN (TEMPLATES)
+
+---
+
+## PART A: QUY TRÌNH GIẢI QUYẾT LỖI (FLOW RESOLVE)
 
 ### 1. Xác định vấn đề (5W1H & Scope)
 > **Mục tiêu:** Định nghĩa rõ vấn đề và khoanh vùng phạm vi ban đầu để Agent không tự ý quét toàn bộ dự án.
 *   **What (Cái gì):** Lỗi/Tính năng cần thực hiện là gì?
     *   👉 
-*   **Who (Ai):** Ai yêu cầu/gặp lỗi? (Có liên quan đến phân quyền/Role nào không?)
+*   **Who (Ai):** Ai phát hiện ra vấn đề? Nhóm người dùng nào bị ảnh hưởng?
     *   👉 
-*   **Where (Ở đâu):** Lỗi/Tính năng thuộc Module, Component, hoặc Route nào?
+*   **Where (Ở đâu):** Lỗi xảy ra ở Module, Component, hoặc Route nào?
     *   👉 
-*   **When (Khi nào):** Lỗi xảy ra khi thực hiện hành động nào?
+*   **When (Khi nào):** Lỗi xảy ra khi thực hiện hành động nào? Tần suất?
     *   👉 
-*   **Why (Tại sao):** Tại sao cần giải quyết? Mục tiêu mong muốn đạt được là gì?
+*   **Why (Tại sao):** Tại sao cần giải quyết? Tác hại nếu không giải quyết?
     *   👉 
-*   **How (Như thế nào):** Hành vi lỗi hiện tại vs. Hành vi mong muốn?
+*   **How (Như thế nào):** Hành vi lỗi hiện tại vs. Hành vi mong muốn? Các bước tái hiện?
     *   👉 
-
----
 
 ### 2. Thu thập thông tin & Giới hạn File cần đọc (Token Optimization)
 > **Mục tiêu:** Liệt kê CHÍNH XÁC những file Agent được phép đọc. **CẤM** Agent tự ý quét hoặc đọc toàn bộ thư mục lớn để tiết kiệm token.
@@ -53,8 +67,6 @@ graph TD
     *   👉 
 *   **Log lỗi / Dữ liệu thực tế:** *(Cung cấp log cụ thể để tránh Agent phải chạy mò)*
     *   👉 
-
----
 
 ### 3. Phân tích nguyên nhân (5 Whys)
 > **Mục tiêu:** Dẫn dắt Agent phân tích nguyên nhân gốc rễ dựa trên thông tin đã thu thập ở Bước 2.
@@ -67,8 +79,6 @@ graph TD
 *   **Kết luận nguyên nhân gốc rễ:**
     *   👉 
 
----
-
 ### 4. Đề xuất các giải pháp Code
 > **Mục tiêu:** Đưa ra các phương án sửa đổi code cụ thể (về mặt logic hoặc cấu trúc).
 
@@ -77,15 +87,11 @@ graph TD
 | 1 | **Phương án A:** *Tối ưu hóa câu query...* | `[file.php](file:///...)` | Ảnh hưởng tới hiệu năng tạm thời |
 | 2 | **Phương án B:** *Thêm middleware kiểm tra...* | `[middleware.php](file:///...)` | Có thể chặn nhầm request nếu config sai |
 
----
-
 ### 5. Đánh giá và chọn giải pháp tối ưu
 > **Mục tiêu:** Chọn giải pháp tối thiểu hóa rủi ro, thời gian và lượng code thay đổi.
 *   👉 **Giải pháp được chọn:** **[Phương án X]**
 *   **Lý do chọn:** *(Ít rủi ro nhất, tối ưu token khi sửa đổi, dễ test...)*
     *   👉 
-
----
 
 ### 6. Lập kế hoạch thực hiện chi tiết (Task List cho Agent)
 > **Mục tiêu:** Lập trình tự các bước thực hiện chi tiết. **Agent PHẢI làm việc theo đúng trình tự này trong 1 lần làm việc.**
@@ -98,8 +104,6 @@ graph TD
 - [ ] Bước 5: Chạy lệnh test/kiểm tra lỗi cú pháp (Syntax check / Unit Test).
 ```
 
----
-
 ### 7. Thực hiện (Execution)
 > **Mục tiêu:** Thực hiện code theo đúng kế hoạch ở Bước 6. Ghi nhận nhật ký thay đổi và các lỗi phát sinh trong quá trình code.
 *   **Nhật ký sửa đổi code:**
@@ -107,8 +111,6 @@ graph TD
     *   *Task 2:* ...
 *   **Lỗi phát sinh & Cách xử lý của Agent:** *(Ghi nhận nếu trình biên dịch báo lỗi hoặc test case thất bại)*
     *   👉 
-
----
 
 ### 8. Đánh giá kết quả (Verification)
 > **Mục tiêu:** Xác nhận vấn đề đã được giải quyết triệt để và code hoạt động đúng.
@@ -120,3 +122,179 @@ graph TD
     *   [ ] Code tuân thủ coding convention của dự án.
 *   **Bài học rút ra cho Agent:** *(Lưu ý gì cho các task tương tự lần sau để tránh lặp lại lỗi)*
     *   👉 
+
+---
+
+## PART B: QUY TRÌNH PHÁT TRIỂN TÍNH NĂNG MỚI (FLOW DEVELOP)
+
+### 1. Xác định yêu cầu
+> **Mục tiêu:** Định nghĩa rõ ràng yêu cầu nghiệp vụ và mục tiêu của tính năng mới.
+*   **Mô tả tính năng:** *(Tính năng mới làm gì?)*
+    *   👉 
+*   **Đối tượng sử dụng:** *(Ai sẽ sử dụng tính năng này?)*
+    *   👉 
+*   **Tiêu chí hoàn thành (Definition of Done - DoD):** *(Khi nào tính năng được coi là hoàn thành?)*
+    *   👉 
+
+### 2. Phân tích yêu cầu
+> **Mục tiêu:** Xác định các thành phần bị ảnh hưởng, luồng dữ liệu và các thay đổi về Database.
+*   **Các thành phần ảnh hưởng:** *(Những module, view, controller, API nào sẽ bị thay đổi hoặc tạo mới?)*
+    *   👉 
+*   **Thay đổi Database (nếu có):** *(Bảng mới, trường mới, quan hệ mới)*
+    *   👉 
+*   **Luồng xử lý (Data Flow):** *(Mô tả luồng dữ liệu đi từ giao diện đến database)*
+    *   👉 
+
+### 3. Thiết kế giải pháp
+> **Mục tiêu:** Thiết kế cấu trúc UI/UX và kiến trúc code của tính năng mới trước khi phát triển.
+*   **Thiết kế Giao diện (UI/UX):** *(Mô tả layout, các component cần tạo, áp dụng CSS/Tailwind thế nào theo Rule)*
+    *   👉 
+*   **Thiết kế API/Endpoints (nếu có):** *(Danh sách API URL, Method, Request/Response payload)*
+    *   👉 
+*   **Thuật toán/Logic xử lý chính:** *(Mô tả logic xử lý nghiệp vụ)*
+    *   👉 
+
+### 4. Lập kế hoạch thực hiện
+> **Mục tiêu:** Phân chia các task cụ thể cho Agent phát triển tuần tự.
+```markdown
+- [ ] Bước 1: Tạo file Migration cho database (nếu có).
+- [ ] Bước 2: Tạo Model, Controller, Service xử lý logic.
+- [ ] Bước 3: Tạo giao diện (Blade/Vite/React component) áp dụng đúng Rule UI/UX.
+- [ ] Bước 4: Viết Route và kết nối API.
+- [ ] Bước 5: Viết Unit Test/Feature Test.
+```
+
+### 5. Phát triển
+> **Mục tiêu:** Viết code cho các task đã lập kế hoạch ở Bước 4.
+*   **Nhật ký phát triển:** *(Cập nhật tiến độ code)*
+    *   👉 
+*   **Danh sách File đã tạo mới / Sửa đổi:**
+    *   👉 
+
+### 6. Kiểm thử
+> **Mục tiêu:** Đảm bảo tính năng hoạt động đúng nghiệp vụ và không làm hỏng các tính năng cũ.
+*   **Các trường hợp kiểm thử (Test Cases):**
+
+| STT | Mô Tả Test Case | Kết Quả Mong Đợi | Kết Quả Thực Tế | Trạng Thái |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | *Ví dụ: Click submit form trống* | Hiển thị thông báo lỗi validate | | ⏳ Chưa test |
+| 2 | *Ví dụ: Submit form đúng dữ liệu* | Lưu DB thành công & redirect | | ⏳ Chưa test |
+
+*   **Kiểm thử hồi quy (Regression Test):** *(Đảm bảo các tính năng cũ vẫn hoạt động tốt)*
+    *   👉 
+
+### 7. Triển khai
+> **Mục tiêu:** Đưa tính năng lên Staging/Production và kiểm tra môi trường chạy thực tế.
+*   **Các bước triển khai:**
+    1.  [ ] Chạy `php artisan migrate` (nếu có thay đổi DB).
+    2.  [ ] Chạy `npm run build` (nếu có frontend build).
+    3.  [ ] Xóa cache hệ thống: `php artisan cache:clear`.
+*   **Xác nhận sau triển khai:** *(Checklist kiểm tra hoạt động trực tiếp)*
+    *   👉 
+
+---
+
+## 📐 Tiêu Chuẩn Thiết Kế & Quy Tắc Code (UI/UX & Coding Rules)
+
+Quy định bắt buộc đối với Agent khi tạo hoặc chỉnh sửa giao diện quản lý thư viện/tài liệu số:
+
+### 🌟 Phong cách thiết kế:
+* **CHUYÊN NGHIỆP, COMPACT (Tối giản/Gọn gàng)** và hỗ trợ đầy đủ **DARK/LIGHT THEME**.
+* **Nguyên tắc cốt lõi:**
+  * 🔴 Chữ (Text) dùng màu xám, **KHÔNG** dùng màu trắng tinh (White) trên nền tối.
+  * 🔴 Đường viền (Border line) dùng màu xám, **KHÔNG** dùng màu trắng tinh.
+  * 🔴 Nút (Button) bắt buộc phải có màu nền (phù hợp với theme Dark/Light).
+  * 🔴 Đầy đủ hiệu ứng `hover`, `active` cho hàng của bảng (row table) và nút (button).
+  * 🔴 Sử dụng **Tailwind CSS**.
+
+### 🎨 Quy định về màu sắc (Client View):
+Dùng các mã màu gradient sau cho icon ở Sidebar:
+```php
+$sidebarIcons = [
+    'fas fa-circle-info'    => ['from-vttu-red to-vttu-dark',    'shadow-vttu-red/25'],
+    'fas fa-bullseye'       => ['from-vttu-red to-vttu-dark',    'shadow-vttu-red/25'],
+    'fas fa-scale-balanced' => ['from-vttu-red to-vttu-dark',    'shadow-vttu-red/25'],
+    'fas fa-clock'          => ['from-vttu-red to-vttu-dark',    'shadow-vttu-red/25'],
+    'fas fa-sitemap'        => ['from-vttu-red to-vttu-dark',    'shadow-vttu-red/25'],
+];
+```
+* **Admin View (Topsecret):** Sử dụng các tông màu và phong cách theo layout admin hiện tại của hệ thống.
+* **Database Icons:** Nếu icon đang được lưu trong Database, ưu tiên sử dụng icon đó.
+
+---
+
+### 1. SPACING (Khoảng cách) - [BẮT BUỘC]
+* **Padding trong card:** `p-3` hoặc `p-4` *(CẤM dùng `p-6`, `p-8` hoặc lớn hơn).*
+* **Gap giữa các phần tử:** `gap-2`, `gap-3` *(CẤM dùng `gap-6`, `gap-8`).*
+* **Margin giữa các section:** `my-3`, `my-4` *(CẤM dùng `my-8`, `my-10`).*
+* **Hàng trong bảng (Table row):** `py-2 px-3`.
+* **Padding Container chính:** `px-4` (trên mobile), `px-6` (trên tablet/desktop).
+
+### 2. BORDER-RADIUS - [BẮT BUỘC]
+* **Card/Container:** `rounded` hoặc `rounded-md` *(CẤM dùng `rounded-xl`, `rounded-2xl`, `rounded-3xl`).*
+* **Button:** `rounded-sm` hoặc `rounded`.
+* **Input/Select:** `rounded-sm`.
+* **Badge/Tag:** `rounded-sm`.
+* **Avatar:** `rounded-full` (chỉ áp dụng cho avatar người dùng).
+* **Modal/Dialog:** `rounded-md`.
+
+### 3. ICONS - [BẮT BUỘC]
+* **Thư viện:** CHỈ sử dụng **Lucide React icons** (hoặc FontAwesome/Icon từ DB nếu được cấu hình sẵn cho sidebar).
+* **Màu sắc:** `text-muted-foreground` hoặc `currentColor`.
+* **Kích thước:** `w-4 h-4` (16px) cho inline icon, `w-5 h-5` (20px) cho icon trong button.
+* ⚠️ **CẤM:** Dùng emoji, icon nhiều màu, hoặc icon từ các thư viện lạ khác.
+* *Ví dụ đúng:* `<FileText className="w-4 h-4" />`, `<Folder className="w-4 h-4" />`.
+
+### 4. DARK/LIGHT THEME - [CÚ PHÁP ĐỒNG BỘ]
+* **Màu nền chính:** `bg-background`
+* **Card container:** `bg-card border border-border`
+* **Text chính:** `text-foreground`
+* **Text phụ:** `text-muted-foreground`
+* **Hiệu ứng Hover:** `hover:bg-muted` hoặc `hover:bg-accent`
+* **Active/Selected:** `bg-primary text-primary-foreground`
+* ⚠️ **CẤM:** Hardcode các màu như `bg-white`, `text-black`, `bg-gray-100`.
+
+### 5. HỖ TRỢ ĐA MÀN HÌNH (Responsive) - [BẮT BUỘC]
+* **A. MOBILE (< 640px - `sm`):**
+  * Sidebar: Mặc định ẩn, chỉ hiển thị thông qua Hamburger Menu hoặc Drawer (Sheet).
+  * Layout: `flex-col`, xếp chồng theo chiều dọc (stack vertical).
+  * Table: Chuyển sang dạng danh sách thẻ (Card list) hoặc hỗ trợ cuộn ngang (`overflow-x-auto`).
+  * Cỡ chữ: `text-sm` cho phần thân (body).
+  * Padding: Container chính dùng `px-4`.
+  * Button: Kéo giãn 100% (`w-full`) hoặc chuyển thành dạng icon-only.
+  * Điều hướng: Sử dụng bottom nav hoặc menu hamburger.
+* **B. TABLET / MÀN HÌNH VUÔNG (640px - 1024px - `sm` đến `lg`):**
+  * Sidebar: Thu gọn dạng chỉ hiện icon (collapsible icon-only) hoặc hiển thị dạng overlay.
+  * Layout: Sử dụng grid chia cột như `grid-cols-1 md:grid-cols-2`.
+  * Table: Chỉ hiện các cột quan trọng, ẩn bớt cột phụ.
+  * Padding: Container chính dùng `px-6`.
+  * Cỡ chữ: `text-sm`.
+* **C. DESKTOP / LAPTOP (> 1024px - `lg`, `xl`):**
+  * Sidebar: Hiển thị đầy đủ, cố định độ rộng `w-56` hoặc `w-64`.
+  * Layout: `flex-row`, chia rõ sidebar và main content.
+  * Table: Hiển thị đầy đủ tất cả các cột dữ liệu.
+  * Padding: Container chính dùng `px-6 lg:px-8`.
+  * Cỡ chữ: `text-sm` cho table, `text-base` cho headings.
+
+### 6. CẤU TRÚC COMPONENT CHUẨN
+* **HEADER:**
+  * Chiều cao cố định: `h-14` hoặc `h-16`.
+  * Sticky top có hiệu ứng mờ nền: `sticky top-0 bg-background/95 backdrop-blur`.
+  * Breadcrumb: Dùng cỡ chữ `text-sm`, ẩn trên mobile (chỉ hiện tên trang hiện tại).
+* **SIDEBAR:**
+  * Desktop: Rộng `w-56`, đặt fixed hoặc sticky.
+  * Mobile: Dùng Sheet/Drawer trượt ra từ bên trái.
+  * Item: Cấu hình `px-3 py-2 rounded text-sm`.
+  * Item đang chọn (Active): `bg-primary text-primary-foreground`.
+  * Hover Item: `hover:bg-muted`.
+* **TABLE/DATA LIST:**
+  * Table Header: Cỡ chữ `text-xs uppercase tracking-wide text-muted-foreground bg-muted/50`.
+  * Row: `py-2 px-3 border-b border-border` đi kèm hiệu ứng `hover:bg-muted/50`.
+  * Mobile: Chuyển hoàn toàn sang Card-based layout.
+* **SEARCH & FILTERS:**
+  * Input height: `h-9` || `h-10`.
+  * Bố cục mobile: Xếp dọc `flex-col sm:flex-row` co giãn linh hoạt.
+  * Filter buttons: Gom nhóm vào Dropdown trên mobile để tiết kiệm không gian.
+* **ACTION BUTTONS:**
+  * Desktop: Hiển thị chữ + Icon.
+  * Mobile: Thu nhỏ thành Icon-only.

@@ -95,10 +95,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
 // Detail of Online Database (under Resources)
 Route::get('/tai-nguyen/co-so-du-lieu-chi-tiet/{id?}', [\App\Http\Controllers\SiteController::class, 'onlineDatabaseDetail'])->name('site.online-database.detail');
 
-Route::get('/{code}', [\App\Http\Controllers\SiteController::class, 'page'])->name('site.page');
-Route::get('/sitemap', [\App\Http\Controllers\SiteController::class, 'sitemap'])->name('site.sitemap');
-Route::get('/sitemap.xml', [\App\Http\Controllers\SiteController::class, 'xmlSitemap'])->name('site.sitemap.xml');
-
 // Public News Routes
 Route::get('/tin-tuc-chi-tiet/{slug}', [\App\Http\Controllers\NewsController::class, 'show'])->name('news.show.custom');
 Route::prefix('tin-tuc')->name('news.')->group(function () {
@@ -113,6 +109,10 @@ Route::prefix('tin-tuc')->name('news.')->group(function () {
     Route::get('/api', [\App\Http\Controllers\NewsController::class, 'api'])->name('api');
     Route::post('/{news}/like', [\App\Http\Controllers\NewsController::class, 'like'])->name('like');
 });
+
+Route::get('/{code}', [\App\Http\Controllers\SiteController::class, 'page'])->name('site.page');
+Route::get('/sitemap', [\App\Http\Controllers\SiteController::class, 'sitemap'])->name('site.sitemap');
+Route::get('/sitemap.xml', [\App\Http\Controllers\SiteController::class, 'xmlSitemap'])->name('site.sitemap.xml');
 
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\Admin\UserController;

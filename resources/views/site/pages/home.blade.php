@@ -980,6 +980,23 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                     });
                     target.classList.remove('text-slate-400', 'hover:text-vttu-red');
                     target.classList.add('text-white', 'bg-vttu-red', 'shadow-lg', 'shadow-vttu-red/20');
+
+                    // Khởi tạo Swiper cho tab chuyên đề Y khoa mới load xong
+                    new Swiper('#medical-content .medical-swiper-container', {
+                        slidesPerView: 'auto',
+                        spaceBetween: 12,
+                        centeredSlides: false,
+                        observer: true,
+                        observeParents: true,
+                        navigation: {
+                            nextEl: '#medical-content .medical-next',
+                            prevEl: '#medical-content .medical-prev',
+                        },
+                        breakpoints: {
+                            640: { spaceBetween: 12 },
+                            1024: { spaceBetween: 16 }
+                        }
+                    });
                 });
             },
             loadNewsTab(type, tabsId, contentId) {

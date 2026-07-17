@@ -359,612 +359,252 @@
                         </div>
                     </div>
                 @elseif(isset($customSitemap) && $customSitemap === true)
-                    <!-- 3D Interactive Website Sitemap -->
-                    <div class="w-full space-y-4">
-                        <!-- Header Card -->
-                        <div class="bg-gradient-to-r from-vttu-red to-vttu-dark text-white rounded-lg p-6 shadow-lg">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h2 class="text-2xl font-black tracking-wider mb-2">BẢN ĐỒ WEBSITE THƯVIỆN</h2>
-                                    <p class="text-sm opacity-90">Khám phá cấu trúc tổ chức toàn bộ nội dung website Thư viện VTTU</p>
+                    <!-- Dynamic Website Sitemap Diagram -->
+                    <div class="w-full space-y-8 pb-12">
+                        
+                        <!-- Header Banner -->
+                        <div class="flex justify-center mt-2">
+                            <div class="relative bg-[#A80D0D] text-white rounded-md py-4 px-8 text-center border-2 border-white/20 shadow-md max-w-xl w-full mx-4">
+                                <div class="absolute left-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white opacity-85"></div>
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white opacity-85"></div>
+                                <div class="border border-white/30 rounded-full px-6 py-1.5 inline-block">
+                                    <h1 class="text-xl md:text-2xl font-black tracking-widest text-white uppercase font-sans">SƠ ĐỒ WEBSITE</h1>
                                 </div>
-                                <div class="text-5xl opacity-20"><i class="fas fa-sitemap"></i></div>
                             </div>
                         </div>
 
+                        <!-- Main Branch Line Connector (Desktop) -->
+                        <div class="hidden md:block w-full max-w-5xl mx-auto -mt-4 mb-4 relative">
+                            <div class="w-0.5 h-6 bg-[#A80D0D] mx-auto"></div>
+                            <div class="absolute left-[7.14%] right-[7.14%] top-6 h-0.5 bg-[#A80D0D]"></div>
+                            <div class="flex justify-between px-[7.14%] pt-6">
+                                @for($i = 0; $i < 7; $i++)
+                                    <div class="w-px h-3 bg-[#A80D0D]"></div>
+                                @endfor
+                            </div>
+                        </div>
 
-                        <!-- 3D Canvas Container -->
-                        <div class="relative bg-gray-900 rounded-lg overflow-hidden shadow-xl border border-gray-700" id="canvas-container" style="height: 600px;">
-                            <canvas id="sitemap-canvas"></canvas>
+                        <!-- 7 Main Columns Grid -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 max-w-5xl mx-auto px-4">
+                            <!-- Column 1: Trang chủ -->
+                            <button onclick="scrollToSection('section-home')" class="flex flex-col items-center group focus:outline-none">
+                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-[#A80D0D] flex items-center justify-center shadow-md border-2 border-white group-hover:scale-105 transition-transform">
+                                    <i data-lucide="home" class="w-8 h-8 text-white"></i>
+                                </div>
+                                <span class="mt-2 px-1.5 py-1 bg-rose-50 dark:bg-rose-950/20 text-[#A80D0D] dark:text-rose-300 text-[10px] font-black uppercase tracking-wider rounded text-center w-full max-w-[90px] truncate shadow-sm border border-rose-100/50 dark:border-rose-900/10">TRANG CHỦ</span>
+                            </button>
                             
-                            <!-- Info Panel (Overlay) -->
-                            <div id="info-panel" class="absolute bottom-6 right-6 bg-white rounded-lg shadow-2xl p-6 max-w-sm hidden z-50 border-2 border-vttu-red transform transition-all duration-300 max-h-96 overflow-y-auto">
-                                <button onclick="closeInfoPanel()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl sticky">
-                                    <i class="fas fa-times-circle"></i>
-                                </button>
-                                <div id="info-content" class="text-sm"></div>
-                            </div>
+                            <!-- Column 2: Giới thiệu -->
+                            <button onclick="scrollToSection('section-gioi-thieu')" class="flex flex-col items-center group focus:outline-none">
+                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shadow-md border-2 border-white group-hover:scale-105 transition-transform bg-slate-100">
+                                    <img src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=120&h=120&fit=crop" class="w-full h-full object-cover">
+                                </div>
+                                <span class="mt-2 px-1.5 py-1 bg-rose-50 dark:bg-rose-950/20 text-[#A80D0D] dark:text-rose-300 text-[10px] font-black uppercase tracking-wider rounded text-center w-full max-w-[90px] truncate shadow-sm border border-rose-100/50 dark:border-rose-900/10">GIỚI THIỆU</span>
+                            </button>
 
-                            <!-- Breadcrumb Display -->
-                            <div id="breadcrumb-panel" class="absolute top-4 left-4 bg-black/80 text-white rounded-lg px-4 py-2 text-xs hidden z-40 max-w-xs">
-                                <div id="breadcrumb-content"></div>
+                            <!-- Column 3: Hướng dẫn -->
+                            <button onclick="scrollToSection('section-huong-dan')" class="flex flex-col items-center group focus:outline-none">
+                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shadow-md border-2 border-white group-hover:scale-105 transition-transform bg-slate-100">
+                                    <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=120&h=120&fit=crop" class="w-full h-full object-cover">
+                                </div>
+                                <span class="mt-2 px-1.5 py-1 bg-rose-50 dark:bg-rose-950/20 text-[#A80D0D] dark:text-rose-300 text-[10px] font-black uppercase tracking-wider rounded text-center w-full max-w-[90px] truncate shadow-sm border border-rose-100/50 dark:border-rose-900/10">HƯỚNG DẪN</span>
+                            </button>
+
+                            <!-- Column 4: Tài nguyên -->
+                            <button onclick="scrollToSection('section-tai-nguyen')" class="flex flex-col items-center group focus:outline-none">
+                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shadow-md border-2 border-white group-hover:scale-105 transition-transform bg-slate-100">
+                                    <img src="https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?w=120&h=120&fit=crop" class="w-full h-full object-cover">
+                                </div>
+                                <span class="mt-2 px-1.5 py-1 bg-rose-50 dark:bg-rose-950/20 text-[#A80D0D] dark:text-rose-300 text-[10px] font-black uppercase tracking-wider rounded text-center w-full max-w-[90px] truncate shadow-sm border border-rose-100/50 dark:border-rose-900/10">TÀI NGUYÊN</span>
+                            </button>
+
+                            <!-- Column 5: Tin tức -->
+                            <button onclick="scrollToSection('section-tin-tuc')" class="flex flex-col items-center group focus:outline-none">
+                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shadow-md border-2 border-white group-hover:scale-105 transition-transform bg-slate-100">
+                                    <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=120&h=120&fit=crop" class="w-full h-full object-cover">
+                                </div>
+                                <span class="mt-2 px-1.5 py-1 bg-rose-50 dark:bg-rose-950/20 text-[#A80D0D] dark:text-rose-300 text-[10px] font-black uppercase tracking-wider rounded text-center w-full max-w-[90px] truncate shadow-sm border border-rose-100/50 dark:border-rose-900/10">TIN TỨC</span>
+                            </button>
+
+                            <!-- Column 6: Tra cứu OPAC -->
+                            <button onclick="scrollToSection('section-tra-cuu-opac')" class="flex flex-col items-center group focus:outline-none">
+                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shadow-md border-2 border-white group-hover:scale-105 transition-transform bg-slate-100">
+                                    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=120&h=120&fit=crop" class="w-full h-full object-cover">
+                                </div>
+                                <span class="mt-2 px-1.5 py-1 bg-rose-50 dark:bg-rose-950/20 text-[#A80D0D] dark:text-rose-300 text-[10px] font-black uppercase tracking-wider rounded text-center w-full max-w-[90px] truncate shadow-sm border border-rose-100/50 dark:border-rose-900/10">TRA CỨU OPAC</span>
+                            </button>
+
+                            <!-- Column 7: Thông tin độc giả -->
+                            <button onclick="scrollToSection('section-thong-tin-doc-gia')" class="flex flex-col items-center group focus:outline-none">
+                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shadow-md border-2 border-white group-hover:scale-105 transition-transform bg-slate-100">
+                                    <img src="https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=120&h=120&fit=crop" class="w-full h-full object-cover">
+                                </div>
+                                <span class="mt-2 px-1.5 py-1 bg-rose-50 dark:bg-rose-950/20 text-[#A80D0D] dark:text-rose-300 text-[10px] font-black uppercase tracking-wider rounded text-center w-full max-w-[90px] truncate shadow-sm border border-rose-100/50 dark:border-rose-900/10">TT ĐỘC GIẢ</span>
+                            </button>
+                        </div>
+
+                        <!-- ================== DETAILED SECTIONS ================== -->
+
+                        <!-- SECTION 1: TRANG CHỦ -->
+                        <div class="space-y-4 pt-4">
+                            <div id="section-home" class="bg-[#A80D0D] text-white py-2.5 px-4 text-center font-black text-sm uppercase tracking-widest rounded shadow-sm">
+                                TRANG CHỦ
+                            </div>
+                            <div class="bg-card border border-border rounded p-6 shadow-sm text-center space-y-4">
+                                <p class="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                                    Chào mừng đến với Cổng thông tin Thư viện số Trường Đại học Võ Trường Toản. Nơi lưu trữ, kết nối và cung cấp nguồn học liệu, tài nguyên nghiên cứu khoa học phục vụ cho toàn thể Cán bộ, Giảng viên và Sinh viên nhà trường.
+                                </p>
+                                <a href="/" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#A80D0D] hover:bg-[#8d0a0a] text-white text-xs font-black rounded uppercase tracking-wider transition-all duration-300 shadow-md">
+                                    <i data-lucide="home" class="w-4 h-4"></i>
+                                    <span>Về Trang chủ Thư viện</span>
+                                </a>
                             </div>
                         </div>
+
+                        <!-- SECTION 2: GIỚI THIỆU -->
+                        @php
+                            $gioiThieuNode = isset($menuItems) ? $menuItems->firstWhere('node_code', 'gioi-thieu') : null;
+                            $gioiThieuChildren = $gioiThieuNode ? $gioiThieuNode->activeChildren : collect();
+                        @endphp
+                        @if($gioiThieuChildren->count() > 0)
+                            <div class="space-y-4 pt-4">
+                                <div id="section-gioi-thieu" class="bg-[#A80D0D] text-white py-2.5 px-4 text-center font-black text-sm uppercase tracking-widest rounded shadow-sm">
+                                    GIỚI THIỆU
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                                    @foreach($gioiThieuChildren as $child)
+                                        <div class="flex flex-col items-center">
+                                            <!-- Down pointing double chevron -->
+                                            <i data-lucide="chevrons-down" class="w-4.5 h-4.5 text-[#A80D0D] mb-2 animate-bounce" style="animation-duration: 2.5s;"></i>
+                                            <a href="{{ $child->getUrl() }}" class="w-full flex-grow flex flex-col items-center justify-center p-4 bg-rose-50 dark:bg-rose-950/20 text-[#A80D0D] dark:text-rose-200 border border-rose-100 dark:border-rose-900/30 rounded shadow-sm text-center min-h-[120px] transition-all hover:scale-105 hover:bg-rose-100/30 hover:shadow-md">
+                                                <span class="text-[11px] font-bold leading-relaxed">
+                                                    {{ $child->description ?: $child->display_name }}
+                                                </span>
+                                            </a>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- SECTION 3: HƯỚNG DẪN -->
+                        @php
+                            $huongDanNode = isset($menuItems) ? $menuItems->firstWhere('node_code', 'huong-dan') : null;
+                            $huongDanChildren = $huongDanNode ? $huongDanNode->activeChildren : collect();
+                        @endphp
+                        <div class="space-y-4 pt-4">
+                            <div id="section-huong-dan" class="bg-[#A80D0D] text-white py-2.5 px-4 text-center font-black text-sm uppercase tracking-widest rounded shadow-sm">
+                                HƯỚNG DẪN SỬ DỤNG
+                            </div>
+                            <div class="bg-card border border-border rounded p-5 shadow-sm space-y-4">
+                                <p class="text-xs md:text-sm text-muted-foreground leading-relaxed">
+                                    Bao gồm các cẩm nang, tài liệu và quy trình hướng dẫn giúp độc giả có thể dễ dàng tiếp cận và khai thác tối đa các tiện ích, dịch vụ của Thư viện điện tử như: Hướng dẫn đăng nhập tài khoản cá nhân, cài đặt ứng dụng mobile, gia hạn sách trực tuyến, hướng dẫn tra cứu tài liệu in, khai thác cơ sở dữ liệu số,...
+                                </p>
+                                
+                                @if($huongDanChildren->count() > 0)
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-3 border-t border-border">
+                                        @foreach($huongDanChildren as $child)
+                                            <a href="{{ $child->getUrl() }}" class="flex items-center gap-2.5 p-3 rounded bg-rose-50/50 hover:bg-rose-50 dark:bg-rose-950/10 dark:hover:bg-rose-950/20 text-[#A80D0D] dark:text-rose-300 border border-rose-100/50 dark:border-rose-900/10 transition-all hover:-translate-y-0.5 shadow-xs text-center justify-center">
+                                                <i data-lucide="{{ getLucideIcon($child->icon) }}" class="w-4 h-4 text-[#A80D0D] dark:text-rose-400 flex-shrink-0"></i>
+                                                <span class="text-[10px] font-black uppercase tracking-wider truncate">{{ $child->display_name }}</span>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- SECTION 4: TÀI NGUYÊN -->
+                        @php
+                            $taiNguyenNode = isset($menuItems) ? $menuItems->firstWhere('node_code', 'tai-nguyen') : null;
+                            $taiNguyenChildren = $taiNguyenNode ? $taiNguyenNode->activeChildren : collect();
+                        @endphp
+                        @if($taiNguyenChildren->count() > 0)
+                            <div class="space-y-4 pt-4">
+                                <div id="section-tai-nguyen" class="bg-[#A80D0D] text-white py-2.5 px-4 text-center font-black text-sm uppercase tracking-widest rounded shadow-sm">
+                                    TÀI NGUYÊN THƯ VIỆN
+                                </div>
+                                
+                                <!-- Resource Connector Line (Desktop) -->
+                                <div class="hidden md:block w-full max-w-3xl mx-auto -mt-2 mb-2 relative">
+                                    <div class="w-0.5 h-4 bg-[#A80D0D] mx-auto"></div>
+                                    <div class="absolute left-[12.5%] right-[12.5%] top-4 h-0.5 bg-[#A80D0D]"></div>
+                                    <div class="flex justify-between px-[12.5%] pt-4">
+                                        @for($i = 0; $i < $taiNguyenChildren->count(); $i++)
+                                            <div class="w-px h-3 bg-[#A80D0D]"></div>
+                                        @endfor
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                                    @foreach($taiNguyenChildren as $child)
+                                        <a href="{{ $child->getUrl() }}" class="flex flex-col items-center p-4 bg-rose-50 dark:bg-rose-950/20 text-[#A80D0D] dark:text-rose-200 border border-rose-100 dark:border-rose-900/30 rounded shadow-sm hover:scale-105 transition-transform hover:shadow-md hover:bg-rose-100/30 text-center justify-center min-h-[90px] group">
+                                            <i data-lucide="{{ getLucideIcon($child->icon) }}" class="w-5 h-5 mb-2 text-[#A80D0D] dark:text-rose-400 group-hover:scale-110 transition-transform"></i>
+                                            <span class="text-[11px] font-black uppercase tracking-wider leading-normal">{{ $child->display_name }}</span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- SECTION 5: TIN TỨC -->
+                        <div class="space-y-4 pt-4">
+                            <div id="section-tin-tuc" class="bg-[#A80D0D] text-white py-2.5 px-4 text-center font-black text-sm uppercase tracking-widest rounded shadow-sm">
+                                TIN TỨC & HOẠT ĐỘNG
+                            </div>
+                            <div class="bg-card border border-border rounded p-6 shadow-sm text-center space-y-4">
+                                <p class="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                                    Cập nhật các thông báo học vụ mới nhất, tin tức sự kiện nổi bật, các chuyên mục giới thiệu sách mới hàng tháng và các video hướng dẫn hoạt động thực tế từ thư viện Đại học Võ Trường Toản.
+                                </p>
+                                <a href="{{ route('news.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#A80D0D] hover:bg-[#8d0a0a] text-white text-xs font-black rounded uppercase tracking-wider transition-all duration-300 shadow-md">
+                                    <i data-lucide="newspaper" class="w-4 h-4"></i>
+                                    <span>Vào mục Tin tức & Sự kiện</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 6: TRA CỨU OPAC -->
+                        <div class="space-y-4 pt-4">
+                            <div id="section-tra-cuu-opac" class="bg-[#A80D0D] text-white py-2.5 px-4 text-center font-black text-sm uppercase tracking-widest rounded shadow-sm">
+                                TRA CỨU OPAC
+                            </div>
+                            <div class="bg-card border border-border rounded p-6 shadow-sm text-center space-y-4">
+                                <p class="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                                    Hệ thống Tìm kiếm trực tuyến (OPAC) giúp độc giả tra cứu nhanh danh mục sách in, giáo trình, báo cáo khóa luận, tài liệu tham khảo bản cứng đang được lưu trữ tại Thư viện Trường.
+                                </p>
+                                <a href="{{ route('opac.search') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#A80D0D] hover:bg-[#8d0a0a] text-white text-xs font-black rounded uppercase tracking-wider transition-all duration-300 shadow-md">
+                                    <i data-lucide="search" class="w-4 h-4"></i>
+                                    <span>Truy cập hệ thống OPAC</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 7: THÔNG TIN ĐỘC GIẢ -->
+                        <div class="space-y-4 pt-4">
+                            <div id="section-thong-tin-doc-gia" class="bg-[#A80D0D] text-white py-2.5 px-4 text-center font-black text-sm uppercase tracking-widest rounded shadow-sm">
+                                THÔNG TIN ĐỘC GIẢ
+                            </div>
+                            <div class="bg-card border border-border rounded p-6 shadow-sm text-center space-y-4">
+                                <p class="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                                    Đăng nhập trang thông tin độc giả cá nhân để tự quản lý thông tin tài khoản, danh sách tài liệu đang mượn, lịch sử mượn trả, yêu cầu mượn trước tài liệu, gia hạn và đề xuất bổ sung sách mới.
+                                </p>
+                                <a href="{{ route('profile') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#A80D0D] hover:bg-[#8d0a0a] text-white text-xs font-black rounded uppercase tracking-wider transition-all duration-300 shadow-md">
+                                    <i data-lucide="user" class="w-4 h-4"></i>
+                                    <span>Vào trang Cá nhân độc giả</span>
+                                </a>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+                    <!-- Client side smooth scroll script -->
                     <script>
-                        // Website structure data
-                        const siteStructure = {
-                            name: "Thư viện VTTU",
-                            url: "/",
-                            description: "Trang chủ Thư viện Đại học Võ Trường Toản - Nơi lưu giữ và chia sẻ tri thức",
-                            role: "Trang chủ",
-                            icon: "home",
-                            children: [
-                                {
-                                    name: "Giới thiệu",
-                                    url: "/page/gioi-thieu",
-                                    description: "Tìm hiểu về lịch sử, sứ mệnh và tầm nhìn của Thư viện VTTU",
-                                    role: "Mục giới thiệu",
-                                    icon: "info",
-                                    children: [
-                                        { name: "Giới thiệu chung", url: "/page/gioi-thieu-chung", description: "Thông tin tổng quát về thư viện, các dịch vụ chính", role: "Trang con" },
-                                        { name: "Thời gian phục vụ", url: "/thoi-gian-phuc-vu", description: "Giờ mở cửa, lịch nghỉ, thông tin liên hệ", role: "Trang con" },
-                                        { name: "Nội quy thư viện", url: "/noi-quy-thu-vien", description: "Các quy định, điều kiện sử dụng dịch vụ", role: "Trang con" },
-                                        { name: "Liên hệ", url: "/page/lien-he", description: "Thông tin liên lạc, địa chỉ, số điện thoại", role: "Trang con" }
-                                    ]
-                                },
-                                {
-                                    name: "Dịch vụ",
-                                    url: "/page/dich-vu",
-                                    description: "Các dịch vụ toàn diện mà thư viện cung cấp cho độc giả",
-                                    role: "Mục dịch vụ",
-                                    icon: "service",
-                                    children: [
-                                        { name: "Mượn trả tài liệu", url: "/page/muon-tra-tai-lieu", description: "Hướng dẫn quy trình mượn, trả, gia hạn tài liệu", role: "Trang con" },
-                                        { name: "Tra cứu OPAC", url: "/opac", description: "Tìm kiếm sách, tài liệu trực tuyến trong danh mục", role: "Trang con" },
-                                        { name: "Tài nguyên số", url: "/tai-lieu-so", description: "Tài liệu điện tử, database, tạp chí khoa học", role: "Trang con" }
-                                    ]
-                                },
-                                {
-                                    name: "Tài nguyên",
-                                    url: "/tai-nguyen-giao-duc-mo",
-                                    description: "Kho tài nguyên giáo dục mở - Hỗ trợ giảng dạy và học tập",
-                                    role: "Mục tài nguyên",
-                                    icon: "book",
-                                    children: [
-                                        { name: "Tài nguyên giáo dục mở", url: "/tai-nguyen-giao-duc-mo", description: "Tài nguyên OER - Các khóa học, giáo trình mở", role: "Trang con" },
-                                        { name: "Tin tức", url: "/tin-tuc", description: "Tin tức hoạt động, thông báo sự kiện thư viện", role: "Trang con" }
-                                    ]
-                                },
-                                {
-                                    name: "Tra cứu",
-                                    url: "/tra-cuu",
-                                    description: "Công cụ tìm kiếm và khám phá tài liệu tổng hợp",
-                                    role: "Mục tra cứu",
-                                    icon: "search",
-                                    children: [
-                                        { name: "OPAC", url: "/opac", description: "Tra cứu catalog sách và tài liệu in", role: "Trang con" },
-                                        { name: "Bản đồ Website", url: "/ban-do-website-thu-vien", description: "Bản đồ cấu trúc website - Khám phá cấu trúc tổ chức", role: "Trang con" }
-                                    ]
-                                }
-                            ]
-                        };
-
-                        // Three.js Setup
-                        const canvas = document.getElementById('sitemap-canvas');
-                        const container = document.getElementById('canvas-container');
-                        
-                        const scene = new THREE.Scene();
-                        scene.background = new THREE.Color(0x0f1419);
-                        
-                        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-                        camera.position.set(0, 0, 20);
-                        
-                        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-                        renderer.setSize(container.clientWidth, container.clientHeight);
-                        renderer.setPixelRatio(window.devicePixelRatio);
-                        
-                        // Enhanced Lighting
-                        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-                        scene.add(ambientLight);
-                        
-                        const pointLight1 = new THREE.PointLight(0xffffff, 0.9);
-                        pointLight1.position.set(15, 15, 15);
-                        scene.add(pointLight1);
-
-                        const pointLight2 = new THREE.PointLight(0x4488ff, 0.5);
-                        pointLight2.position.set(-15, -15, -10);
-                        scene.add(pointLight2);
-
-                        // Create 3D nodes and structure
-                        const nodeGroup = new THREE.Group();
-                        scene.add(nodeGroup);
-                        
-                        const nodeMap = new Map();
-                        const allMeshes = [];
-                        let selectedNode = null;
-
-                        function createTextTexture(text, size = 512) {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = size;
-                            canvas.height = size;
-                            const ctx = canvas.getContext('2d');
-                            
-                            // Background
-                            ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-                            ctx.fillRect(0, 0, size, size);
-                            
-                            // Border
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-                            ctx.lineWidth = 2;
-                            ctx.strokeRect(2, 2, size - 4, size - 4);
-                            
-                            // Text
-                            ctx.fillStyle = '#ffffff';
-                            ctx.font = 'bold 40px Arial';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            
-                            // Word wrap
-                            const words = text.split(' ');
-                            let lines = [];
-                            let currentLine = '';
-                            
-                            for (let word of words) {
-                                const testLine = currentLine + (currentLine ? ' ' : '') + word;
-                                const metrics = ctx.measureText(testLine);
-                                
-                                if (metrics.width > size - 60) {
-                                    if (currentLine) lines.push(currentLine);
-                                    currentLine = word;
-                                } else {
-                                    currentLine = testLine;
-                                }
-                            }
-                            if (currentLine) lines.push(currentLine);
-                            
-                            // Draw text
-                            const lineHeight = 50;
-                            const startY = (size - (lines.length - 1) * lineHeight) / 2;
-                            
-                            lines.forEach((line, i) => {
-                                ctx.strokeStyle = '#000000';
-                                ctx.lineWidth = 4;
-                                ctx.strokeText(line, size / 2, startY + i * lineHeight);
-                                ctx.fillStyle = '#ffffff';
-                                ctx.fillText(line, size / 2, startY + i * lineHeight);
-                            });
-                            
-                            const texture = new THREE.CanvasTexture(canvas);
-                            texture.anisotropy = 16;
-                            return texture;
-                        }
-
-                        // Create 3D icon texture from emoji/symbol
-                        function createIconTexture(iconName, color = '#ffffff', size = 256) {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = size;
-                            canvas.height = size;
-                            const ctx = canvas.getContext('2d');
-                            
-                            // Transparent background
-                            ctx.clearRect(0, 0, size, size);
-                            
-                            // Icon mapping - using unicode symbols
-                            const icons = {
-                                'home': '🏠',
-                                'info': 'ℹ️',
-                                'book': '📚',
-                                'search': '🔍',
-                                'service': '⚙️',
-                                'page': '📄'
-                            };
-                            
-                            // Draw icon as large emoji/symbol
-                            ctx.font = `bold ${size * 0.7}px Arial`;
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(icons[iconName] || '●', size / 2, size / 2);
-                            
-                            const texture = new THREE.CanvasTexture(canvas);
-                            return texture;
-                        }
-
-                        function createNode(data, x = 0, y = 0, z = 0, level = 0, parent = null) {
-                            // Create cube instead of sphere for icon display
-                            const cubeSize = level === 0 ? 1.2 : (level === 1 ? 0.9 : 0.7);
-                            const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-                            
-                            // Color based on level
-                            let color, emissiveColor;
-                            switch(level) {
-                                case 0:
-                                    color = new THREE.Color(0xff4444);
-                                    emissiveColor = new THREE.Color(0xff0000);
-                                    break;
-                                case 1:
-                                    color = new THREE.Color(0x4488ff);
-                                    emissiveColor = new THREE.Color(0x2255cc);
-                                    break;
-                                default:
-                                    color = new THREE.Color(0x44dd44);
-                                    emissiveColor = new THREE.Color(0x22aa22);
-                            }
-                            
-                            // Icon mapping
-                            const iconMap = {
-                                'Thư viện VTTU': 'home',
-                                'Giới thiệu': 'info',
-                                'Dịch vụ': 'service',
-                                'Tài nguyên': 'book',
-                                'Tra cứu': 'search'
-                            };
-                            const iconName = iconMap[data.name] || 'page';
-                            
-                            // Create materials for each face with icon
-                            const iconTexture = createIconTexture(iconName, color.getHexString());
-                            const materials = [
-                                new THREE.MeshPhongMaterial({ color: color, emissive: emissiveColor, emissiveIntensity: 0.4, shininess: 100, map: iconTexture }),
-                                new THREE.MeshPhongMaterial({ color: color, emissive: emissiveColor, emissiveIntensity: 0.4, shininess: 100, map: iconTexture }),
-                                new THREE.MeshPhongMaterial({ color: color, emissive: emissiveColor, emissiveIntensity: 0.4, shininess: 100, map: iconTexture }),
-                                new THREE.MeshPhongMaterial({ color: color, emissive: emissiveColor, emissiveIntensity: 0.4, shininess: 100, map: iconTexture }),
-                                new THREE.MeshPhongMaterial({ color: color, emissive: emissiveColor, emissiveIntensity: 0.4, shininess: 100, map: iconTexture }),
-                                new THREE.MeshPhongMaterial({ color: color, emissive: emissiveColor, emissiveIntensity: 0.4, shininess: 100, map: iconTexture })
-                            ];
-                            
-                            const mesh = new THREE.Mesh(geometry, materials);
-                            mesh.position.set(x, y, z);
-                            mesh.userData = {
-                                data: data,
-                                level: level,
-                                parent: parent,
-                                originalColor: color,
-                                originalEmissive: emissiveColor,
-                                isLabel: false
-                            };
-                            
-                            nodeGroup.add(mesh);
-                            allMeshes.push(mesh);
-                            
-                            // Add text label above the node
-                            const labelTexture = createTextTexture(data.name);
-                            const labelMaterial = new THREE.MeshBasicMaterial({ map: labelTexture, transparent: true });
-                            const labelWidth = level === 0 ? 3.5 : (level === 1 ? 3 : 2.2);
-                            const labelHeight = labelWidth * 0.6;
-                            const labelGeometry = new THREE.PlaneGeometry(labelWidth, labelHeight);
-                            const labelMesh = new THREE.Mesh(labelGeometry, labelMaterial);
-                            labelMesh.position.set(x, y + cubeSize / 2 + 1.2, z);
-                            labelMesh.userData = {
-                                isLabel: true,
-                                node: mesh
-                            };
-                            nodeGroup.add(labelMesh);
-                            
-                            return mesh;
-                        }
-
-                        function createLine(from, to, isHighlight = false) {
-                            const geometry = new THREE.BufferGeometry();
-                            geometry.setAttribute('position', new THREE.BufferAttribute(
-                                new Float32Array([from.x, from.y, from.z, to.x, to.y, to.z]),
-                                3
-                            ));
-                            
-                            const color = isHighlight ? 0xffaa00 : 0x555555;
-                            const material = new THREE.LineBasicMaterial({ color: color, linewidth: isHighlight ? 3 : 1 });
-                            const line = new THREE.Line(geometry, material);
-                            nodeGroup.add(line);
-                        }
-
-                        // Build structure
-                        const rootNode = createNode(siteStructure, 0, 0, 0, 0);
-                        
-                        // Position child sections
-                        const sections = siteStructure.children;
-                        const angleStep = (Math.PI * 2) / sections.length;
-                        const sectionNodes = {};
-                        
-                        sections.forEach((section, sectionIndex) => {
-                            const sectionAngle = angleStep * sectionIndex;
-                            const sectionX = Math.cos(sectionAngle) * 9;
-                            const sectionZ = Math.sin(sectionAngle) * 9;
-                            
-                            const sectionNode = createNode(section, sectionX, 0, sectionZ, 1, rootNode);
-                            sectionNodes[section.name] = sectionNode;
-                            createLine(rootNode.position, sectionNode.position);
-                            
-                            // Position child pages
-                            if (section.children && section.children.length > 0) {
-                                section.children.forEach((page, pageIndex) => {
-                                    const pageAngle = (Math.PI * 2) / section.children.length * pageIndex;
-                                    const pageX = sectionX + Math.cos(pageAngle) * 5;
-                                    const pageY = 2.5 + Math.random() * 2;
-                                    const pageZ = sectionZ + Math.sin(pageAngle) * 5;
-                                    
-                                    const pageNode = createNode(page, pageX, pageY, pageZ, 2, sectionNode);
-                                    createLine(sectionNode.position, pageNode.position);
-                                });
-                            }
-                        });
-
-                        // Mouse controls
-                        let isDragging = false;
-                        let previousMousePosition = { x: 0, y: 0 };
-                        let hoveredNode = null;
-
-                        canvas.addEventListener('mousedown', (e) => {
-                            isDragging = true;
-                            previousMousePosition = { x: e.clientX, y: e.clientY };
-                        });
-
-                        canvas.addEventListener('mousemove', (e) => {
-                            if (isDragging) {
-                                const deltaX = e.clientX - previousMousePosition.x;
-                                const deltaY = e.clientY - previousMousePosition.y;
-
-                                nodeGroup.rotation.y += deltaX * 0.01;
-                                nodeGroup.rotation.x += deltaY * 0.01;
-
-                                previousMousePosition = { x: e.clientX, y: e.clientY };
-                            }
-                        });
-
-                        canvas.addEventListener('mouseup', () => {
-                            isDragging = false;
-                        });
-
-                        canvas.addEventListener('wheel', (e) => {
-                            e.preventDefault();
-                            camera.position.z += e.deltaY * 0.01;
-                            camera.position.z = Math.max(5, Math.min(50, camera.position.z));
-                        });
-
-                        // Raycasting for node selection
-                        const raycaster = new THREE.Raycaster();
-                        const mouse = new THREE.Vector2();
-
-                        canvas.addEventListener('click', (event) => {
-                            mouse.x = (event.clientX / container.clientWidth) * 2 - 1;
-                            mouse.y = -(event.clientY / container.clientHeight) * 2 + 1;
-
-                            raycaster.setFromCamera(mouse, camera);
-                            const intersects = raycaster.intersectObjects(allMeshes);
-
-                            if (intersects.length > 0) {
-                                const clickedMesh = intersects[0].object;
-                                selectedNode = clickedMesh;
-                                showInfoPanel(clickedMesh.userData);
-                                showBreadcrumb(clickedMesh.userData);
-                            }
-                        });
-
-                        function showInfoPanel(userData) {
-                            const infoPanelContent = document.getElementById('info-content');
-                            const infoPanel = document.getElementById('info-panel');
-                            
-                            const data = userData.data;
-                            const pathToRoot = getPathToRoot(userData);
-                            const pathDisplay = pathToRoot.map(d => d.name).reverse().join(' > ');
-                            
-                            let html = `
-                                <div class="space-y-4">
-                                    <div class="pb-3 border-b-2 border-vttu-red">
-                                        <p class="text-xs text-gray-500 mb-1 font-bold uppercase tracking-wider">Vị trí trong website</p>
-                                        <p class="text-xs text-gray-700 font-semibold">${pathDisplay}</p>
-                                    </div>
-                                    
-                                    <div>
-                                        <h3 class="text-lg font-black text-vttu-red mb-1">${data.name}</h3>
-                                        <p class="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">${data.role}</p>
-                                        <p class="text-sm text-gray-700 leading-relaxed">${data.description}</p>
-                                    </div>
-                                    
-                                    <div class="bg-gray-100 rounded px-3 py-2 text-xs border-l-4 border-vttu-red">
-                                        <p class="text-gray-600 font-bold mb-1">📍 Endpoint:</p>
-                                        <p class="text-vttu-red font-mono font-bold text-[11px] break-all">${data.url}</p>
-                                    </div>
-                                    
-                                    <!-- Navigation Buttons -->
-                                    <div class="space-y-2 pt-2">
-            `;
-                            
-                            // Parent navigation
-                            if (userData.parent && userData.parent.userData && userData.parent.userData.data) {
-                                const parentData = userData.parent.userData.data;
-                                html += `
-                                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded border border-blue-300 p-3">
-                                        <p class="text-xs font-bold text-blue-900 mb-2 flex items-center gap-1">⬆️ Trang mục cha</p>
-                                        <button onclick="navigateToNode('${parentData.name}')" class="w-full px-2 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-black rounded transition-all transform hover:scale-105 active:scale-95">
-                                            📍 ${parentData.name}
-                                        </button>
-                                    </div>
-                                `;
-                            }
-                            
-                            // Sibling navigation
-                            if (userData.parent && userData.parent.userData && userData.parent.userData.data) {
-                                const siblings = userData.parent.userData.data.children || [];
-                                const nonSelfSiblings = siblings.filter(s => s.name !== data.name);
-                                
-                                if (nonSelfSiblings.length > 0) {
-                                    html += `
-                                        <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded border border-purple-300 p-3">
-                                            <p class="text-xs font-bold text-purple-900 mb-2 flex items-center gap-1">↔️ Các trang anh em (${nonSelfSiblings.length})</p>
-                                            <div class="space-y-1 grid grid-cols-1 gap-1">
-                                    `;
-                                    nonSelfSiblings.forEach(sibling => {
-                                        html += `
-                                            <button onclick="navigateToNode('${sibling.name}')" class="px-2 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-xs font-bold rounded transition-all transform hover:scale-105 active:scale-95 text-left">
-                                                → ${sibling.name}
-                                            </button>
-                                        `;
-                                    });
-                                    html += `
-                                            </div>
-                                        </div>
-                                    `;
-                                }
-                            }
-                            
-                            // Children navigation
-                            if (data.children && data.children.length > 0) {
-                                html += `
-                                    <div class="bg-gradient-to-r from-green-50 to-green-100 rounded border border-green-300 p-3">
-                                        <p class="text-xs font-bold text-green-900 mb-2 flex items-center gap-1">⬇️ Các trang con (${data.children.length})</p>
-                                        <div class="space-y-1">
-                                `;
-                                data.children.forEach(child => {
-                                    html += `
-                                        <button onclick="navigateToNode('${child.name}')" class="w-full px-2 py-1.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs font-bold rounded transition-all transform hover:scale-105 active:scale-95 text-left">
-                                            ├─ ${child.name}
-                                        </button>
-                                    `;
-                                });
-                                html += `
-                                        </div>
-                                    </div>
-                                `;
-                            }
-                            
-                            html += `
-                                    </div>
-                                    
-                                    <div class="pt-3 border-t-2 border-gray-200 flex gap-2">
-                                        <a href="${data.url}" target="_blank" class="flex-1 px-3 py-2 bg-vttu-red text-white text-xs font-black rounded hover:bg-vttu-dark transition-all transform hover:scale-105 active:scale-95 text-center">
-                                            🔗 Truy cập
-                                        </a>
-                                        <button onclick="closeInfoPanel()" class="px-3 py-2 bg-gray-300 text-gray-700 text-xs font-black rounded hover:bg-gray-400 transition-all transform hover:scale-105 active:scale-95">
-                                            ✕ Đóng
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                            
-                            infoPanelContent.innerHTML = html;
-                            infoPanel.classList.remove('hidden');
-                        }
-
-                        function getPathToRoot(userData, path = []) {
-                            path.push(userData.data);
-                            if (userData.parent && userData.parent.userData) {
-                                return getPathToRoot(userData.parent.userData, path);
-                            }
-                            return path;
-                        }
-
-                        function showBreadcrumb(userData) {
-                            const breadcrumbPanel = document.getElementById('breadcrumb-panel');
-                            const breadcrumbContent = document.getElementById('breadcrumb-content');
-                            
-                            const pathToRoot = getPathToRoot(userData);
-                            const pathDisplay = pathToRoot.map(d => d.name).reverse().join(' / ');
-                            
-                            breadcrumbContent.innerHTML = `<i class="fas fa-map-pin mr-2"></i> ${pathDisplay}`;
-                            breadcrumbPanel.classList.remove('hidden');
-                        }
-
-                        function closeInfoPanel() {
-                            document.getElementById('info-panel').classList.add('hidden');
-                            document.getElementById('breadcrumb-panel').classList.add('hidden');
-                            selectedNode = null;
-                        }
-
-                        function navigateToPage() {
-                            const select = document.getElementById('navigate-select');
-                            if (select.value) {
-                                window.location.href = select.value;
+                        function scrollToSection(id) {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }
                         }
-
-                        // Navigate to a specific node by name and highlight it
-                        function navigateToNode(nodeName) {
-                            // Find the mesh with matching node name
-                            let targetMesh = null;
-                            
-                            allMeshes.forEach(mesh => {
-                                if (mesh.userData.data && mesh.userData.data.name === nodeName) {
-                                    targetMesh = mesh;
-                                }
-                            });
-                            
-                            if (targetMesh) {
-                                // Update selected node
-                                selectedNode = targetMesh;
-                                
-                                // Show info panel
-                                showInfoPanel(targetMesh.userData);
-                                showBreadcrumb(targetMesh.userData);
-                                
-                                // Animate camera to focus on the node
-                                const targetPos = targetMesh.position;
-                                const direction = new THREE.Vector3();
-                                direction.subVectors(targetPos, camera.position).normalize();
-                                
-                                // Smooth camera animation
-                                let startPos = camera.position.clone();
-                                let animationProgress = 0;
-                                
-                                function animateCamera() {
-                                    animationProgress += 0.05;
-                                    
-                                    if (animationProgress < 1) {
-                                        const newPos = startPos.clone().lerp(targetPos.clone().add(direction.clone().multiplyScalar(15)), animationProgress);
-                                        camera.position.copy(newPos);
-                                        camera.lookAt(targetPos);
-                                        requestAnimationFrame(animateCamera);
-                                    } else {
-                                        camera.position.copy(targetPos).add(direction.clone().multiplyScalar(15));
-                                        camera.lookAt(targetPos);
-                                    }
-                                }
-                                
-                                animateCamera();
-                            }
-                        }
-
-                        // Animation loop
-                        function animate() {
-                            requestAnimationFrame(animate);
-                            
-                            // Auto-rotate slowly when not dragging
-                            if (!isDragging) {
-                                nodeGroup.rotation.y += 0.0001;
-                            }
-                            
-                            // Pulsing effect on selected node
-                            if (selectedNode) {
-                                const time = Date.now() * 0.002;
-                                const scale = 1 + Math.sin(time) * 0.2;
-                                selectedNode.scale.set(scale, scale, scale);
-                            }
-                            
-                            // Make labels always face camera
-                            nodeGroup.children.forEach(child => {
-                                if (child.userData && child.userData.isLabel) {
-                                    child.lookAt(camera.position);
-                                }
-                            });
-                            
-                            renderer.render(scene, camera);
-                        }
-                        animate();
-
-                        // Handle window resize
-                        window.addEventListener('resize', () => {
-                            const width = container.clientWidth;
-                            const height = container.clientHeight;
-                            camera.aspect = width / height;
-                            camera.updateProjectionMatrix();
-                            renderer.setSize(width, height);
-                        });
-
-                        // Close panel when clicking outside
-                        canvas.addEventListener('contextmenu', (e) => {
-                            e.preventDefault();
-                            closeInfoPanel();
-                        });
                     </script>
                 @else
                     <article class="bg-card text-card-foreground border border-border rounded-md shadow-sm overflow-hidden text-gray-500">
@@ -1004,6 +644,16 @@
                             
                             @if($node->node_code === 'huong-dan')
                                 @include('site.pages.huong-dan-content')
+                            @elseif($node->node_code === 'tai-nguyen')
+                                @include('site.pages.tai-nguyen-content')
+                            @elseif($node->node_code === 'tai-lieu-giay')
+                                @include('site.pages.tai-lieu-giay-content')
+                            @elseif($node->node_code === 'tin-tuc')
+                                @if(isset($news) && $news instanceof \App\Models\News)
+                                    @include('site.pages.news-show-content')
+                                @else
+                                    @include('site.pages.news-list-content')
+                                @endif
                             @elseif($node->node_code === 'gioi-thieu-chung')
                                 @include('site.pages.gioi-thieu-chung-content')
                             @elseif($node->node_code === 'co-so-du-lieu')

@@ -105,19 +105,31 @@ class SiteController extends Controller
         if ($request->ajax() && $request->has('medical_type')) {
             $medicalType = $request->query('medical_type', 'Sản khoa');
             
-            // Tìm level tương ứng với medical_type (ví dụ: 'Sản khoa', 'Nhi khoa', 'Nội khoa')
-            $level = \App\Models\BibliographicLevel::where('name_vi', 'LIKE', '%' . $medicalType . '%')
-                ->orWhere('name_en', 'LIKE', '%' . $medicalType . '%')
-                ->orWhere('code', $medicalType)
+            // Tìm topic tương ứng trong portal_topics
+            $topic = \Illuminate\Support\Facades\DB::table('portal_topics')
+                ->where('description', 'LIKE', '%' . $medicalType . '%')
                 ->first();
 
-            if ($level) {
-                $newBooks = \App\Models\BibliographicRecord::with(['fields.subfields', 'items'])
-                    ->where('status', \App\Models\BibliographicRecord::STATUS_APPROVED)
-                    ->where('bibliographic_level', $level->code)
-                    ->latest()
-                    ->take(4)
-                    ->get();
+            if ($topic) {
+                // Lấy các bib_id liên kết với topic này trong portal_articles
+                $bibIds = \Illuminate\Support\Facades\DB::table('portal_articles')
+                    ->where('topic_id', $topic->id)
+                    ->whereNotNull('bib_id')
+                    ->orderBy('sort_order')
+                    ->pluck('bib_id')
+                    ->toArray();
+
+                if (!empty($bibIds)) {
+                    $newBooks = \App\Models\BibliographicRecord::with(['fields.subfields', 'items'])
+                        ->where('status', \App\Models\BibliographicRecord::STATUS_APPROVED)
+                        ->whereIn('id', $bibIds)
+                        // Giữ nguyên thứ tự sắp xếp theo bibIds
+                        ->orderByRaw('FIELD(id, ' . implode(',', $bibIds) . ')')
+                        ->take(4)
+                        ->get();
+                } else {
+                    $newBooks = collect();
+                }
             } else {
                 $newBooks = collect();
             }
