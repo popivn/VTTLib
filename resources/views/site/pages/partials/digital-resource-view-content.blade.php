@@ -124,11 +124,50 @@
         @else
             {{-- ===== SINH VIÊN / KHÁCH: PDF.js 3 layers + stream mã hóa ===== --}}
             <div id="pdf-viewer-container"
-                 class="bg-slate-950 border border-border rounded-sm shadow-lg overflow-hidden"
+                 class="bg-slate-950 border border-border rounded-sm shadow-lg overflow-hidden relative"
                  :class="isFullscreen ? 'fixed inset-0 z-[9999] m-0 rounded-none w-screen h-screen bg-black' : 'relative h-[750px] md:h-[calc(100vh-180px)]'">
 
+                <!-- Floating Top Viewer Controls Bar -->
+                <div id="pdf-floating-controls" class="absolute top-3 left-1/2 -translate-x-1/2 z-[10000] flex items-center gap-3 bg-slate-900/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-slate-700/80 shadow-2xl text-white transition-all">
+                    <!-- Page Indicator & Search / Jump to Page -->
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-file-alt text-vttu-yellow text-xs"></i>
+                        <span class="text-xs font-bold text-slate-300">Trang</span>
+                        <input type="number" 
+                               id="pdf-page-jump-input" 
+                               min="1" 
+                               value="1" 
+                               class="w-12 h-6 px-1 text-center bg-slate-800 border border-slate-600 rounded text-xs font-bold text-vttu-yellow outline-none focus:border-vttu-yellow transition-all"
+                               title="Nhập số trang để tìm / chuyển nhanh">
+                        <span class="text-xs font-bold text-slate-300">/ <span id="pdf-total-pages-display">--</span></span>
+                        <button id="pdf-page-jump-btn" type="button" class="px-2.5 py-0.5 bg-vttu-red hover:bg-vttu-dark text-white rounded text-[10px] font-bold uppercase transition-all shadow-sm">
+                            Đến
+                        </button>
+                    </div>
+
+                    <div class="h-4 w-px bg-slate-700"></div>
+
+                    <!-- Zoom Level Display / Buttons -->
+                    <div class="flex items-center gap-1.5">
+                        <button id="pdf-zoom-out" type="button" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-xs text-slate-300 hover:text-white transition-all" title="Thu nhỏ">
+                            <i class="fas fa-minus text-[9px]"></i>
+                        </button>
+                        <span id="pdf-zoom-val" class="text-[10px] font-bold text-slate-300 w-10 text-center">100%</span>
+                        <button id="pdf-zoom-in" type="button" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-xs text-slate-300 hover:text-white transition-all" title="Phóng to">
+                            <i class="fas fa-plus text-[9px]"></i>
+                        </button>
+                    </div>
+
+                    <div class="h-4 w-px bg-slate-700"></div>
+
+                    <!-- Fullscreen Button -->
+                    <button @click="toggleFullscreen()" type="button" class="p-1 text-slate-300 hover:text-vttu-yellow text-xs transition-colors" title="Toàn màn hình">
+                        <i class="fas" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i>
+                    </button>
+                </div>
+
                 <div id="pdf-render-container"
-                     class="w-full h-full overflow-y-auto flex flex-col items-center bg-black/40 p-4 gap-8">
+                     class="w-full h-full overflow-y-auto flex flex-col items-center bg-black/40 pt-16 pb-6 px-4 gap-8">
 
                     {{-- Loading spinner --}}
                     <div id="pdf-loading" class="flex flex-col items-center justify-center min-h-full">
@@ -384,6 +423,69 @@ document.addEventListener('DOMContentLoaded', async function () {
         const pagesToRender = limit > 0 ? Math.min(limit, totalPages) : totalPages;
 
         // ══════════════════════════════════════════════════
+        // Cấu hình Floating Toolbar (Trang / Tìm chuyển trang / Zoom)
+        // ══════════════════════════════════════════════════
+        const totalDisplayEl = document.getElementById('pdf-total-pages-display');
+        const jumpInputEl    = document.getElementById('pdf-page-jump-input');
+        const jumpBtnEl      = document.getElementById('pdf-page-jump-btn');
+        const zoomInBtn      = document.getElementById('pdf-zoom-in');
+        const zoomOutBtn     = document.getElementById('pdf-zoom-out');
+        const zoomValEl      = document.getElementById('pdf-zoom-val');
+
+        if (totalDisplayEl) totalDisplayEl.textContent = pagesToRender;
+        if (jumpInputEl) jumpInputEl.max = pagesToRender;
+
+        function performJump() {
+            if (!jumpInputEl) return;
+            const targetP = parseInt(jumpInputEl.value);
+            if (!targetP || targetP < 1 || targetP > pagesToRender) return;
+            const targetEl = container.querySelector(`[data-page="${targetP}"]`);
+            if (targetEl) {
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        if (jumpBtnEl) jumpBtnEl.onclick = performJump;
+        if (jumpInputEl) {
+            jumpInputEl.onkeyup = (e) => {
+                if (e.key === 'Enter') performJump();
+            };
+        }
+
+        window.activePageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const pNum = entry.target.getAttribute('data-page');
+                    if (pNum && jumpInputEl && document.activeElement !== jumpInputEl) {
+                        jumpInputEl.value = pNum;
+                    }
+                }
+            });
+        }, { root: container, threshold: 0.5 });
+
+        let zoomScale = 1.0;
+        if (zoomInBtn && zoomOutBtn && zoomValEl) {
+            zoomInBtn.onclick = () => {
+                if (zoomScale >= 2.0) return;
+                zoomScale += 0.15;
+                zoomValEl.textContent = Math.round(zoomScale * 100) + '%';
+                container.querySelectorAll('.pdf-page-wrapper').forEach(w => {
+                    w.style.transform = `scale(${zoomScale})`;
+                    w.style.transformOrigin = 'top center';
+                });
+            };
+            zoomOutBtn.onclick = () => {
+                if (zoomScale <= 0.6) return;
+                zoomScale -= 0.15;
+                zoomValEl.textContent = Math.round(zoomScale * 100) + '%';
+                container.querySelectorAll('.pdf-page-wrapper').forEach(w => {
+                    w.style.transform = `scale(${zoomScale})`;
+                    w.style.transformOrigin = 'top center';
+                });
+            };
+        }
+
+        // ══════════════════════════════════════════════════
         // BƯỚC 5: Tính kích thước 1 trang để làm placeholder
         // ══════════════════════════════════════════════════
         const firstPage       = await pdf.getPage(1);
@@ -584,6 +686,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
 
+        if (window.activePageObserver) window.activePageObserver.observe(wrapper);
         if (!returnOnly) container.appendChild(wrapper);
         return wrapper;
     }

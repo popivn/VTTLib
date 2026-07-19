@@ -411,46 +411,90 @@
                         <div class="w-1 h-3 bg-vttu-yellow rounded-full"></div>
                         <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-vttu-yellow/80">{{ __('Liên kết nhanh') }}</h3>
                     </div>
-                    @if(isset($menuItems))
-                        <ul class="space-y-2">
-                            @foreach($menuItems->take(5) as $item)
-                                @if($item->can_access ?? true)
-                                    <li>
-                                        <a href="{{ $item->getUrl() }}" 
-                                           class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all"
-                                           @if($item->target === '_blank') target="_blank" @endif>
-                                            <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all"></i>
-                                            {{ $item->display_name }}
-                                        </a>
-                                    </li>
-                                @endif
-                            @endforeach
-                        </ul>
-                    @endif
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="{{ url('/') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Trang chủ') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('site.page', 'gioi-thieu-chung') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Giới thiệu chung') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('site.page', 'noi-quy-thu-vien') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Nội quy thư viện') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('site.page', 'thoi-gian-phuc-vu') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Thời gian phục vụ') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('news.index') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Tin tức & Thông báo') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('site.sitemap') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Sơ đồ trang (Sitemap)') }}
+                            </a>
+                        </li>
+                    </ul>
                 </div>
 
-                <!-- Services -->
+                <!-- Services & Resources -->
                 <div class="space-y-4">
                     <div class="flex items-center gap-2">
                         <div class="w-1 h-3 bg-vttu-yellow rounded-full"></div>
-                        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-vttu-yellow/80">{{ __('Dịch vụ') }}</h3>
+                        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-vttu-yellow/80">{{ __('Dịch vụ & Tài nguyên') }}</h3>
                     </div>
-                    @if(isset($footerItems))
-                        <ul class="space-y-2">
-                            @foreach($footerItems as $item)
-                                @if($item->can_access ?? true)
-                                    <li>
-                                        <a href="{{ $item->getUrl() }}" 
-                                           class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all"
-                                           @if($item->target === '_blank') target="_blank" @endif>
-                                            <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all"></i>
-                                            {{ $item->display_name }}
-                                        </a>
-                                    </li>
-                                @endif
-                            @endforeach
-                        </ul>
-                    @endif
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="{{ url('opac') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Tra cứu OPAC') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('site.page', 'tai-lieu-so') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Tài liệu số hóa') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('site.oer.landing') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Tài nguyên giáo dục mở') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('site.page', 'co-so-du-lieu') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Cơ sở dữ liệu trực tuyến') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('site.page', 'cam-nang-hdsd') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Hướng dẫn sử dụng') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('site.page', 'de-nghi-bo-sung') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                                <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
+                                {{ __('Đề nghị bổ sung tài liệu') }}
+                            </a>
+                        </li>
+                    </ul>
                 </div>
 
                 <!-- Contact -->
@@ -490,8 +534,8 @@
                     {{ __('© 2026 VTTU Library. Tất cả quyền được bảo lưu.') }}
                 </p>
                 <div class="flex items-center gap-4">
-                    <a href="#" class="text-[10px] font-bold text-white/40 hover:text-vttu-yellow transition-colors">{{ __('Điều khoản') }}</a>
-                    <a href="#" class="text-[10px] font-bold text-white/40 hover:text-vttu-yellow transition-colors">{{ __('Bảo mật') }}</a>
+                    <a href="{{ route('site.page', 'noi-quy-thu-vien') }}" class="text-[10px] font-bold text-white/40 hover:text-vttu-yellow transition-colors">{{ __('Nội quy & Điều khoản') }}</a>
+                    <a href="{{ route('site.sitemap') }}" class="text-[10px] font-bold text-white/40 hover:text-vttu-yellow transition-colors">{{ __('Sơ đồ trang') }}</a>
                     <div class="w-1.5 h-1.5 rounded-full bg-vttu-yellow animate-pulse"></div>
                     <span class="text-[10px] font-black text-vttu-yellow/70 tracking-widest uppercase">{{ __('System Online') }}</span>
                 </div>
