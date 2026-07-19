@@ -1039,4 +1039,104 @@ class SiteController extends Controller
             'sectionLabel'
         ));
     }
+
+    /**
+     * Serve image from PORTAL_NEWS_MEDIA dynamically.
+     */
+    public function viewImageMedia(Request $request)
+    {
+        $imageId = $request->query('imageId');
+        $ext = $request->query('ext') ?: 'png';
+        
+        if (empty($imageId)) {
+            abort(404);
+        }
+
+        // Ensure target directory exists
+        $targetDir = storage_path('app/public/news-media');
+        if (!file_exists($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+
+        $filename = "media_{$imageId}.{$ext}";
+        $localPath = $targetDir . '/' . $filename;
+        $fileFound = false;
+
+        // 1. Try local news_media table in MySQL first
+        try {
+            $localMedia = \Illuminate\Support\Facades\DB::table('news_media')->find($imageId);
+            if ($localMedia && !empty($localMedia->file_path)) {
+                $fullLocalPath = public_path($localMedia->file_path);
+                if (file_exists($fullLocalPath)) {
+                    $localPath = $fullLocalPath;
+                    $ext = $localMedia->media_extension ?: pathinfo($localPath, PATHINFO_EXTENSION);
+                    $fileFound = true;
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore and fallback
+        }
+
+        // 2. Try to find the file locally in news-media directory if already downloaded
+        if (!$fileFound && !file_exists($localPath)) {
+            $matchingFiles = glob($targetDir . "/media_{$imageId}.*");
+            if (!empty($matchingFiles)) {
+                $localPath = $matchingFiles[0];
+                $filename = basename($localPath);
+                $ext = pathinfo($filename, PATHINFO_EXTENSION);
+                $fileFound = true;
+            }
+        } else if (file_exists($localPath)) {
+            $fileFound = true;
+        }
+
+        // 3. If not found locally, fetch it from SQL Server on demand (Self-healing proxy!)
+        if (!$fileFound) {
+            try {
+                $oldConn = new \PDO("sqlsrv:Server=192.168.1.33;Database=TDHVTTOAN;TrustServerCertificate=true", "sa", "@123456");
+                $oldConn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+                $stmt = $oldConn->prepare("SELECT MEDIAEX, MEDIACONTENT FROM PORTAL_NEWS_MEDIA WHERE MEDIAID = :id");
+                $stmt->execute([':id' => $imageId]);
+                $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+                if ($row) {
+                    $dbExt = $row['MEDIAEX'] ?: $ext;
+                    $imageBinary = $row['MEDIACONTENT'];
+                    if (is_resource($imageBinary)) {
+                        $imageBinary = stream_get_contents($imageBinary);
+                    }
+
+                    if (!empty($imageBinary)) {
+                        $filename = "media_{$imageId}.{$dbExt}";
+                        $localPath = $targetDir . '/' . $filename;
+                        file_put_contents($localPath, $imageBinary);
+                        $ext = $dbExt;
+                        $fileFound = true;
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fail silently
+            }
+        }
+
+        // 4. Serve the file if found
+        if ($fileFound && file_exists($localPath)) {
+            $mimeType = match (strtolower($ext)) {
+                'jpg', 'jpeg' => 'image/jpeg',
+                'gif' => 'image/gif',
+                'png' => 'image/png',
+                'svg' => 'image/svg+xml',
+                default => 'image/png',
+            };
+
+            return response()->file($localPath, [
+                'Content-Type' => $mimeType,
+                'Cache-Control' => 'public, max-age=86400',
+            ]);
+        }
+
+        abort(404);
+    }
 }
+

@@ -337,34 +337,13 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                         <!-- Section 4: Giới thiệu sách -->
                         <div class="bg-white rounded-md p-4 text-vttu-dark border border-slate-100 shadow-sm relative overflow-hidden" data-aos="fade-up">
                             <div class="absolute top-0 right-0 w-32 h-32 bg-vttu-red/5 blur-3xl rounded-full"></div>
-                            <div class="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-4 items-center mb-10">
-                                <div class="md:col-span-3">
-                                    <div class="aspect-[3/4] bg-slate-100 rounded-sm shadow-md p-2 rotate-2 overflow-hidden border border-white">
-                                        @php $bookIntroImg = \App\Models\SystemSetting::get('book_intro_image'); @endphp
-                                        @if($bookIntroImg)
-                                            <img src="{{ asset('storage/' . $bookIntroImg) }}" 
-                                                 class="w-full h-full object-contain mix-blend-multiply"
-                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                                            <div class="hidden w-full h-full bg-slate-50 items-center justify-center">
-                                                <i class="fas fa-book-open text-slate-300 text-3xl"></i>
-                                            </div>
-                                        @else
-                                            <div class="w-full h-full bg-slate-50 flex items-center justify-center">
-                                                <i class="fas fa-book-open text-slate-300 text-3xl"></i>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="md:col-span-9 space-y-3">
-                                    <div class="inline-flex px-2 py-0.5 rounded-sm bg-vttu-red/5 border border-vttu-red/10 text-[9px] font-bold tracking-widest uppercase text-vttu-red">Book of the Month</div>
-                                    <h3 class="text-xl font-bold leading-tight text-vttu-dark uppercase">{{ __('GIỚI THIỆU SÁCH HÀNG THÁNG') }}</h3>
-                                    <p class="text-xs text-slate-500 leading-relaxed">{{ __('Khám phá những tựa sách hay và giá trị nhất được đội ngũ thủ thư VTTU chọn lọc kỹ lưỡng dành cho bạn.') }}</p>
-                                    <a href="{{ route('opac.search') }}" class="inline-block px-6 py-2 bg-vttu-yellow text-vttu-dark text-xs font-bold rounded-sm hover:bg-yellow-400 transition-all shadow-sm text-center">{{ __('Khám phá ngay') }}</a>
-                                </div>
-                            </div>
-                            <div class="border-t border-vttu-red"></div>
                             <!-- Carousel bên dưới (Giới thiệu sách hàng tháng) -->
-                            <div class="mt-6 pt-6 border-t border-slate-50 relative group/book-intro-swiper overflow-hidden w-full">
+                            <div class="relative group/book-intro-swiper overflow-hidden w-full">
+                                <div class="flex items-center border-b border-slate-100 pb-3 mb-4">
+                                    <span class="text-xs font-bold text-white bg-vttu-red px-4 py-1.5 rounded-sm shadow-sm whitespace-nowrap uppercase">
+                                        {{ __('Giới thiệu sách hằng tháng') }}
+                                    </span>
+                                </div>
                                 <div class="swiper book-intro-swiper-container !pb-10">
                                     <div class="swiper-wrapper flex flex-nowrap">
                                         @if(isset($bookIntroductionNews) && count($bookIntroductionNews) > 0)
@@ -515,7 +494,14 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                             </div>
                             
                             <div class="flex flex-col gap-2">
-                                <a href="{{ route('site.oer.landing') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-red-800 to-red-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                <a href="{{ route('site.page', 'tai-lieu-so') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-red-800 to-red-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                    <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
+                                        <i class="fas fa-file-invoice text-[10px]"></i>
+                                    </div>
+                                    <span class="text-[10px] font-black uppercase tracking-wider">{{ __('Tài liệu số') }}</span>
+                                </a>
+
+                                <a href="{{ route('site.oer.landing') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-rose-800 to-rose-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                                     <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
                                         <i class="fas fa-book-reader text-[10px]"></i>
                                     </div>
@@ -529,14 +515,14 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                     <span class="text-[10px] font-black uppercase tracking-wider">{{ __('Tài liệu điện tử') }}</span>
                                 </a>
 
-                                <a href="{{ route('site.page', 'sb-co-so-du-lieu') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-amber-800 to-amber-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                <a href="{{ route('site.page', 'co-so-du-lieu') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-amber-800 to-amber-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                                     <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
                                         <i class="fas fa-database text-[10px]"></i>
                                     </div>
                                     <span class="text-[10px] font-black uppercase tracking-wider">{{ __('Cơ sở dữ liệu') }}</span>
                                 </a>
 
-                                <a href="{{ route('site.page', 'hoc-lieu-vttu') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                <a href="{{ route('home') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                                     <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
                                         <i class="fas fa-graduation-cap text-[10px]"></i>
                                     </div>
@@ -550,7 +536,7 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                     <span class="text-[10px] font-black uppercase tracking-wider">{{ __('Video bài giảng') }}</span>
                                 </a>
 
-                                <a href="{{ route('site.page', 'sb-de-nghi-bo-sung') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-emerald-700 to-emerald-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                <a href="{{ route('site.page', 'de-nghi-bo-sung') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-emerald-700 to-emerald-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                                     <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
                                         <i class="fas fa-plus-circle text-[10px]"></i>
                                     </div>
@@ -662,23 +648,7 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                             @endif
                         </div>
 
-                        <!-- Link Buttons -->
-                        <div class="grid grid-cols-1 gap-2" data-aos="fade-left">
-                            <a href="#" class="flex items-center justify-between p-4 bg-vttu-red rounded-sm text-white shadow-sm hover:-translate-y-0.5 transition-all group">
-                                <div class="flex items-center gap-3">
-                                    <i class="fas fa-globe text-lg text-vttu-yellow"></i>
-                                    <span class="font-bold text-[11px] uppercase tracking-widest">{{ __('Tài nguyên mở') }}</span>
-                                </div>
-                                <i class="fas fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
-                            </a>
-                            <a href="#" class="flex items-center justify-between p-4 bg-vttu-dark rounded-sm text-white shadow-sm hover:-translate-y-0.5 transition-all group">
-                                <div class="flex items-center gap-3">
-                                    <i class="fas fa-desktop text-lg text-vttu-yellow"></i>
-                                    <span class="font-bold text-[11px] uppercase tracking-widest">{{ __('Học liệu số') }}</span>
-                                </div>
-                                <i class="fas fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
-                            </a>
-                        </div>
+
                     </div>
                 </div>
                     </div>
@@ -690,8 +660,10 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
     <!-- Bottom Slider (Network Logos) -->
     <section class="py-8 bg-white border-t border-slate-100">
         <div class="px-4 md:px-12 lg:px-24">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-vttu-dark tracking-tight uppercase">{{ __('VTTU LIB NETWORK') }}</h3>
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-6">
+                <span class="text-xs font-bold text-white bg-vttu-red px-4 py-1.5 rounded-sm shadow-sm whitespace-nowrap uppercase">
+                    {{ __('VTTU LIB NETWORK') }}
+                </span>
                 <div class="flex gap-2">
                     <button onclick="prevSlide()" class="w-8 h-8 rounded-sm border border-slate-200 flex items-center justify-center hover:bg-vttu-red hover:text-white transition-all shadow-sm"><i class="fas fa-chevron-left text-[10px]"></i></button>
                     <button onclick="nextSlide()" class="w-8 h-8 rounded-sm border border-slate-200 flex items-center justify-center hover:bg-vttu-red hover:text-white transition-all shadow-sm"><i class="fas fa-chevron-right text-[10px]"></i></button>

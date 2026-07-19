@@ -311,7 +311,7 @@ class SiteNodeSeeder extends Seeder
         }
 
         // ── 5. TIN TỨC ──
-        SiteNode::updateOrCreate(
+        $newsRoot = SiteNode::updateOrCreate(
             ['node_code' => 'tin-tuc'],
             [
                 'node_name' => 'Tin tức',
@@ -328,6 +328,35 @@ class SiteNodeSeeder extends Seeder
                 'content' => '<p class="text-lg text-slate-600 font-medium text-center">Thông báo và tin tức mới nhất từ Thư viện Đại học Võ Trường Toản. 2</p>',
             ]
         );
+
+        $newsChildren = [
+            ['thong-bao', 'Thông báo', 'fas fa-bullhorn', 'tin-tuc/chuyen-muc/thong-bao'],
+            ['tin-tuc-su-kien', 'Tin tức sự kiện', 'fas fa-calendar-alt', 'tin-tuc/chuyen-muc/tin-tuc-su-kien'],
+            ['video', 'Video', 'fas fa-video', 'tin-tuc/chuyen-muc/video'],
+            ['gioi-thieu-sach', 'Giới thiệu sách', 'fas fa-book-open', 'tin-tuc/chuyen-muc/gioi-thieu-sach'],
+        ];
+
+        foreach ($newsChildren as $index => $child) {
+            SiteNode::updateOrCreate(
+                ['node_code' => $child[0]],
+                [
+                    'parent_id' => $newsRoot->id,
+                    'node_name' => $child[1],
+                    'display_name' => $child[1],
+                    'description' => 'Danh mục ' . $child[1],
+                    'masterpage' => 'about',
+                    'icon' => $child[2],
+                    'redirect_to' => $child[3],
+                    'display_type' => 'page',
+                    'language' => 'vi',
+                    'sort_order' => $index + 1,
+                    'is_active' => true,
+                    'access_type' => 'public',
+                    'allow_guest' => true,
+                    'content' => '<div class="p-4 text-center bg-card border border-border rounded"><i class="' . $child[2] . ' text-2xl text-muted-foreground mb-2"></i><h3 class="text-sm font-bold text-foreground">Nội dung đang được cập nhật...</h3></div>',
+                ]
+            );
+        }
 
         // ── 6. TRA CỨU OPAC (Liên kết ngoài) ──
         SiteNode::updateOrCreate(

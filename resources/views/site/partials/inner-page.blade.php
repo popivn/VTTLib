@@ -13,14 +13,31 @@
     $accent       = $accent ?? 'primary';
     $badgeText    = $badgeText ?? $node->display_name;
     $badgeIcon    = $badgeIcon ?? ($node->icon ?? 'circle-info');
-    $sectionLabel = ($node->parent) ? $node->parent->display_name : $node->display_name;
+
+    // Check if current node is a guide under co-so-du-lieu
+    $isGuide = str_starts_with($node->node_code, 'guide-') || ($node->parent && $node->parent->node_code === 'co-so-du-lieu');
+
+    if ($isGuide) {
+        $sectionLabel = ($node->parent && $node->parent->parent) ? $node->parent->parent->display_name : ($node->parent ? $node->parent->display_name : $node->display_name);
+    } else {
+        $sectionLabel = ($node->parent) ? $node->parent->display_name : $node->display_name;
+    }
 
     // Sidebar: lấy các trang anh em
     $sidebarItems = collect();
-    if ($node->parent) {
-        $sidebarItems = $node->parent->activeChildren()->orderBy('sort_order')->get();
+    if ($isGuide) {
+        $refNode = $node->parent;
+        if ($refNode && $refNode->parent) {
+            $sidebarItems = $refNode->parent->activeChildren()->orderBy('sort_order')->get();
+        } else if ($refNode) {
+            $sidebarItems = $refNode->activeChildren()->orderBy('sort_order')->get();
+        }
     } else {
-        $sidebarItems = $node->activeChildren()->orderBy('sort_order')->get();
+        if ($node->parent) {
+            $sidebarItems = $node->parent->activeChildren()->orderBy('sort_order')->get();
+        } else {
+            $sidebarItems = $node->activeChildren()->orderBy('sort_order')->get();
+        }
     }
     if ($sidebarItems->count() === 0) {
         $sidebarItems = collect([$node]);
@@ -116,7 +133,10 @@
                     <nav class="p-2 space-y-1">
                         @foreach($sidebarItems as $item)
                             @php 
-                                $active = $item->id === $node->id;
+                                $active = ($item->id === $node->id) 
+                                    || ($isGuide && $item->node_code === 'co-so-du-lieu')
+                                    || (isset($category) && $item->node_code === $category->slug)
+                                    || (isset($news) && $news instanceof \App\Models\News && $news->category && $item->node_code === $news->category->slug);
                             @endphp
                             <a href="{{ $item->getUrl() }}"
                                class="flex items-center gap-3 px-3 py-2 rounded text-sm transition-all relative group

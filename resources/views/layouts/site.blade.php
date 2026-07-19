@@ -143,8 +143,8 @@
 <body class="bg-gray-50">
     <!-- Header -->
     <header id="siteHeader" class="fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-vttu-dark shadow-xl">
-        <nav class="w-full px-4 md:px-12 lg:px-24 py-3 transition-all duration-500" id="headerNav">
-            <div class="flex justify-between items-center transition-all duration-500" id="headerContainer">
+        <nav class="w-full px-4 md:px-6 lg:px-4 xl:px-8 2xl:px-12 py-3 transition-all duration-500" id="headerNav">
+            <div class="w-full flex justify-between items-center transition-all duration-500" id="headerContainer">
                 <!-- Logo -->
                 <div class="flex-shrink-0">
                     <a href="/" class="flex items-center space-x-2">
@@ -159,18 +159,18 @@
                 </div>
 
                 <!-- Desktop Menu -->
-                <div class="hidden lg:flex items-center space-x-6 flex-grow justify-center">
+                <div class="hidden lg:flex items-center lg:space-x-2 xl:space-x-4 flex-1 justify-end lg:px-2 xl:px-6">
                     @if(isset($menuItems))
                         @foreach($menuItems as $item)
                             @if($item->activeChildren && $item->activeChildren->count() > 0)
                                 <!-- Dropdown Node -->
                                 <div class="relative group h-full flex items-center" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                                    <a href="{{ $item->getUrl() }}" class="text-white/80 group-hover:text-white font-black text-xs uppercase tracking-[0.1em] transition-all py-5 flex items-center space-x-1 outline-none">
+                                    <a href="{{ $item->getUrl() }}" class="text-white/80 group-hover:text-white font-bold text-[11px] uppercase tracking-[0.05em] transition-all py-5 flex items-center space-x-1 outline-none whitespace-nowrap">
                                         <span>{{ __($item->display_name) }}</span>
                                         <i class="fas fa-chevron-down text-[8px] opacity-50 transition-transform duration-300" :class="open ? 'rotate-180' : ''"></i>
                                     </a>
                                     <div class="absolute -bottom-1 left-0 w-0 h-0.5 bg-vttu-yellow transition-all group-hover:w-full"></div>
-
+ 
                                     <!-- Dropdown Menu -->
                                     <div x-show="open" 
                                          x-transition:enter="transition ease-out duration-200"
@@ -195,7 +195,7 @@
                             @else
                                 <div class="relative group whitespace-nowrap">
                                     <a href="{{ $item->getUrl() }}" 
-                                       class="text-white/80 hover:text-white font-black text-xs uppercase tracking-[0.1em] transition-all py-5 block">
+                                       class="text-white/80 hover:text-white font-bold text-[11px] uppercase tracking-[0.05em] transition-all py-5 block">
                                         {{ __($item->display_name) }}
                                     </a>
                                     <div class="absolute -bottom-1 left-0 w-0 h-0.5 bg-vttu-yellow transition-all group-hover:w-full"></div>
@@ -206,7 +206,7 @@
                 </div>
 
                 <!-- Language & User Desktop -->
-                <div class="hidden lg:flex items-center space-x-4 flex-shrink-0">
+                <div class="hidden lg:flex items-center lg:space-x-2 xl:space-x-4 flex-shrink-0">
                     <!-- Language Switcher Desktop -->
                     <div class="relative group" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false" 
@@ -379,7 +379,7 @@
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2 group cursor-default">
                         <div class="w-8 h-8 rounded-sm bg-white/10 flex items-center justify-center text-vttu-yellow group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-all duration-300 shadow-sm border border-white/10">
-                            <i data-lucide="book-open" class="w-4 h-4"></i>
+                            <i class="fas fa-book-open text-xs"></i>
                         </div>
                         <span class="font-black text-sm uppercase tracking-tighter text-white">{{ __('Thư viện số') }}</span>
                     </div>
@@ -388,13 +388,13 @@
                     </p>
                     <div class="flex items-center gap-2 pt-1">
                         <a href="#" class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-white/60 hover:bg-vttu-yellow hover:text-vttu-dark active:scale-90 transition-all border border-white/10">
-                            <i data-lucide="facebook" class="w-4 h-4"></i>
+                            <i class="fab fa-facebook-f text-xs"></i>
                         </a>
                         <a href="#" class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-white/60 hover:bg-vttu-yellow hover:text-vttu-dark active:scale-90 transition-all border border-white/10">
-                            <i data-lucide="youtube" class="w-4 h-4"></i>
+                            <i class="fab fa-youtube text-xs"></i>
                         </a>
                         <a href="#" class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-white/60 hover:bg-vttu-yellow hover:text-vttu-dark active:scale-90 transition-all border border-white/10">
-                            <i data-lucide="mail" class="w-4 h-4"></i>
+                            <i class="fas fa-envelope text-xs"></i>
                         </a>
                     </div>
                 </div>
@@ -413,7 +413,7 @@
                                         <a href="{{ $item->getUrl() }}" 
                                            class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all"
                                            @if($item->target === '_blank') target="_blank" @endif>
-                                            <i data-lucide="chevron-right" class="w-3 h-3 mr-1.5 opacity-0 group-hover:opacity-100 transition-all"></i>
+                                            <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all"></i>
                                             {{ $item->display_name }}
                                         </a>
                                     </li>
@@ -437,7 +437,7 @@
                                         <a href="{{ $item->getUrl() }}" 
                                            class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all"
                                            @if($item->target === '_blank') target="_blank" @endif>
-                                            <i data-lucide="chevron-right" class="w-3 h-3 mr-1.5 opacity-0 group-hover:opacity-100 transition-all"></i>
+                                            <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all"></i>
                                             {{ $item->display_name }}
                                         </a>
                                     </li>
@@ -456,7 +456,7 @@
                     <div class="space-y-3">
                         <div class="flex items-start gap-3 group">
                             <div class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-vttu-yellow flex-shrink-0 group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-colors border border-white/10 shadow-sm">
-                                <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                <i class="fas fa-map-marker-alt text-xs"></i>
                             </div>
                             <span class="text-xs leading-relaxed text-white/60 group-hover:text-white transition-colors font-medium">
                                 {{ __('Quốc Lộ 1A, Tân Phú Thạnh, Châu Thành A, Hậu Giang') }}
@@ -464,13 +464,13 @@
                         </div>
                         <div class="flex items-center gap-3 group">
                             <div class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-vttu-yellow flex-shrink-0 group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-colors border border-white/10 shadow-sm">
-                                <i data-lucide="phone" class="w-4 h-4"></i>
+                                <i class="fas fa-phone-alt text-xs"></i>
                             </div>
                             <span class="text-xs text-white/60 group-hover:text-white transition-colors font-medium">{{ __('0293 3504 345') }}</span>
                         </div>
                         <div class="flex items-center gap-3 group">
                             <div class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-vttu-yellow flex-shrink-0 group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-colors border border-white/10 shadow-sm">
-                                <i data-lucide="mail" class="w-4 h-4"></i>
+                                <i class="fas fa-envelope text-xs"></i>
                             </div>
                             <span class="text-xs text-white/60 group-hover:text-white transition-colors font-medium truncate">{{ __('Mail') }}: {{ __('thuvien@vttu.edu.vn') }}</span>
                         </div>

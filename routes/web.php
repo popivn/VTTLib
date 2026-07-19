@@ -101,6 +101,7 @@ Route::prefix('tin-tuc')->name('news.')->group(function () {
     Route::get('/', [\App\Http\Controllers\NewsController::class, 'index'])->name('index');
     Route::get('/{slug}', [\App\Http\Controllers\NewsController::class, 'show'])->name('show');
     Route::get('/chuyen-muc/{slug}', [\App\Http\Controllers\NewsController::class, 'category'])->name('category');
+    Route::get('/chuyen-muc/{category_slug}/tag/{tag_slug}', [\App\Http\Controllers\NewsController::class, 'categoryTag'])->name('category.tag');
     Route::get('/tag/{slug}', [\App\Http\Controllers\NewsController::class, 'tag'])->name('tag');
     Route::get('/noi-bat', [\App\Http\Controllers\NewsController::class, 'featured'])->name('featured');
     Route::get('/tim-kiem', [\App\Http\Controllers\NewsController::class, 'search'])->name('search');
@@ -109,6 +110,8 @@ Route::prefix('tin-tuc')->name('news.')->group(function () {
     Route::get('/api', [\App\Http\Controllers\NewsController::class, 'api'])->name('api');
     Route::post('/{news}/like', [\App\Http\Controllers\NewsController::class, 'like'])->name('like');
 });
+
+Route::get('/News/ViewImageMedia', [\App\Http\Controllers\SiteController::class, 'viewImageMedia'])->name('site.view-image-media');
 
 Route::get('/{code}', [\App\Http\Controllers\SiteController::class, 'page'])->name('site.page');
 Route::get('/sitemap', [\App\Http\Controllers\SiteController::class, 'sitemap'])->name('site.sitemap');

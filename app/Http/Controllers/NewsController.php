@@ -20,6 +20,7 @@ class NewsController extends Controller
             ->orderBy('published_at', 'desc');
 
         // Filters
+        $category = null;
         if ($request->filled('category')) {
             $category = NewsCategory::where('slug', $request->category)->first();
             if ($category) {
@@ -27,6 +28,7 @@ class NewsController extends Controller
             }
         }
 
+        $tag = null;
         if ($request->filled('tag')) {
             $tag = NewsTag::where('slug', $request->tag)->first();
             if ($tag) {
@@ -68,7 +70,7 @@ class NewsController extends Controller
         $footerItems = \App\Models\SiteNode::getMenuItems('footer');
         $node = \App\Models\SiteNode::where('node_code', 'tin-tuc')->first() ?? new \App\Models\SiteNode(['node_code' => 'tin-tuc', 'display_name' => 'Tin tức', 'icon' => 'fas fa-newspaper']);
 
-        return view('site.pages.news-index', compact('news', 'featuredNews', 'categories', 'popularTags', 'menuItems', 'footerItems', 'node'));
+        return view('site.pages.news-index', compact('news', 'featuredNews', 'categories', 'popularTags', 'menuItems', 'footerItems', 'node', 'category', 'tag'));
     }
 
     /**
@@ -141,6 +143,46 @@ class NewsController extends Controller
             'news' => $news,
             'category' => $category,
             'breadcrumb' => $breadcrumb,
+            'menuItems' => $menuItems,
+            'footerItems' => $footerItems,
+            'node' => $node,
+            'categories' => $categories,
+            'popularTags' => $popularTags
+        ]);
+    }
+
+    /**
+     * Display news by category and tag.
+     */
+    public function categoryTag($category_slug, $tag_slug)
+    {
+        $category = NewsCategory::where('slug', $category_slug)
+            ->active()
+            ->firstOrFail();
+
+        $tag = NewsTag::where('slug', $tag_slug)
+            ->active()
+            ->firstOrFail();
+
+        $news = News::where('status', 'published')
+            ->where('category_id', $category->id)
+            ->whereHas('tags', function ($q) use ($tag) {
+                $q->where('news_tags.id', $tag->id);
+            })
+            ->with(['category', 'author', 'tags'])
+            ->orderBy('published_at', 'desc')
+            ->paginate(12);
+
+        $menuItems = \App\Models\SiteNode::getMenuItems('menu');
+        $footerItems = \App\Models\SiteNode::getMenuItems('footer');
+        $node = \App\Models\SiteNode::where('node_code', 'tin-tuc')->first() ?? new \App\Models\SiteNode(['node_code' => 'tin-tuc', 'display_name' => 'Tin tức', 'icon' => 'fas fa-newspaper']);
+        $categories = NewsCategory::active()->withCount('publishedNews')->orderBy('sort_order')->orderBy('name')->get();
+        $popularTags = NewsTag::getPopularTags(15);
+
+        return view('site.pages.news-index', [
+            'news' => $news,
+            'category' => $category,
+            'tag' => $tag,
             'menuItems' => $menuItems,
             'footerItems' => $footerItems,
             'node' => $node,
