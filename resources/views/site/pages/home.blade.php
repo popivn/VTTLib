@@ -522,7 +522,7 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                     <span class="text-[10px] font-black uppercase tracking-wider">{{ __('Cơ sở dữ liệu') }}</span>
                                 </a>
 
-                                <a href="{{ route('home') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                <a href="http://hoclieu.vttu.edu.vn/" target="_blank" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                                     <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
                                         <i class="fas fa-graduation-cap text-[10px]"></i>
                                     </div>
@@ -543,7 +543,7 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                     <span class="text-[10px] font-black uppercase tracking-wider">{{ __('Đề nghị bổ sung tài liệu') }}</span>
                                 </a>
 
-                                <a href="{{ route('site.page', 'sb-khao-sat') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-emerald-800 to-emerald-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                <a href="{{ route('site.page', 'khao-sat-y-kien') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-emerald-800 to-emerald-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                                     <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
                                         <i class="fas fa-poll text-[10px]"></i>
                                     </div>

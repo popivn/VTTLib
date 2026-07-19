@@ -694,8 +694,10 @@
                                 @include('site.pages.tra-cuu-tai-lieu-so-content')
                             @elseif($node->node_code === 'muon-truoc-gia-han')
                                 @include('site.pages.muon-truoc-gia-han-content')
-                            @elseif($node->node_code === 'de-nghi-bo-sung')
+                            @elseif($node->node_code === 'de-nghi-bo-sung' || $node->node_code === 'sb-de-nghi-bo-sung')
                                 @include('site.pages.de-nghi-bo-sung-content')
+                            @elseif($node->node_code === 'khao-sat-y-kien' || $node->node_code === 'sb-khao-sat' || $node->node_code === 'khao-sat')
+                                @include('site.pages.khao-sat-y-kien-content')
                             @else
                                 {!! $node->content !!}
                             @endif

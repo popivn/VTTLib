@@ -162,6 +162,9 @@
                 <div class="hidden lg:flex items-center lg:space-x-2 xl:space-x-4 flex-1 justify-end lg:px-2 xl:px-6">
                     @if(isset($menuItems))
                         @foreach($menuItems as $item)
+                            @if(str_contains(strtolower($item->node_code ?? ''), 'khao-sat') || str_contains(mb_strtolower($item->display_name ?? ''), 'khảo sát'))
+                                @continue
+                            @endif
                             @if($item->activeChildren && $item->activeChildren->count() > 0)
                                 <!-- Dropdown Node -->
                                 <div class="relative group h-full flex items-center" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
@@ -301,6 +304,9 @@
 
                 @if(isset($menuItems))
                     @foreach($menuItems as $item)
+                        @if(str_contains(strtolower($item->node_code ?? ''), 'khao-sat') || str_contains(mb_strtolower($item->display_name ?? ''), 'khảo sát'))
+                            @continue
+                        @endif
                         @if($item->activeChildren->count() > 0)
                             <div x-data="{ open: false }" class="border-b border-white/5 last:border-0">
                                 <button @click="open = !open" 

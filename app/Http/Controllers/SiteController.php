@@ -557,6 +557,48 @@ class SiteController extends Controller
     }
 
     /**
+     * Store patron survey response.
+     */
+    public function storeSurvey(Request $request)
+    {
+        $request->validate([
+            'full_name' => 'nullable|string|max:255',
+            'card_number' => 'nullable|string|max:100',
+            'email_phone' => 'required|string|max:255',
+            'patron_group' => 'required|string|max:100',
+            'rating_service' => 'nullable|integer|min:1|max:5',
+            'rating_resource' => 'nullable|integer|min:1|max:5',
+            'rating_facility' => 'nullable|integer|min:1|max:5',
+            'rating_overall' => 'required|integer|min:1|max:5',
+            'survey_category' => 'required|string|max:100',
+            'content' => 'required|string|min:5',
+        ], [
+            'email_phone.required' => 'Vui lòng nhập Email hoặc Số điện thoại liên hệ.',
+            'patron_group.required' => 'Vui lòng chọn nhóm bạn đọc.',
+            'rating_overall.required' => 'Vui lòng đánh giá mức độ hài lòng chung.',
+            'survey_category.required' => 'Vui lòng chọn chủ đề đóng góp ý kiến.',
+            'content.required' => 'Vui lòng nhập nội dung ý kiến đóng góp.',
+            'content.min' => 'Nội dung đóng góp phải có ít nhất 5 ký tự.',
+        ]);
+
+        \App\Models\PatronSurvey::create([
+            'full_name' => $request->full_name ?: (auth()->check() ? auth()->user()->name : 'Bạn đọc ẩn danh'),
+            'card_number' => $request->card_number ?: (auth()->check() ? (auth()->user()->username ?? '') : ''),
+            'email_phone' => $request->email_phone,
+            'patron_group' => $request->patron_group,
+            'rating_service' => $request->rating_service ?? 5,
+            'rating_resource' => $request->rating_resource ?? 5,
+            'rating_facility' => $request->rating_facility ?? 5,
+            'rating_overall' => $request->rating_overall,
+            'survey_category' => $request->survey_category,
+            'content' => $request->content,
+            'status' => 'pending',
+        ]);
+
+        return back()->with('success', 'Cảm ơn bạn đã gửi ý kiến khảo sát! Đóng góp của bạn giúp Thư viện nâng cao chất lượng phục vụ.');
+    }
+
+    /**
      * Display the user profile page.
      */
     public function profile()
@@ -649,10 +691,40 @@ class SiteController extends Controller
             ->first();
 
         if (!$siteNode) {
-            if ($code === 'home') {
-                return redirect('/');
+            $builtinPages = [
+                'khao-sat-y-kien' => 'Khảo sát ý kiến bạn đọc',
+                'khao-sat' => 'Khảo sát ý kiến bạn đọc',
+                'sb-khao-sat' => 'Khảo sát ý kiến bạn đọc',
+                'de-nghi-bo-sung' => 'Đề nghị bổ sung tài liệu',
+                'sb-de-nghi-bo-sung' => 'Đề nghị bổ sung tài liệu',
+                'co-so-du-lieu' => 'Cơ sở dữ liệu',
+                'sb-co-so-du-lieu' => 'Cơ sở dữ liệu',
+                'tai-lieu-so' => 'Tài liệu số',
+            ];
+
+            if (isset($builtinPages[$code])) {
+                $siteNode = SiteNode::firstOrCreate(
+                    ['node_code' => $code],
+                    [
+                        'node_name' => $builtinPages[$code],
+                        'display_name' => $builtinPages[$code],
+                        'is_active' => 1,
+                        'allow_guest' => 1,
+                        'access_type' => 'public',
+                        'display_type' => 'none',
+                        'language' => 'vi',
+                    ]
+                );
+
+                if ($siteNode->display_type === 'menu') {
+                    $siteNode->update(['display_type' => 'none']);
+                }
+            } else {
+                if ($code === 'home') {
+                    return redirect('/');
+                }
+                abort(404);
             }
-            abort(404);
         }
 
         // Tự động chuyển hướng nếu có thiết lập redirect_to
@@ -667,6 +739,12 @@ class SiteController extends Controller
             }
             abort(403, 'Bạn không có quyền truy cập trang này');
         }
+
+        // Đảm bảo các node khảo sát không hiển thị trên thanh menu chính
+        \App\Models\SiteNode::where(function($q) {
+            $q->where('node_code', 'LIKE', '%khao-sat%')
+              ->orWhere('display_name', 'LIKE', '%Khảo sát%');
+        })->where('display_type', 'menu')->update(['display_type' => 'none']);
 
         // Nạp menu với eager loading children
         $menuItems = SiteNode::getMenuItems('menu');

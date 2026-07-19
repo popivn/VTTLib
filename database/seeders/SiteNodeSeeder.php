@@ -241,6 +241,7 @@ class SiteNodeSeeder extends Seeder
             ['tra-cuu-tai-lieu-so', 'Tra cứu tài liệu số', 'fas fa-file-pdf'],
             ['muon-truoc-gia-han', 'Mượn trước - Gia hạn', 'fas fa-calendar-check'],
             ['de-nghi-bo-sung', 'Đề nghị bổ sung tài liệu', 'fas fa-plus-circle'],
+            ['khao-sat-y-kien', 'Khảo sát ý kiến bạn đọc', 'fas fa-poll'],
         ];
 
         foreach ($subPages as $index => $page) {

@@ -74,6 +74,7 @@ Route::get('/opac/search', [\App\Http\Controllers\SiteController::class, 'opac']
 Route::get('/opac/book/{record}', [\App\Http\Controllers\SiteController::class, 'bookDetail'])->name('opac.book.show');
 Route::post('/opac/book/{record}/reserve', [\App\Http\Controllers\SiteController::class, 'reserveBook'])->name('opac.book.reserve')->middleware('auth');
 Route::post('/de-nghi-bo-sung', [\App\Http\Controllers\SiteController::class, 'storeProposal'])->name('site.proposal.store');
+Route::post('/khao-sat-y-kien', [\App\Http\Controllers\SiteController::class, 'storeSurvey'])->name('site.survey.store');
 
 // Profile & My Loans
 Route::middleware(['auth'])->group(function () {
