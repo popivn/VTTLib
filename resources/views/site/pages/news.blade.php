@@ -280,7 +280,7 @@
                             <ul class="space-y-3">
                                 <li><a href="/noi-quy-thu-vien" class="text-xs font-bold text-slate-500 hover:text-vttu-red transition-colors flex items-center"><i class="fas fa-chevron-right text-[8px] mr-2 opacity-30"></i> Nội quy thư viện</a></li>
                                 <li><a href="/huong-dan" class="text-xs font-bold text-slate-500 hover:text-vttu-red transition-colors flex items-center"><i class="fas fa-chevron-right text-[8px] mr-2 opacity-30"></i> Hướng dẫn mượn trả</a></li>
-                                <li><a href="/opac/search" class="text-xs font-bold text-slate-500 hover:text-vttu-red transition-colors flex items-center"><i class="fas fa-chevron-right text-[8px] mr-2 opacity-30"></i> Biểu mẫu đăng ký</a></li>
+                                <li><a href="/opac" class="text-xs font-bold text-slate-500 hover:text-vttu-red transition-colors flex items-center"><i class="fas fa-chevron-right text-[8px] mr-2 opacity-30"></i> Tra cứu OPAC</a></li>
                             </ul>
                         </div>
                     </div>

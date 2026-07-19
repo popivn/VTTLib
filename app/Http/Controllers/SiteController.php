@@ -566,12 +566,11 @@ class SiteController extends Controller
             'card_number' => 'nullable|string|max:100',
             'email_phone' => 'required|string|max:255',
             'patron_group' => 'required|string|max:100',
-            'rating_service' => 'nullable|integer|min:1|max:5',
-            'rating_resource' => 'nullable|integer|min:1|max:5',
-            'rating_facility' => 'nullable|integer|min:1|max:5',
             'rating_overall' => 'required|integer|min:1|max:5',
             'survey_category' => 'required|string|max:100',
             'content' => 'required|string|min:5',
+            'ratings' => 'nullable|array',
+            'ratings.*' => 'nullable|integer|min:1|max:5',
         ], [
             'email_phone.required' => 'Vui lòng nhập Email hoặc Số điện thoại liên hệ.',
             'patron_group.required' => 'Vui lòng chọn nhóm bạn đọc.',
@@ -581,19 +580,27 @@ class SiteController extends Controller
             'content.min' => 'Nội dung đóng góp phải có ít nhất 5 ký tự.',
         ]);
 
-        \App\Models\PatronSurvey::create([
+        $survey = \App\Models\PatronSurvey::create([
             'full_name' => $request->full_name ?: (auth()->check() ? auth()->user()->name : 'Bạn đọc ẩn danh'),
             'card_number' => $request->card_number ?: (auth()->check() ? (auth()->user()->username ?? '') : ''),
             'email_phone' => $request->email_phone,
             'patron_group' => $request->patron_group,
-            'rating_service' => $request->rating_service ?? 5,
-            'rating_resource' => $request->rating_resource ?? 5,
-            'rating_facility' => $request->rating_facility ?? 5,
             'rating_overall' => $request->rating_overall,
             'survey_category' => $request->survey_category,
             'content' => $request->content,
             'status' => 'pending',
         ]);
+
+        // Lưu chi tiết từng tiêu chí khảo sát động vào bảng patron_survey_ratings
+        $criteria = \App\Models\SurveyCriterion::active()->get();
+        foreach ($criteria as $criterion) {
+            $ratingVal = $request->input("ratings.{$criterion->id}") ?? $request->input("ratings.{$criterion->code}") ?? $request->input("rating_{$criterion->code}") ?? 5;
+            \App\Models\PatronSurveyRating::create([
+                'patron_survey_id' => $survey->id,
+                'survey_criterion_id' => $criterion->id,
+                'rating' => (int) $ratingVal,
+            ]);
+        }
 
         return back()->with('success', 'Cảm ơn bạn đã gửi ý kiến khảo sát! Đóng góp của bạn giúp Thư viện nâng cao chất lượng phục vụ.');
     }
@@ -644,12 +651,27 @@ class SiteController extends Controller
             ];
         }
 
+        // Nạp lịch sử khảo sát ý kiến của tài khoản này
+        $mySurveys = \App\Models\PatronSurvey::where(function($q) use ($user) {
+            if (!empty($user->username)) {
+                $q->where('card_number', $user->username)
+                  ->orWhere('email_phone', $user->username);
+            }
+            if (!empty($user->email)) {
+                $q->orWhere('email_phone', $user->email);
+            }
+            $q->orWhere('full_name', $user->name);
+        })
+        ->with(['ratings.criterion'])
+        ->latest()
+        ->get();
+
         $menuItems = SiteNode::getMenuItems('menu');
         $footerItems = SiteNode::getMenuItems('footer');
 
         return view('site.pages.profile', compact(
             'user', 'patron', 'menuItems', 'footerItems', 
-            'stats', 'activeLoans', 'returnedLoans', 'reservations'
+            'stats', 'activeLoans', 'returnedLoans', 'reservations', 'mySurveys'
         ));
     }
 

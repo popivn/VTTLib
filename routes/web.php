@@ -70,7 +70,9 @@ Route::get('/home', function() {
     return redirect('/');
 });
 Route::get('/opac', [\App\Http\Controllers\SiteController::class, 'opac'])->name('site.opac');
-Route::get('/opac/search', [\App\Http\Controllers\SiteController::class, 'opac'])->name('opac.search');
+Route::get('/opac/search', function() {
+    return redirect()->route('site.opac', request()->query());
+})->name('opac.search');
 Route::get('/opac/book/{record}', [\App\Http\Controllers\SiteController::class, 'bookDetail'])->name('opac.book.show');
 Route::post('/opac/book/{record}/reserve', [\App\Http\Controllers\SiteController::class, 'reserveBook'])->name('opac.book.reserve')->middleware('auth');
 Route::post('/de-nghi-bo-sung', [\App\Http\Controllers\SiteController::class, 'storeProposal'])->name('site.proposal.store');
@@ -602,6 +604,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
     // Digital Reports
     Route::get('/digital-reports', [\App\Http\Controllers\Admin\DigitalReportController::class, 'index'])->name('admin.digital.reports.index');
     Route::post('/digital-reports/generate', [\App\Http\Controllers\Admin\DigitalReportController::class, 'generate'])->name('admin.digital.reports.generate');
+
+    // Patron Surveys List
+    Route::get('/patron-surveys', [\App\Http\Controllers\Admin\PatronSurveyController::class, 'index'])->name('admin.patron-surveys.index');
 });
 
 // Visitor Routes

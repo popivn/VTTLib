@@ -24,7 +24,7 @@
 
             <!-- Search Bar OPAC -->
             <div class="mt-6">
-                <form action="{{ route('opac.search') }}" method="GET" class="relative group">
+                <form action="{{ route('site.opac') }}" method="GET" class="relative group">
                     <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                         <i class="fas fa-search text-slate-400 group-focus-within:text-vttu-red transition-colors text-sm"></i>
                     </div>
@@ -157,7 +157,7 @@
                     <div class="bg-white p-3 rounded-md border border-slate-100 hover:border-vttu-red/20 transition-all group flex flex-col shadow-sm hover:shadow-md">
                         <!-- Book Cover -->
                         <a href="{{ route('opac.book.show', $book->id) }}" class="block aspect-[3/4] bg-slate-100 rounded-md mb-3 border border-slate-100 group-hover:bg-vttu-red/5 transition-colors overflow-hidden relative">
-                            @if($book->cover_image)
+                            @if($book->cover_image && \Storage::disk('public')->exists($book->cover_image))
                                 <img src="{{ asset('storage/' . $book->cover_image) }}" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500">
                             @else
                                 <img src="{{ asset('assets/imgs/books/noimage.png') }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
@@ -213,7 +213,7 @@
                         <div class="flex gap-4">
                             <!-- Cover Small -->
                             <div class="w-20 aspect-[3/4] bg-slate-100 rounded-sm overflow-hidden flex-shrink-0 border border-slate-100">
-                                @if($book->cover_image)
+                                @if($book->cover_image && \Storage::disk('public')->exists($book->cover_image))
                                     <img src="{{ asset('storage/' . $book->cover_image) }}" class="w-full h-full object-contain mix-blend-multiply">
                                 @else
                                     <img src="{{ asset('assets/imgs/books/noimage.png') }}" class="w-full h-full object-contain">
@@ -278,7 +278,7 @@
                     <h3 class="text-xs font-bold text-vttu-dark uppercase tracking-widest border-b border-slate-50 pb-3 mb-3">SÁCH THEO KHO</h3>
                     <div class="space-y-2">
                         @forelse($sidebar['locations'] as $location)
-                        <a href="{{ route('opac.search', ['location' => $location->id]) }}" class="flex justify-between items-center group">
+                        <a href="{{ route('site.opac', ['location' => $location->id]) }}" class="flex justify-between items-center group">
                             <span class="text-xs font-medium text-slate-600 group-hover:text-vttu-red transition-colors truncate pr-2">{{ $location->name }}</span>
                             <span class="bg-slate-50 text-slate-400 px-1.5 py-0.5 rounded-sm text-[9px] font-bold group-hover:bg-vttu-red/10 group-hover:text-vttu-red transition-all">{{ $location->book_items_count }}</span>
                         </a>
@@ -293,7 +293,7 @@
                     <h3 class="text-xs font-bold text-vttu-yellow uppercase tracking-widest border-b border-white/10 pb-3 mb-3">PHÂN LOẠI DDC</h3>
                     <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1.5 custom-scrollbar">
                         @forelse($sidebar['ddc'] as $ddc)
-                        <a href="{{ route('opac.search', ['ddc' => $ddc['code']]) }}" class="flex justify-between items-start group border-b border-white/5 pb-1.5 last:border-0">
+                        <a href="{{ route('site.opac', ['ddc' => $ddc['code']]) }}" class="flex justify-between items-start group border-b border-white/5 pb-1.5 last:border-0">
                             <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-vttu-yellow tracking-widest">{{ $ddc['code'] }}</span>
                                 <span class="text-xs font-medium text-white/70 group-hover:text-white transition-colors leading-tight">{{ $ddc['name'] }}</span>
@@ -330,7 +330,7 @@
                     <h3 class="text-xs font-bold text-vttu-dark uppercase tracking-widest border-b border-slate-50 pb-3 mb-3">TỪ KHÓA HOT</h3>
                     <div class="flex flex-wrap gap-1.5">
                         @forelse($sidebar['hotKeywords'] as $tag)
-                        <a href="{{ route('opac.search', ['q' => $tag]) }}" class="px-2.5 py-1 bg-slate-50 hover:bg-vttu-red hover:text-white text-slate-500 text-[9px] font-bold uppercase tracking-widest rounded-sm transition-all border border-slate-100">
+                        <a href="{{ route('site.opac', ['q' => $tag]) }}" class="px-2.5 py-1 bg-slate-50 hover:bg-vttu-red hover:text-white text-slate-500 text-[9px] font-bold uppercase tracking-widest rounded-sm transition-all border border-slate-100">
                             {{ $tag }}
                         </a>
                         @empty

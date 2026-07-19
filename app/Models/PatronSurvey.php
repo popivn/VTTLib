@@ -16,9 +16,6 @@ class PatronSurvey extends Model
         'card_number',
         'email_phone',
         'patron_group',
-        'rating_service',
-        'rating_resource',
-        'rating_facility',
         'rating_overall',
         'survey_category',
         'content',
@@ -26,9 +23,18 @@ class PatronSurvey extends Model
     ];
 
     protected $casts = [
-        'rating_service' => 'integer',
-        'rating_resource' => 'integer',
-        'rating_facility' => 'integer',
         'rating_overall' => 'integer',
     ];
+
+    public function ratings()
+    {
+        return $this->hasMany(PatronSurveyRating::class, 'patron_survey_id');
+    }
+
+    public function criteria()
+    {
+        return $this->belongsToMany(SurveyCriterion::class, 'patron_survey_ratings', 'patron_survey_id', 'survey_criterion_id')
+                    ->withPivot('rating')
+                    ->withTimestamps();
+    }
 }

@@ -1,57 +1,57 @@
 @extends('layouts.site')
 
 @php
-    // Trích xuất dữ liệu MARC trực tiếp để đảm bảo không bị lỗi undefined variable
-    $marcData = [];
-    foreach ($record->fields as $field) {
-        $subfields = [];
-        foreach ($field->subfields as $sub) {
-            $subfields[$sub->code] = $sub->value;
-        }
-        $marcData[$field->tag] = $subfields;
-    }
+// Trích xuất dữ liệu MARC trực tiếp để đảm bảo không bị lỗi undefined variable
+$marcData = [];
+foreach ($record->fields as $field) {
+$subfields = [];
+foreach ($field->subfields as $sub) {
+$subfields[$sub->code] = $sub->value;
+}
+$marcData[$field->tag] = $subfields;
+}
 
-    // Nhan đề (245$a $b $c)
-    $fullTitle = ($marcData['245']['a'] ?? 'Không có nhan đề') . 
-                 (isset($marcData['245']['b']) ? ' ' . $marcData['245']['b'] : '') . 
-                 (isset($marcData['245']['c']) ? ' / ' . $marcData['245']['c'] : '');
+// Nhan đề (245$a $b $c)
+$fullTitle = ($marcData['245']['a'] ?? 'Không có nhan đề') .
+(isset($marcData['245']['b']) ? ' ' . $marcData['245']['b'] : '') .
+(isset($marcData['245']['c']) ? ' / ' . $marcData['245']['c'] : '');
 
-    // Tác giả (100$a hoặc 700$a)
-    $author = $marcData['100']['a'] ?? ($marcData['700']['a'] ?? '');
+// Tác giả (100$a hoặc 700$a)
+$author = $marcData['100']['a'] ?? ($marcData['700']['a'] ?? '');
 
-    // Thông tin xuất bản đã được làm sạch
-    $pubPlace = rtrim(trim($marcData['260']['a'] ?? ($marcData['264']['a'] ?? '')), ' :-/;');
-    $publisher = rtrim(trim($marcData['260']['b'] ?? ($marcData['264']['b'] ?? '')), ' :-/;');
-    $pubYear = rtrim(trim($marcData['260']['c'] ?? ($marcData['264']['c'] ?? '')), ' :-/;.[]');
+// Thông tin xuất bản đã được làm sạch
+$pubPlace = rtrim(trim($marcData['260']['a'] ?? ($marcData['264']['a'] ?? '')), ' :-/;');
+$publisher = rtrim(trim($marcData['260']['b'] ?? ($marcData['264']['b'] ?? '')), ' :-/;');
+$pubYear = rtrim(trim($marcData['260']['c'] ?? ($marcData['264']['c'] ?? '')), ' :-/;.[]');
 
-    // Mô tả vật lý (300$a $b $c)
-    $physPages = trim($marcData['300']['a'] ?? '');
-    $physDetails = trim($marcData['300']['b'] ?? '');
-    $physSize = trim($marcData['300']['c'] ?? '');
-    $physDesc = trim(($physPages ? $physPages . ' ' : '') . ($physDetails ? $physDetails . ', ' : '') . ($physSize ? $physSize : ''));
+// Mô tả vật lý (300$a $b $c)
+$physPages = trim($marcData['300']['a'] ?? '');
+$physDetails = trim($marcData['300']['b'] ?? '');
+$physSize = trim($marcData['300']['c'] ?? '');
+$physDesc = trim(($physPages ? $physPages . ' ' : '') . ($physDetails ? $physDetails . ', ' : '') . ($physSize ? $physSize : ''));
 
-    // Phân loại DDC và Cutter
-    $ddcVal = $marcData['082']['a'] ?? ($marcData['090']['a'] ?? '');
-    $cutterVal = $marcData['082']['b'] ?? ($marcData['090']['b'] ?? '');
+// Phân loại DDC và Cutter
+$ddcVal = $marcData['082']['a'] ?? ($marcData['090']['a'] ?? '');
+$cutterVal = $marcData['082']['b'] ?? ($marcData['090']['b'] ?? '');
 
-    // Thông tin trách nhiệm (245$c)
-    $responsibility = $marcData['245']['c'] ?? '';
+// Thông tin trách nhiệm (245$c)
+$responsibility = $marcData['245']['c'] ?? '';
 
-    // Trích xuất danh sách chủ đề (đầu thẻ 6xx)
-    $subjects = [];
-    foreach ($record->fields as $field) {
-        if (str_starts_with($field->tag, '6')) {
-            foreach ($field->subfields as $sub) {
-                if ($sub->code === 'a') {
-                    $subjects[] = trim($sub->value, ' .,-:');
-                }
-            }
-        }
-    }
-    $subjects = array_unique(array_filter($subjects));
+// Trích xuất danh sách chủ đề (đầu thẻ 6xx)
+$subjects = [];
+foreach ($record->fields as $field) {
+if (str_starts_with($field->tag, '6')) {
+foreach ($field->subfields as $sub) {
+if ($sub->code === 'a') {
+$subjects[] = trim($sub->value, ' .,-:');
+}
+}
+}
+}
+$subjects = array_unique(array_filter($subjects));
 
-    // Tóm tắt (520$a)
-    $summary = $marcData['520']['a'] ?? 'Nội dung đang được cập nhật...';
+// Tóm tắt (520$a)
+$summary = $marcData['520']['a'] ?? 'Nội dung đang được cập nhật...';
 @endphp
 
 @section('title', $fullTitle . ' - Chi tiết tài liệu - VTTLib')
@@ -59,28 +59,28 @@
 @section('content')
 <div class="bg-slate-50 min-h-screen pt-24 pb-12">
     <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         <!-- Breadcrumb -->
         <nav class="flex mb-8 text-sm font-medium" aria-label="Breadcrumb">
             <ol class="flex items-center space-x-2">
                 <li><a href="{{ route('home') }}" class="text-slate-400 hover:text-vttu-red transition-colors">Trang chủ</a></li>
                 <li><i class="fas fa-chevron-right text-[10px] text-slate-300"></i></li>
-                <li><a href="{{ route('opac.search') }}" class="text-slate-400 hover:text-vttu-red transition-colors">Tra cứu OPAC</a></li>
+                <li><a href="{{ route('site.opac') }}" class="text-slate-400 hover:text-vttu-red transition-colors">Tra cứu OPAC</a></li>
                 <li><i class="fas fa-chevron-right text-[10px] text-slate-300"></i></li>
                 <li class="text-vttu-dark truncate max-w-[200px] md:max-w-md">{{ $fullTitle }}</li>
             </ol>
         </nav>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
+
             <!-- LEFT: Book Cover & Quick Actions -->
             <div class="lg:col-span-4 space-y-6">
                 <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col items-center sticky top-28">
                     <div class="w-full aspect-[3/4] bg-slate-50 rounded-3xl overflow-hidden shadow-2xl shadow-slate-200 mb-8 border border-slate-100 relative group">
                         @if($record->cover_image)
-                            <img src="{{ asset('storage/' . $record->cover_image) }}" class="w-full h-full object-contain">
+                        <img src="{{ asset('storage/' . $record->cover_image) }}" class="w-full h-full object-contain">
                         @else
-                            <img src="{{ asset('assets/imgs/books/noimage.png') }}" class="w-full h-full object-contain">
+                        <img src="{{ asset('assets/imgs/books/noimage.png') }}" class="w-full h-full object-contain">
                         @endif
                         <div class="absolute top-4 right-4">
                             <span class="px-4 py-1.5 bg-vttu-red text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">{{ $record->record_type ?? 'Sách' }}</span>
@@ -89,17 +89,17 @@
 
                     <div class="w-full space-y-3">
                         @if($record->items->where('status', 'available')->count() > 0)
-                            <button type="button" onclick="confirmReservation({{ $record->id }}, '{{ addslashes($fullTitle) }}')" class="w-full py-4 bg-vttu-red text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-vttu-dark transition-all shadow-xl shadow-vttu-red/20 flex items-center justify-center gap-3">
-                                <i class="fas fa-shopping-basket"></i>
-                                Đăng ký mượn ngay
-                            </button>
+                        <button type="button" onclick="confirmReservation({{ $record->id }}, '{{ addslashes($fullTitle) }}')" class="w-full py-4 bg-vttu-red text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-vttu-dark transition-all shadow-xl shadow-vttu-red/20 flex items-center justify-center gap-3">
+                            <i class="fas fa-shopping-basket"></i>
+                            Đăng ký mượn ngay
+                        </button>
                         @else
-                            <button disabled class="w-full py-4 bg-slate-200 text-slate-400 rounded-2xl font-black uppercase text-xs tracking-[0.2em] cursor-not-allowed flex items-center justify-center gap-3">
-                                <i class="fas fa-clock"></i>
-                                Tài liệu tạm hết
-                            </button>
+                        <button disabled class="w-full py-4 bg-slate-200 text-slate-400 rounded-2xl font-black uppercase text-xs tracking-[0.2em] cursor-not-allowed flex items-center justify-center gap-3">
+                            <i class="fas fa-clock"></i>
+                            Tài liệu tạm hết
+                        </button>
                         @endif
-                        
+
                         <button class="w-full py-4 bg-white text-vttu-dark border-2 border-slate-100 rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:border-vttu-red/20 hover:text-vttu-red transition-all flex items-center justify-center gap-3">
                             <i class="far fa-heart"></i>
                             Thêm vào yêu thích
@@ -122,7 +122,7 @@
 
             <!-- RIGHT: Book Information -->
             <div class="lg:col-span-8 space-y-8">
-                
+
                 <!-- Main Info Section -->
                 <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
                     <div class="mb-8 pb-8 border-b border-slate-50">
@@ -184,14 +184,14 @@
                                 <div class="w-48 text-slate-500 font-medium py-1.5 shrink-0 text-sm">Xuất bản:</div>
                                 <div class="flex-1 flex flex-wrap items-center gap-2 text-sm text-sky-600 font-semibold">
                                     @if($pubPlace)
-                                        <span class="text-slate-600 font-medium">{{ $pubPlace }} :</span>
+                                    <span class="text-slate-600 font-medium">{{ $pubPlace }} :</span>
                                     @endif
                                     @if($publisher)
-                                        <span class="px-3.5 py-1 bg-sky-50 text-sky-600 font-semibold rounded-full text-xs">{{ $publisher }}</span>
+                                    <span class="px-3.5 py-1 bg-sky-50 text-sky-600 font-semibold rounded-full text-xs">{{ $publisher }}</span>
                                     @endif
                                     @if($pubYear)
-                                        @if($publisher) <span class="text-slate-600 font-medium">,</span> @endif
-                                        <span class="px-3.5 py-1 bg-sky-50 text-sky-600 font-semibold rounded-full text-xs">{{ $pubYear }}</span>
+                                    @if($publisher) <span class="text-slate-600 font-medium">,</span> @endif
+                                    <span class="px-3.5 py-1 bg-sky-50 text-sky-600 font-semibold rounded-full text-xs">{{ $pubYear }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -276,9 +276,9 @@
                                     <td class="py-4 text-sm font-bold text-slate-600">{{ $item->shelf ?? 'Đang cập nhật' }}</td>
                                     <td class="py-4 text-center">
                                         @if($item->status == 'available')
-                                            <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-lg">Có thể mượn</span>
+                                        <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-lg">Có thể mượn</span>
                                         @else
-                                            <span class="px-3 py-1 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-lg">Đang bận</span>
+                                        <span class="px-3 py-1 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-lg">Đang bận</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -309,11 +309,25 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     @keyframes swal-book-float {
-        0% { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 0; }
-        20% { opacity: 1; }
-        80% { opacity: 1; }
-        100% { transform: translateY(-20vh) translateX(100px) rotate(360deg); opacity: 0; }
+        0% {
+            transform: translateY(100vh) translateX(0) rotate(0deg);
+            opacity: 0;
+        }
+
+        20% {
+            opacity: 1;
+        }
+
+        80% {
+            opacity: 1;
+        }
+
+        100% {
+            transform: translateY(-20vh) translateX(100px) rotate(360deg);
+            opacity: 0;
+        }
     }
+
     .swal2-container .floating-book {
         position: fixed;
         color: rgba(255, 255, 255, 0.3);
@@ -371,48 +385,48 @@
 
                 // Gửi AJAX
                 fetch(`/opac/book/${id}/reserve`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(async response => {
-                    const isJson = response.headers.get('content-type')?.includes('application/json');
-                    const data = isJson ? await response.json() : null;
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(async response => {
+                        const isJson = response.headers.get('content-type')?.includes('application/json');
+                        const data = isJson ? await response.json() : null;
 
-                    if (!response.ok) {
-                        throw new Error(data?.message || 'Có lỗi xảy ra từ máy chủ.');
-                    }
-                    return data;
-                })
-                .then(data => {
-                    if (data && data.success) {
+                        if (!response.ok) {
+                            throw new Error(data?.message || 'Có lỗi xảy ra từ máy chủ.');
+                        }
+                        return data;
+                    })
+                    .then(data => {
+                        if (data && data.success) {
+                            Swal.fire({
+                                title: 'Thành công!',
+                                text: data.message,
+                                icon: 'success',
+                                confirmButtonColor: '#680102',
+                                borderRadius: '2rem'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            throw new Error(data?.message || 'Đăng ký không thành công.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Reservation error:', error);
                         Swal.fire({
-                            title: 'Thành công!',
-                            text: data.message,
-                            icon: 'success',
+                            title: 'Thất bại!',
+                            text: error.message || 'Không thể kết nối tới hệ thống.',
+                            icon: 'error',
                             confirmButtonColor: '#680102',
                             borderRadius: '2rem'
-                        }).then(() => {
-                            window.location.reload();
                         });
-                    } else {
-                        throw new Error(data?.message || 'Đăng ký không thành công.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Reservation error:', error);
-                    Swal.fire({
-                        title: 'Thất bại!',
-                        text: error.message || 'Không thể kết nối tới hệ thống.',
-                        icon: 'error',
-                        confirmButtonColor: '#680102',
-                        borderRadius: '2rem'
                     });
-                });
             }
         });
     }

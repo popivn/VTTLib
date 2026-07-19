@@ -132,59 +132,31 @@
                 <h3 class="text-xs font-black text-vttu-dark uppercase tracking-wider">Đánh giá mức độ hài lòng (Thang điểm 1 - 5 Sao)</h3>
             </div>
 
+            @php
+                $activeCriteria = \App\Models\SurveyCriterion::active()->orderBy('sort_order')->get();
+            @endphp
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                <!-- Rating 1: Service -->
-                <div class="p-3 bg-slate-50/80 border border-slate-200/80 rounded-md flex flex-col justify-between hover:border-amber-300 transition-colors" x-data="{ val: {{ old('rating_service', 5) }} }">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs font-bold text-slate-700">1. Thái độ & Dịch vụ phục vụ</span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800" x-text="val + '/5 Sao'"></span>
+                @foreach($activeCriteria as $idx => $criterion)
+                    <div class="p-3 bg-slate-50/80 border border-slate-200/80 rounded-md flex flex-col justify-between hover:border-amber-300 transition-colors" x-data="{ val: {{ old('ratings.'.$criterion->id, 5) }} }">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-slate-700">{{ $idx + 1 }}. {{ $criterion->name }}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800" x-text="val + '/5 Sao'"></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @for($i = 1; $i <= 5; $i++)
+                                <label class="cursor-pointer group flex items-center">
+                                    <input type="radio" name="ratings[{{ $criterion->id }}]" value="{{ $i }}" @click="val = {{ $i }}" class="sr-only" {{ old('ratings.'.$criterion->id, 5) == $i ? 'checked' : '' }}>
+                                    <i class="fas fa-star text-base transition-transform group-hover:scale-125" :class="val >= {{ $i }} ? 'text-amber-400' : 'text-slate-300'"></i>
+                                </label>
+                            @endfor
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        @for($i = 1; $i <= 5; $i++)
-                            <label class="cursor-pointer group flex items-center">
-                                <input type="radio" name="rating_service" value="{{ $i }}" @click="val = {{ $i }}" class="sr-only" {{ old('rating_service', 5) == $i ? 'checked' : '' }}>
-                                <i class="fas fa-star text-base transition-transform group-hover:scale-125" :class="val >= {{ $i }} ? 'text-amber-400' : 'text-slate-300'"></i>
-                            </label>
-                        @endfor
-                    </div>
-                </div>
+                @endforeach
 
-                <!-- Rating 2: Resource -->
-                <div class="p-3 bg-slate-50/80 border border-slate-200/80 rounded-md flex flex-col justify-between hover:border-amber-300 transition-colors" x-data="{ val: {{ old('rating_resource', 5) }} }">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs font-bold text-slate-700">2. Vốn tài liệu / Học liệu</span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800" x-text="val + '/5 Sao'"></span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        @for($i = 1; $i <= 5; $i++)
-                            <label class="cursor-pointer group flex items-center">
-                                <input type="radio" name="rating_resource" value="{{ $i }}" @click="val = {{ $i }}" class="sr-only" {{ old('rating_resource', 5) == $i ? 'checked' : '' }}>
-                                <i class="fas fa-star text-base transition-transform group-hover:scale-125" :class="val >= {{ $i }} ? 'text-amber-400' : 'text-slate-300'"></i>
-                            </label>
-                        @endfor
-                    </div>
-                </div>
-
-                <!-- Rating 3: Facility -->
-                <div class="p-3 bg-slate-50/80 border border-slate-200/80 rounded-md flex flex-col justify-between hover:border-amber-300 transition-colors" x-data="{ val: {{ old('rating_facility', 5) }} }">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs font-bold text-slate-700">3. Cơ sở vật chất & Không gian đọc</span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800" x-text="val + '/5 Sao'"></span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        @for($i = 1; $i <= 5; $i++)
-                            <label class="cursor-pointer group flex items-center">
-                                <input type="radio" name="rating_facility" value="{{ $i }}" @click="val = {{ $i }}" class="sr-only" {{ old('rating_facility', 5) == $i ? 'checked' : '' }}>
-                                <i class="fas fa-star text-base transition-transform group-hover:scale-125" :class="val >= {{ $i }} ? 'text-amber-400' : 'text-slate-300'"></i>
-                            </label>
-                        @endfor
-                    </div>
-                </div>
-
-                <!-- Rating 4: Overall -->
+                <!-- Rating Overall -->
                 <div class="p-3 bg-amber-50/50 border border-amber-200/80 rounded-md flex flex-col justify-between hover:border-amber-400 transition-colors" x-data="{ val: {{ old('rating_overall', 5) }} }">
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs font-bold text-amber-900">4. Mức độ hài lòng chung <span class="text-vttu-red">*</span></span>
+                        <span class="text-xs font-bold text-amber-900">Mức độ hài lòng chung <span class="text-vttu-red">*</span></span>
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-200 text-amber-900" x-text="val + '/5 Sao'"></span>
                     </div>
                     <div class="flex items-center gap-2">
