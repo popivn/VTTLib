@@ -114,8 +114,6 @@ Route::prefix('tin-tuc')->name('news.')->group(function () {
     Route::post('/{news}/like', [\App\Http\Controllers\NewsController::class, 'like'])->name('like');
 });
 
-Route::get('/News/ViewImageMedia', [\App\Http\Controllers\SiteController::class, 'viewImageMedia'])->name('site.view-image-media');
-
 Route::get('/{code}', [\App\Http\Controllers\SiteController::class, 'page'])->name('site.page');
 Route::get('/sitemap', [\App\Http\Controllers\SiteController::class, 'sitemap'])->name('site.sitemap');
 Route::get('/sitemap.xml', [\App\Http\Controllers\SiteController::class, 'xmlSitemap'])->name('site.sitemap.xml');
@@ -607,6 +605,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
 
     // Patron Surveys List
     Route::get('/patron-surveys', [\App\Http\Controllers\Admin\PatronSurveyController::class, 'index'])->name('admin.patron-surveys.index');
+
+    // Curriculum Management
+    Route::get('/curriculum', [\App\Http\Controllers\Admin\CurriculumController::class, 'index'])->name('admin.curriculum.index');
+    Route::post('/curriculum', [\App\Http\Controllers\Admin\CurriculumController::class, 'store'])->name('admin.curriculum.store');
+    Route::put('/curriculum/{id}', [\App\Http\Controllers\Admin\CurriculumController::class, 'update'])->name('admin.curriculum.update');
+    Route::delete('/curriculum/{id}', [\App\Http\Controllers\Admin\CurriculumController::class, 'destroy'])->name('admin.curriculum.destroy');
 });
 
 // Visitor Routes

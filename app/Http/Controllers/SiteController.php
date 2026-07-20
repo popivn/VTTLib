@@ -712,6 +712,13 @@ class SiteController extends Controller
             ->where('is_active', 1)
             ->first();
 
+        // Xử lý alias đường dẫn chương trình đào tạo
+        if (!$siteNode && in_array($code, ['chuong-trinh-dao-tao-vttu', 'chuong-trinh-dao-tao'])) {
+            $siteNode = SiteNode::where('node_code', 'khung-chuong-trinh-dao-tao')
+                ->where('is_active', 1)
+                ->first();
+        }
+
         if (!$siteNode) {
             $builtinPages = [
                 'khao-sat-y-kien' => 'Khảo sát ý kiến bạn đọc',
@@ -939,7 +946,15 @@ class SiteController extends Controller
             $extraData['currentField'] = $field;
             $extraData['keyword'] = $keyword;
             $extraData['currentFolderId'] = $folderId;
-            $extraData['folders'] = \App\Models\DigitalFolder::where('is_active', true)->orderBy('sort_order')->get();
+            $extraData['folders'] = \App\Models\DigitalFolder::where(function($q) {
+                $q->whereNull('parent_id')->orWhere('parent_id', 0);
+            })->where('is_active', true)
+              ->with(['children' => function($q) {
+                  $q->where('is_active', true)->withCount('resources')->orderBy('sort_order');
+              }])
+              ->withCount('resources')
+              ->orderBy('sort_order')
+              ->get();
         }
 
         // Nạp dữ liệu OER nếu truy cập trang tài nguyên giáo dục mở (chỉ load list, không phải landing page)
@@ -1010,9 +1025,10 @@ class SiteController extends Controller
             ], $extraData));
         }
 
-        // 3. Fallback theo node_code chỉ khi không có masterpage
-        if (!$siteNode->masterpage && view()->exists("site.pages.{$code}")) {
-            return view("site.pages.{$code}", array_merge([
+        // 3. Fallback theo node_code hoặc code của siteNode
+        $targetView = $siteNode->node_code;
+        if (view()->exists("site.pages.{$targetView}")) {
+            return view("site.pages.{$targetView}", array_merge([
                 'node' => $siteNode,
                 'siteNode' => $siteNode,
                 'menuItems' => $menuItems,

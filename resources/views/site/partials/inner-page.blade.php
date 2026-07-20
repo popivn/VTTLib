@@ -51,7 +51,7 @@
             'fas fa-bullseye'       => 'target',
             'fas fa-scale-balanced' => 'scale',
             'fas fa-clock'          => 'clock',
-            'fas fa-sitemap'        => 'sitemap',
+            'fas fa-sitemap'        => 'network',
             'fas fa-compass'        => 'compass',
             'fas fa-home'           => 'home',
             'fas fa-search'         => 'search',
@@ -144,13 +144,13 @@
                                          ? 'bg-vttu-red text-white font-bold shadow-md shadow-vttu-red/20' 
                                          : 'text-muted-foreground hover:bg-vttu-red/10 hover:text-vttu-red active:bg-vttu-red active:text-white active:scale-[0.98]' }}">
                                 
-                                @if(!$active)
-                                    <div class="w-8 h-8 rounded-sm bg-gradient-to-br from-vttu-red to-vttu-dark shadow-vttu-red/25 flex items-center justify-center text-white flex-shrink-0 transition-all group-hover:scale-110 group-active:scale-95 group-active:bg-none group-active:text-vttu-yellow">
-                                        <i data-lucide="{{ getLucideIcon($item->icon) }}" class="w-4 h-4"></i>
+                                @if(str_starts_with($item->icon ?? '', 'fa') || str_contains($item->icon ?? '', 'fa-'))
+                                    <div class="w-8 h-8 rounded-sm {{ !$active ? 'bg-gradient-to-br from-vttu-red to-vttu-dark shadow-vttu-red/25' : '' }} flex items-center justify-center flex-shrink-0 transition-all group-hover:scale-110 group-active:scale-95">
+                                        <i class="{{ $item->icon }} text-xs {{ $active ? 'text-vttu-yellow' : 'text-white' }}"></i>
                                     </div>
                                 @else
-                                    <div class="w-8 h-8 flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 group-active:scale-95">
-                                        <i data-lucide="{{ getLucideIcon($item->icon) }}" class="w-4 h-4 text-vttu-yellow"></i>
+                                    <div class="w-8 h-8 rounded-sm {{ !$active ? 'bg-gradient-to-br from-vttu-red to-vttu-dark shadow-vttu-red/25' : '' }} flex items-center justify-center flex-shrink-0 transition-all group-hover:scale-110 group-active:scale-95">
+                                        <i data-lucide="{{ getLucideIcon($item->icon) }}" class="w-4 h-4 {{ $active ? 'text-vttu-yellow' : 'text-white' }}"></i>
                                     </div>
                                 @endif
                                 
@@ -202,6 +202,10 @@
                     @else
                         @include('site.pages.partials.digital-list-content')
                     @endif
+                @elseif($node->node_code === 'chuong-trinh-dao-tao-vttu' || $node->node_code === 'khung-chuong-trinh-dao-tao')
+                    @include('site.pages.partials.curriculum-content')
+                @elseif($node->node_code === 'huong-dan' || $node->masterpage === 'help')
+                    @include('site.pages.huong-dan-content')
                 @elseif($node->node_code === 'tai-nguyen-giao-duc-mo' || $node->masterpage === 'oer')
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2">
