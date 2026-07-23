@@ -319,8 +319,71 @@ window.addEventListener('DOMContentLoaded', () => {
     switchTab(tab);
 });
 
-// Return single loan inline
-function returnSingleBook(loanId, barcode, title) {
+// Process checkout dynamically via AJAX
+function processAjaxCheckout(form) {
+    const patronCode = form.querySelector('[name="patron_code"]').value.trim();
+    const barcode = form.querySelector('[name="barcode"]').value.trim();
+    
+    if (!patronCode || !barcode) {
+        Swal.fire(getSwalConfig('{{ __("Thông báo") }}', 'warning', { text: '{{ __("Vui lòng nhập mã bạn đọc và mã vạch tài liệu") }}' }));
+        return;
+    }
+
+    Swal.fire(getSwalConfig('{{ __("Đang xử lý") }}', 'info', {
+        text: '{{ __("Đang thực hiện cho mượn...") }}',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    }));
+
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.message || 'Lỗi hệ thống'); });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            Swal.fire(getSwalConfig('{{ __("Thành công") }}', 'success', { text: data.message }));
+            // Clear barcode input
+            const barcodeInput = document.getElementById('book_barcode');
+            if (barcodeInput) {
+                barcodeInput.value = '';
+                barcodeInput.focus();
+            }
+            // Clear bookSearchResult info
+            const bookResultDiv = document.getElementById('bookSearchResult');
+            if (bookResultDiv) {
+                updateHTMLAndRefreshIcons(bookResultDiv, `
+                    <div class="text-center text-muted-foreground text-xs py-6">
+                        <i data-lucide="book-open" class="w-8 h-8 mx-auto mb-2 text-muted-foreground/30"></i>
+                        <p>{{ __('Nhập mã vạch sách để hiển thị thông tin') }}</p>
+                    </div>
+                `);
+            }
+            // Reload patron's active loans dynamically
+            loadPatronActiveLoans();
+        } else {
+            Swal.fire(getSwalConfig('{{ __("Lỗi") }}', 'error', { text: data.message }));
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        Swal.fire(getSwalConfig('{{ __("Lỗi") }}', 'error', { text: error.message || '{{ __("Có lỗi xảy ra khi cho mượn sách") }}' }));
+    });
+}
+
+// Return single loan inline using AJAX
+function returnSingleBook(loanId, barcode, title, isOverdue = false) {
     Swal.fire(getSwalConfig('{{ __("Xác nhận trả sách") }}', 'question', {
         html: `Trả tài liệu <strong>${title}</strong>?<br><small class="font-mono">${barcode}</small>`,
         showCancelButton: true,
@@ -330,24 +393,77 @@ function returnSingleBook(loanId, barcode, title) {
     })).then((result) => {
         if (!result.isConfirmed) return;
 
-        Swal.fire(getSwalConfig('{{ __("Đang xử lý") }}', 'info', {
-            text: '{{ __("Đang trả sách...") }}',
-            allowOutsideClick: false,
-            didOpen: () => { Swal.showLoading(); }
-        }));
-
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ route("admin.circulation.checkin") }}';
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (csrf) {
-            const t = document.createElement('input'); t.type = 'hidden'; t.name = '_token'; t.value = csrf;
-            form.appendChild(t);
+        if (isOverdue) {
+            Swal.fire(getSwalConfig('Sách đã quá hạn!', 'warning', {
+                text: 'Bạn có muốn THA THỨ cho lần mượn quá hạn này không? Hệ thống sẽ lưu lại lịch sử tha thứ.',
+                showCancelButton: true,
+                confirmButtonText: 'Có, tha thứ',
+                cancelButtonText: 'Không, tính phạt',
+            })).then((overdueResult) => {
+                if (overdueResult.isConfirmed) {
+                    ajaxReturnBook(loanId, barcode, true);
+                } else if (overdueResult.dismiss === Swal.DismissReason.cancel) {
+                    ajaxReturnBook(loanId, barcode, false);
+                }
+            });
+        } else {
+            ajaxReturnBook(loanId, barcode, false);
         }
-        const bInput = document.createElement('input'); bInput.type = 'hidden'; bInput.name = 'barcode'; bInput.value = barcode;
-        form.appendChild(bInput);
-        document.body.appendChild(form);
-        form.submit();
+    });
+}
+
+// AJAX helper to post checkin data
+function ajaxReturnBook(loanId, barcode, forgive) {
+    Swal.fire(getSwalConfig('{{ __("Đang xử lý") }}', 'info', {
+        text: '{{ __("Đang trả sách...") }}',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    }));
+
+    const formData = new FormData();
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+    formData.append('_token', csrf);
+    if (loanId) {
+        formData.append('loan_id', loanId);
+    }
+    if (barcode) {
+        formData.append('barcode', barcode);
+    }
+    formData.append('forgive', forgive ? 1 : 0);
+
+    fetch('{{ route("admin.circulation.checkin") }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.message || 'Lỗi hệ thống'); });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            Swal.fire(getSwalConfig('{{ __("Thành công") }}', 'success', { text: data.message }));
+            // Reload active loans list dynamically
+            const patronCode = document.getElementById('patron_code')?.value.trim() 
+                || document.getElementById('reading_patron_code')?.value.trim() 
+                || document.getElementById('hold_patron_code')?.value.trim();
+            if (patronCode) {
+                loadPatronActiveLoans();
+            } else {
+                setTimeout(() => { window.location.reload(); }, 1200);
+            }
+        } else {
+            Swal.fire(getSwalConfig('{{ __("Lỗi") }}', 'error', { text: data.message }));
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        Swal.fire(getSwalConfig('{{ __("Lỗi") }}', 'error', { text: error.message || '{{ __("Có lỗi xảy ra khi trả sách") }}' }));
     });
 }
 
@@ -405,7 +521,7 @@ async function loadPatronActiveLoans() {
                                         <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
                                     </button>
                                 `}
-                                <button onclick="returnSingleBook(${loan.id}, '${barcode}', '${addslashes(title)}')" 
+                                <button onclick="returnSingleBook(${loan.id}, '${barcode}', '${addslashes(title)}', ${isOverdue})" 
                                         class="flex items-center gap-1 px-2.5 py-1 bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white border border-blue-500/20 rounded-sm transition-all text-[10px] font-bold">
                                     <i data-lucide="undo-2" class="w-3 h-3"></i>
                                     Trả sách
@@ -675,7 +791,15 @@ function displayPatronResult(patron) {
         
         let borrowingStatus, statusColor, statusIcon;
         if (!canBorrow) {
-            if (loans >= patron.data.max_loans) {
+            if (patron.data.is_expired) {
+                borrowingStatus = `Thẻ đã hết hạn (${new Date(patron.data.expiry_date).toLocaleDateString('vi-VN')})`;
+                statusColor = 'text-destructive bg-destructive/10 border-destructive/20';
+                statusIcon = 'clock';
+            } else if (patron.data.card_status === 'locked') {
+                borrowingStatus = 'Thẻ đang bị khóa';
+                statusColor = 'text-destructive bg-destructive/10 border-destructive/20';
+                statusIcon = 'lock';
+            } else if (loans >= patron.data.max_loans) {
                 borrowingStatus = 'Đã đạt giới hạn mượn sách';
                 statusColor = 'text-destructive bg-destructive/10 border-destructive/20';
                 statusIcon = 'alert-triangle';
@@ -700,8 +824,8 @@ function displayPatronResult(patron) {
                     <div class="flex-shrink-0">
                         <div class="w-16 h-20 rounded-md overflow-hidden bg-muted flex items-center justify-center border border-border">
                             ${patron.data.profile_image ? 
-                                `<img src="${patron.data.profile_image}" alt="${patron.data.display_name || 'Patron'}" class="w-full h-full object-cover">` :
-                                `<i data-lucide="user" class="w-6 h-6 text-muted-foreground"></i>`
+                                `<img src="${patron.data.profile_image}" onerror="this.onerror=null; this.src='/assets/imgs/books/noimage.png';" alt="${patron.data.display_name || 'Patron'}" class="w-full h-full object-cover">` :
+                                `<img src="/assets/imgs/books/noimage.png" alt="No image" class="w-full h-full object-cover">`
                             }
                         </div>
                     </div>
@@ -985,7 +1109,7 @@ function loadCurrentLoans(patronId, activeLoans = null) {
                 <td class="p-2 text-muted-foreground text-xs">${notes}</td>
                 <td class="p-2 text-center">
                     <div class="flex items-center justify-center gap-1">
-                        <button onclick="returnSingleBook(${loan.id}, '${loan.book_item?.barcode || ''}', '${addslashes(title)}')" 
+                        <button onclick="returnSingleBook(${loan.id}, '${loan.book_item?.barcode || ''}', '${addslashes(title)}', ${isOverdue})" 
                                 class="p-1 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10 rounded transition-colors"
                                 title="{{ __("Trả sách") }}">
                             <i data-lucide="undo-2" class="w-3.5 h-3.5"></i>
@@ -1061,8 +1185,8 @@ function declareLostSpecificBook(barcode, title) {
             .then(data => {
                 if (data.success) {
                     Swal.fire(getSwalConfig('{{ __("Thành công") }}', 'success', { text: `{{ __("Khai báo mất tài liệu thành công") }}: ${title}` }));
-                    const patronCode = document.getElementById('patron_code').value.trim();
-                    if (patronCode) searchPatronByCode(patronCode);
+                    const patronCode = document.getElementById('patron_code')?.value.trim();
+                    if (patronCode) loadPatronActiveLoans();
                 } else {
                     Swal.fire(getSwalConfig('{{ __("Lỗi") }}', 'error', { text: data.message }));
                 }
@@ -1109,9 +1233,9 @@ function renewSpecificBook(loanId, barcode, title) {
             .then(data => {
                 if (data.success) {
                     Swal.fire(getSwalConfig('{{ __("Thành công") }}', 'success', { text: data.message || '{{ __("Gia hạn tài liệu thành công") }}' }));
-                    const patronCode = document.getElementById('patron_code').value.trim();
+                    const patronCode = document.getElementById('patron_code')?.value.trim();
                     if (patronCode) {
-                        searchPatronByCode(patronCode);
+                        loadPatronActiveLoans();
                     } else {
                         setTimeout(() => { window.location.reload(); }, 1500);
                     }
@@ -1229,7 +1353,12 @@ function processRecall() {
             }
             Swal.fire(getSwalConfig('{{ __("Thành công") }}', 'success', { text: message }));
             closeRecallModal();
-            setTimeout(() => { window.location.reload(); }, 1500);
+            const patronCode = document.getElementById('patron_code')?.value.trim();
+            if (patronCode) {
+                loadPatronActiveLoans();
+            } else {
+                setTimeout(() => { window.location.reload(); }, 1500);
+            }
         } else {
             Swal.fire(getSwalConfig('{{ __("Lỗi") }}', 'error', { text: data.message }));
         }
@@ -1274,7 +1403,12 @@ function processDeclareLost() {
             } else {
                 Swal.fire(getSwalConfig('{{ __("Thành công") }}', 'success', { text: '{{ __("Khai báo mất tài liệu thành công") }}' }));
                 closeDeclareLostModal();
-                setTimeout(() => { window.location.reload(); }, 1500);
+                const patronCode = document.getElementById('patron_code')?.value.trim();
+                if (patronCode) {
+                    loadPatronActiveLoans();
+                } else {
+                    setTimeout(() => { window.location.reload(); }, 1500);
+                }
             }
         })
         .catch(err => {

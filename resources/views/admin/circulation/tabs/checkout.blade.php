@@ -28,7 +28,7 @@
         </div>
 
         <!-- Right: New Checkout -->
-        <form action="{{ route('admin.circulation.checkout') }}" method="POST" class="bg-card border border-border p-3 rounded-md shadow-sm space-y-3">
+        <form action="{{ route('admin.circulation.checkout') }}" method="POST" onsubmit="event.preventDefault(); processAjaxCheckout(this);" class="bg-card border border-border p-3 rounded-md shadow-sm space-y-3">
             @csrf
             <h3 class="text-sm font-bold text-blue-500 flex items-center gap-1">
                 <i data-lucide="scan-barcode" class="w-4 h-4"></i>

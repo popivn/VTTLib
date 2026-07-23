@@ -196,6 +196,16 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                 0%,100% { transform: scale(0.5); opacity: 0.2; }
                 50%      { transform: scale(1.8); opacity: 1;   }
             }
+            .news-swiper-container .swiper-slide,
+            .books-swiper-container .swiper-slide,
+            .medical-swiper-container .swiper-slide,
+            .book-intro-swiper-container .swiper-slide {
+                height: auto !important;
+            }
+            .news-swiper-container .swiper-wrapper,
+            .medical-swiper-container .swiper-wrapper {
+                align-items: flex-start !important;
+            }
         </style>
     </section>
 
@@ -204,7 +214,7 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
         <!-- Content overlay for readability -->
         <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse at center top, rgba(255,255,255,0.15) 0%, transparent 60%);"></div>
 
-        <div class="px-4 md:px-12 lg:px-24 relative z-10 w-full">
+        <div class="container-fluid px-4 md:px-6 lg:px-8 relative z-10 w-full">
             <div class="flex flex-col lg:flex-row gap-8 transition-all duration-500 ease-in-out w-full">
                 
                 <!-- LEFT COLUMN -->
@@ -330,7 +340,9 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                 </button>
                             </div>
                             <div id="news-content" class="min-h-[200px] relative">
-                                @include('site.pages.partials.home-news', ['homeNews' => $tabNews ?? $homeNews])
+                                <div class="flex items-center justify-center w-full py-20">
+                                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-vttu-red"></div>
+                                </div>
                             </div>
                         </div>
 
@@ -344,20 +356,24 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                         {{ __('Giới thiệu sách hằng tháng') }}
                                     </span>
                                 </div>
-                                <div class="swiper book-intro-swiper-container !pb-10">
+                                <div class="swiper book-intro-swiper-container !pb-1">
                                     <div class="swiper-wrapper flex flex-nowrap">
                                         @if(isset($bookIntroductionNews) && count($bookIntroductionNews) > 0)
                                             @foreach($bookIntroductionNews as $item)
-                                            <div class="swiper-slide h-auto shrink-0 !w-[160px]">
+                                            <div class="swiper-slide h-auto shrink-0">
                                                 <div class="bg-white p-2.5 rounded-md border border-slate-100 hover:border-vttu-red/20 transition-all group flex flex-col shadow-sm">
                                                     <!-- Book Cover -->
-                                                    <div class="aspect-[3/4] bg-slate-50 rounded-sm mb-2 border border-slate-50 flex items-center justify-center overflow-hidden relative">
+                                                    <div class="aspect-[3/4] bg-slate-900 rounded-sm mb-2 border border-slate-50 overflow-hidden relative group/img">
                                                         @if($item->featured_image)
-                                                            <img src="{{ $item->featured_image }}" class="w-full h-full object-contain">
+                                                            <!-- Blurred Backdrop Image Fill -->
+                                                            <img src="{{ $item->featured_image }}" class="absolute inset-0 w-full h-full object-cover blur-lg scale-125 opacity-50 pointer-events-none">
+                                                            <div class="absolute inset-0 bg-black/10"></div>
+                                                            <!-- Main Foreground Image -->
+                                                            <img src="{{ $item->featured_image }}" class="relative z-10 w-full h-full object-contain group-hover/img:scale-105 transition-transform duration-500">
                                                         @else
                                                             <div class="w-full h-full bg-vttu-red flex items-center justify-center text-white font-bold text-center p-2 text-[10px]">VTTU Library</div>
                                                         @endif
-                                                        <div class="absolute top-1.5 right-1.5">
+                                                        <div class="absolute top-1.5 right-1.5 z-10">
                                                             <span class="px-1.5 py-0.5 bg-white/90 backdrop-blur text-vttu-red rounded-sm text-[7px] font-bold uppercase tracking-widest shadow-sm">SÁCH</span>
                                                         </div>
                                                     </div>
@@ -385,7 +401,7 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                             @endforeach
                                         @else
                                             @for($i=1; $i<=2; $i++)
-                                            <div class="swiper-slide h-auto shrink-0 !w-[160px]">
+                                            <div class="swiper-slide h-auto shrink-0">
                                                 <div class="bg-white p-2.5 rounded-md border border-slate-100 hover:border-vttu-red/20 transition-all group flex flex-col shadow-sm">
                                                     <!-- Book Cover -->
                                                     <div class="aspect-[3/4] bg-slate-50 rounded-sm mb-2 border border-slate-50 flex items-center justify-center overflow-hidden relative">
@@ -442,8 +458,10 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                 <button @click="loadMedicalTab('Nội khoa', 'medical-tabs', 'medical-content')"
                                     class="tab-btn text-xs font-bold text-slate-400 hover:text-vttu-red px-4 py-1.5 rounded-sm whitespace-nowrap transition-all uppercase">{{ __('NỘI KHOA') }}</button>
                             </div>
-                            <div id="medical-content" class="min-h-[200px] flex items-center justify-center">
-                                <span class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i> {{ __('Đang tải dữ liệu...') }}</span>
+                            <div id="medical-content" class="min-h-[200px] relative">
+                                <div class="flex items-center justify-center w-full py-20">
+                                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-vttu-red"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -611,21 +629,13 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                              data-video-title="{{ $video->title }}"
                                              data-video-image="{{ $video->featured_image ?? 'https://img.freepik.com/free-vector/video-streaming-concept-illustration_114360-10731.jpg' }}">
                                             <div class="w-16 h-10 flex-shrink-0 bg-slate-900 rounded-sm relative overflow-hidden shadow-sm">
-                                                @if($video->video_url)
-                                                    <iframe src="{{ $video->video_url }}" 
-                                                            class="w-full h-full pointer-events-none" 
-                                                            frameborder="0" 
-                                                            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-                                                    </iframe>
-                                                @else
-                                                    <div class="absolute inset-0 flex items-center justify-center z-10">
-                                                        <div class="w-6 h-6 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white text-[8px]">
-                                                            <i class="fas fa-play"></i>
-                                                        </div>
+                                                <img src="{{ $video->featured_image ?? 'https://img.freepik.com/free-vector/video-streaming-concept-illustration_114360-10731.jpg' }}" 
+                                                     class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                                                <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors z-10">
+                                                    <div class="w-5 h-5 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-vttu-red shadow-sm">
+                                                        <i class="fas fa-play text-[7px] ml-0.5"></i>
                                                     </div>
-                                                    <img src="{{ $video->featured_image ?? 'https://img.freepik.com/free-vector/video-streaming-concept-illustration_114360-10731.jpg' }}" 
-                                                         class="w-full h-full object-cover opacity-60">
-                                                @endif
+                                                </div>
                                             </div>
                                             <div class="flex-1 min-w-0">
                                                 <a href="{{ $video->url }}" class="text-[10px] font-bold text-vttu-dark leading-snug line-clamp-2 group-hover:text-vttu-red transition-colors">
@@ -793,7 +803,9 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                     if (container.swiper) container.swiper.destroy();
                     const self = window.homeWizard;
                     new Swiper('.books-swiper-container', {
-                        slidesPerView: 'auto',
+                        autoHeight: true,
+                        slidesPerView: 1,
+                        slidesPerGroup: 1,
                         spaceBetween: 12,
                         centeredSlides: false,
                         observer: true,
@@ -803,9 +815,21 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                             prevEl: '.books-prev',
                         },
                         breakpoints: {
-                            640: { spaceBetween: 16 },
-                            1024: { spaceBetween: 20 },
-                            1280: { spaceBetween: 24 }
+                            520: {
+                                slidesPerView: 2,
+                                slidesPerGroup: 2,
+                                spaceBetween: 12
+                            },
+                            768: {
+                                slidesPerView: 3,
+                                slidesPerGroup: 3,
+                                spaceBetween: 16
+                            },
+                            1024: {
+                                slidesPerView: 4,
+                                slidesPerGroup: 4,
+                                spaceBetween: 16
+                            }
                         },
                         on: {
                             slideChange: function() {
@@ -838,7 +862,7 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                 this.loadingMore = true;
                 console.log(`[LazyLoad] Requesting book at offset ${offset} for tab ${type}...`);
                 
-                fetch(`{{ route('home') }}?type=${type}&offset=${offset}&limit=1&only_slides=1`, {
+                fetch(`{{ route('home') }}?type=${type}&offset=${offset}&limit=4&only_slides=1`, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
                 .then(response => {
@@ -929,8 +953,8 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                 })
                 .catch(err => console.error('Tab Load Error:', err));
             },
-            loadMedicalTab(type, tabsId, contentId) {
-                const target = event.currentTarget;
+            loadMedicalTab(type, tabsId, contentId, eventOverride = null) {
+                const target = eventOverride ? eventOverride.currentTarget : event.currentTarget;
                 const contentDiv = document.getElementById(contentId);
                 const tabsDiv = document.getElementById(tabsId);
                 
@@ -953,9 +977,11 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                     target.classList.remove('text-slate-400', 'hover:text-vttu-red');
                     target.classList.add('text-white', 'bg-vttu-red', 'shadow-lg', 'shadow-vttu-red/20');
 
-                    // Khởi tạo Swiper cho tab chuyên đề Y khoa mới load xong
+                    // Khởi tạo Swiper 4-item cho tab chuyên đề Y khoa
                     new Swiper('#medical-content .medical-swiper-container', {
-                        slidesPerView: 'auto',
+                        autoHeight: true,
+                        slidesPerView: 1,
+                        slidesPerGroup: 1,
                         spaceBetween: 12,
                         centeredSlides: false,
                         observer: true,
@@ -965,14 +991,27 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                             prevEl: '#medical-content .medical-prev',
                         },
                         breakpoints: {
-                            640: { spaceBetween: 12 },
-                            1024: { spaceBetween: 16 }
+                            520: {
+                                slidesPerView: 2,
+                                slidesPerGroup: 2,
+                                spaceBetween: 12
+                            },
+                            768: {
+                                slidesPerView: 3,
+                                slidesPerGroup: 3,
+                                spaceBetween: 16
+                            },
+                            1024: {
+                                slidesPerView: 4,
+                                slidesPerGroup: 4,
+                                spaceBetween: 16
+                            }
                         }
                     });
                 });
             },
-            loadNewsTab(type, tabsId, contentId) {
-                const target = event.currentTarget;
+            loadNewsTab(type, tabsId, contentId, eventOverride = null) {
+                const target = eventOverride ? eventOverride.currentTarget : event.currentTarget;
                 const contentDiv = document.getElementById(contentId);
                 const tabsDiv = document.getElementById(tabsId);
                 
@@ -994,7 +1033,44 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                     });
                     target.classList.remove('text-slate-400', 'hover:text-vttu-red');
                     target.classList.add('text-white', 'bg-vttu-red', 'shadow-sm');
+
+                    this.initNewsSwiper();
                 });
+            },
+            initNewsSwiper() {
+                const container = document.querySelector('.news-swiper-container');
+                if (container) {
+                    if (container.swiper) container.swiper.destroy();
+                    new Swiper('.news-swiper-container', {
+                        autoHeight: true,
+                        slidesPerView: 1,
+                        slidesPerGroup: 1,
+                        spaceBetween: 12,
+                        observer: true,
+                        observeParents: true,
+                        navigation: {
+                            nextEl: '.news-next',
+                            prevEl: '.news-prev',
+                        },
+                        breakpoints: {
+                            520: {
+                                slidesPerView: 2,
+                                slidesPerGroup: 2,
+                                spaceBetween: 12
+                            },
+                            768: {
+                                slidesPerView: 3,
+                                slidesPerGroup: 3,
+                                spaceBetween: 16
+                            },
+                            1024: {
+                                slidesPerView: 4,
+                                slidesPerGroup: 4,
+                                spaceBetween: 16
+                            }
+                        }
+                    });
+                }
             }
         }
         return window.homeWizard;
@@ -1047,21 +1123,33 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                 AOS.refresh();
             }, 200);
         });
-        // Initialize Books Swiper on load
         const wizard = catalogWizard();
-        // wizard.initBooksSwiper(); // Không init trực tiếp vì sẽ load bằng AJAX bên dưới
 
-        // Force load tab đầu tiên bằng AJAX khi vào trang
+        // Force load tab sách đầu tiên bằng AJAX khi vào trang
         const firstTab = document.querySelector('#book-tabs .tab-btn');
         if (firstTab) {
-            // Tạo một mock event để khớp với logic loadTab
             const mockEvent = { currentTarget: firstTab };
             wizard.loadTab('book', 'book-tabs', 'books-content', mockEvent);
         }
 
+        // Force load tab tin tức đầu tiên bằng AJAX khi vào trang
+        const firstNewsTab = document.querySelector('#news-tabs .tab-btn');
+        if (firstNewsTab) {
+            const mockNewsEvent = { currentTarget: firstNewsTab };
+            wizard.loadNewsTab('news', 'news-tabs', 'news-content', mockNewsEvent);
+        }
+
+        // Force load tab y khoa đầu tiên bằng AJAX khi vào trang
+        const firstMedicalTab = document.querySelector('#medical-tabs .tab-btn');
+        if (firstMedicalTab) {
+            const mockMedicalEvent = { currentTarget: firstMedicalTab };
+            wizard.loadMedicalTab('Sản khoa', 'medical-tabs', 'medical-content', mockMedicalEvent);
+        }
+
         // Initialize Book Introduction Swiper
         new Swiper('.book-intro-swiper-container', {
-            slidesPerView: 'auto',
+            slidesPerView: 1,
+            slidesPerGroup: 1,
             spaceBetween: 12,
             centeredSlides: false,
             observer: true,
@@ -1071,8 +1159,21 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                 prevEl: '.book-intro-prev',
             },
             breakpoints: {
-                640: { spaceBetween: 12 },
-                1024: { spaceBetween: 16 }
+                520: {
+                    slidesPerView: 2,
+                    slidesPerGroup: 2,
+                    spaceBetween: 12
+                },
+                768: {
+                    slidesPerView: 3,
+                    slidesPerGroup: 3,
+                    spaceBetween: 16
+                },
+                1024: {
+                    slidesPerView: 4,
+                    slidesPerGroup: 4,
+                    spaceBetween: 16
+                }
             }
         });
     });

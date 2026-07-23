@@ -253,7 +253,7 @@
                 </div>
 
                 <!-- Sidebar Notifications (20%) -->
-                <aside class="lg:w-[20%] space-y-8">
+                <aside class="lg:w-[20%] space-y-8 self-start">
                     <div class="bg-white rounded-[2rem] p-8 shadow-xl shadow-black/5 border border-slate-100 sticky top-24" data-aos="fade-left">
                         <h3 class="text-lg font-black text-vttu-dark mb-6 flex items-center">
                             <span class="w-1.5 h-6 bg-vttu-red rounded-full mr-3"></span>

@@ -126,33 +126,53 @@ class CirculationController extends Controller
             $patron = PatronDetail::where('patron_code', $validated['patron_code'])->first();
             if (!$patron) {
                 DB::rollBack();
-                return back()->with('warning', __('Không tìm thấy bạn đọc với mã đã nhập.'));
+                $msg = __('Không tìm thấy bạn đọc với mã đã nhập.');
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 400);
+                }
+                return back()->with('warning', $msg);
             }
             
             // Find book item
             $bookItem = BookItem::where('barcode', $validated['barcode'])->first();
             if (!$bookItem) {
                 DB::rollBack();
-                return back()->with('warning', __('Không tìm thấy tài liệu với mã vạch đã nhập.'));
+                $msg = __('Không tìm thấy tài liệu với mã vạch đã nhập.');
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 400);
+                }
+                return back()->with('warning', $msg);
             }
 
             // Check if patron can borrow
             if (!$patron->canBorrow()) {
                 DB::rollBack();
-                return back()->with('warning', __('Bạn đọc không thể mượn sách. Vui lòng kiểm tra lại giới hạn mượn, hạn thẻ hoặc tiền phạt tồn đọng.'));
+                $msg = __('Bạn đọc không thể mượn sách. Vui lòng kiểm tra lại giới hạn mượn, hạn thẻ hoặc tiền phạt tồn đọng.');
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 400);
+                }
+                return back()->with('warning', $msg);
             }
 
             // Check if book is available
             if ($bookItem->status !== 'available') {
                 DB::rollBack();
-                return back()->with('warning', __('Tài liệu hiện không ở trạng thái sẵn sàng để mượn.'));
+                $msg = __('Tài liệu hiện không ở trạng thái sẵn sàng để mượn.');
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 400);
+                }
+                return back()->with('warning', $msg);
             }
 
             // Get policy
             $policy = $patron->patronGroup?->activePolicy;
             if (!$policy) {
                 DB::rollBack();
-                return back()->with('warning', __('Chưa có quy định lưu thông đang hoạt động cho nhóm bạn đọc này.'));
+                $msg = __('Chưa có quy định lưu thông đang hoạt động cho nhóm bạn đọc này.');
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 400);
+                }
+                return back()->with('warning', $msg);
             }
 
             // Create loan transaction
@@ -172,12 +192,25 @@ class CirculationController extends Controller
 
             DB::commit();
 
-            return back()->with('success', __('Book checked out successfully. Due date: :date', [
+            $successMsg = __('Book checked out successfully. Due date: :date', [
                 'date' => $loan->due_date->format('d/m/Y')
-            ]));
+            ]);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $successMsg,
+                    'due_date' => $loan->due_date->format('d/m/Y')
+                ]);
+            }
+
+            return back()->with('success', $successMsg);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
             return back()->with('error', $e->getMessage());
         }
     }
@@ -734,6 +767,9 @@ class CirculationController extends Controller
                     'outstanding_fine' => $outstandingFine,
                     'can_borrow' => $canBorrow,
                     'status' => $patron->status,
+                    'card_status' => $patron->card_status,
+                    'expiry_date' => $patron->expiry_date ? (\Carbon\Carbon::parse($patron->expiry_date)->format('Y-m-d')) : null,
+                    'is_expired' => $patron->isExpired(),
                     'transaction_stats' => [
                         'total_checkouts' => $totalCheckouts,
                         'total_checkins' => $totalCheckins,
@@ -753,7 +789,7 @@ class CirculationController extends Controller
                 'execution_time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
             ]);
 
-            return response()->json($result);
+            return response()->json($this->cleanUtf8($result));
 
         } catch (\Exception $e) {
             \Log::error('Patron search error', [
@@ -764,7 +800,7 @@ class CirculationController extends Controller
                 'execution_time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
             ]);
             
-            return response()->json(['success' => false, 'message' => __('Search error: ') . $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => __('Search error: ') . __($e->getMessage())]);
         }
     }
 
@@ -863,7 +899,7 @@ class CirculationController extends Controller
                 'execution_time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
             ]);
 
-            return response()->json($result);
+            return response()->json($this->cleanUtf8($result));
 
         } catch (\Exception $e) {
             \Log::error('Book search error', [
@@ -874,7 +910,7 @@ class CirculationController extends Controller
                 'execution_time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms'
             ]);
             
-            return response()->json(['success' => false, 'message' => __('Search error: ') . $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => __('Search error: ') . __($e->getMessage())]);
         }
     }
 
@@ -2118,5 +2154,18 @@ class CirculationController extends Controller
             ->get();
 
         return view('admin.circulation.book-management', compact('overdueLoans', 'activeLoans', 'loanRequests'));
+    }
+
+    private function cleanUtf8($data)
+    {
+        if (is_string($data)) {
+            return mb_convert_encoding($data, 'UTF-8', 'UTF-8');
+        }
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                $data[$key] = $this->cleanUtf8($value);
+            }
+        }
+        return $data;
     }
 }

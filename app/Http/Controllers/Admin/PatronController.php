@@ -37,6 +37,8 @@ class PatronController extends Controller
         $branch = $request->get('branch', 'all');
         $dateFrom = $request->get('date_from', '');
         $dateTo = $request->get('date_to', '');
+        $expiryStatus = $request->get('expiry_status', 'all');
+        $expiringInDays = $request->get('expiring_in_days', '');
         $viewMode = $request->get('view_mode', 'card'); // card, grid, list
         $perPage = $request->get('per_page', 15);
         $sort = $request->get('sort', 'desc'); // desc, asc
@@ -104,6 +106,27 @@ class PatronController extends Controller
             $query->whereDate('registration_date', '<=', $dateTo);
         }
 
+        // Expiration Status Filter
+        if ($expiryStatus === 'expired') {
+            $query->where(function($q) {
+                $q->whereNotNull('expiry_date')->whereDate('expiry_date', '<', now());
+            });
+        } elseif ($expiryStatus === 'active') {
+            $query->where(function($q) {
+                $q->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', now());
+            });
+        }
+
+        // Expiring Soon Filter (in N days)
+        if ($expiringInDays !== '' && is_numeric($expiringInDays)) {
+            $days = (int)$expiringInDays;
+            $query->where(function($q) use ($days) {
+                $q->whereNotNull('expiry_date')
+                  ->whereDate('expiry_date', '>=', now())
+                  ->whereDate('expiry_date', '<=', now()->addDays($days));
+            });
+        }
+
         // Order by sort parameter
         if ($sort === 'asc') {
             $query->orderBy('registration_date', 'asc');
@@ -111,7 +134,18 @@ class PatronController extends Controller
             $query->orderBy('registration_date', 'desc');
         }
         
-        $patrons = $query->paginate($perPage)->withQueryString();
+        // Resolve perPage if it is all/unlimited
+        $resolvedPerPage = $perPage;
+        if ($perPage === 'all' || $perPage === 'unlimited') {
+            $resolvedPerPage = $query->count() ?: 15;
+        } else {
+            $resolvedPerPage = (int)$perPage;
+            if ($resolvedPerPage <= 0) {
+                $resolvedPerPage = 15;
+            }
+        }
+
+        $patrons = $query->paginate($resolvedPerPage)->withQueryString();
 
         // Get filter data
         $patronGroups = PatronGroup::where('is_active', true)->get();
@@ -132,6 +166,8 @@ class PatronController extends Controller
             'branch',
             'dateFrom',
             'dateTo',
+            'expiryStatus',
+            'expiringInDays',
             'perPage'
         ));
     }
@@ -653,38 +689,71 @@ class PatronController extends Controller
      */
     public function bulkUpdate(Request $request)
     {
+        // Parse patron_ids if it comes as a comma-separated string from the hidden field
+        if ($request->has('patron_ids') && is_string($request->patron_ids)) {
+            $request->merge([
+                'patron_ids' => explode(',', $request->patron_ids)
+            ]);
+        }
+
         $request->validate([
             'patron_ids' => 'required|array',
-            'patron_ids.*' => 'exists:users,id',
+            'patron_ids.*' => 'exists:patron_details,id',
             'fields' => 'required|array',
             'fields.*' => 'in:patron_group_id,branch_id,is_active,expiry_date,phone'
         ]);
 
-        $patronIds = $request->patron_ids;
+        $patronIds = $request->patron_ids; // PatronDetail IDs
         $fields = $request->fields;
-        $updateData = [];
+        $patronUpdateData = [];
+        $userUpdateData = [];
 
         // Build update data based on selected fields
         foreach ($fields as $field) {
             if ($request->has($field) && $request->input($field) !== '') {
-                $updateData[$field] = $request->input($field);
+                $val = $request->input($field);
+                if ($field === 'patron_group_id') {
+                    $patronUpdateData['patron_group_id'] = $val;
+                } elseif ($field === 'branch_id') {
+                    $patronUpdateData['branch'] = $val;
+                    $patronUpdateData['branch_id'] = $val;
+                } elseif ($field === 'expiry_date') {
+                    $patronUpdateData['expiry_date'] = $val;
+                } elseif ($field === 'phone') {
+                    $patronUpdateData['phone'] = $val;
+                } elseif ($field === 'is_active') {
+                    $patronUpdateData['card_status'] = ($val == '1') ? 'normal' : 'locked';
+                    $userUpdateData['status'] = ($val == '1') ? 'active' : 'inactive';
+                }
             }
         }
 
-        if (empty($updateData)) {
+        if (empty($patronUpdateData) && empty($userUpdateData)) {
             return back()->with('error', 'Vui lòng chọn ít nhất một trường và nhập giá trị mới.');
         }
 
-        // Update patrons
-        $updatedCount = User::whereIn('id', $patronIds)->update($updateData);
+        DB::transaction(function() use ($patronIds, $patronUpdateData, $userUpdateData) {
+            if (!empty($patronUpdateData)) {
+                PatronDetail::whereIn('id', $patronIds)->update($patronUpdateData);
+            }
+            
+            if (!empty($userUpdateData)) {
+                $userIds = PatronDetail::whereIn('id', $patronIds)->whereNotNull('user_id')->pluck('user_id')->toArray();
+                if (!empty($userIds)) {
+                    User::whereIn('id', $userIds)->update($userUpdateData);
+                }
+            }
 
-        // Log activity
-        ActivityLog::log('patrons_bulk_updated', null, [
-            'patron_count' => $updatedCount,
-            'updated_fields' => array_keys($updateData)
-        ]);
+            // Log activity for each patron
+            $patrons = PatronDetail::whereIn('id', $patronIds)->get();
+            foreach ($patrons as $patron) {
+                ActivityLog::log('patrons_bulk_updated', $patron, [
+                    'updated_fields' => array_keys(array_merge($patronUpdateData, $userUpdateData))
+                ]);
+            }
+        });
 
-        return back()->with('success', "Đã cập nhật thông tin cho {$updatedCount} độc giả thành công.");
+        return back()->with('success', 'Đã cập nhật thông tin cho ' . count($patronIds) . ' độc giả thành công.');
     }
 
     /**
@@ -692,24 +761,54 @@ class PatronController extends Controller
      */
     public function bulkDelete(Request $request)
     {
+        // Parse patron_ids if it comes as a comma-separated string
+        if ($request->has('patron_ids') && is_string($request->patron_ids)) {
+            $request->merge([
+                'patron_ids' => explode(',', $request->patron_ids)
+            ]);
+        }
+
         $request->validate([
             'patron_ids' => 'required|array',
-            'patron_ids.*' => 'exists:users,id'
+            'patron_ids.*' => 'exists:patron_details,id'
         ]);
 
-        $patronIds = $request->patron_ids;
+        $patronIds = $request->patron_ids; // PatronDetail IDs
         
-        // Get patrons before deletion for logging
-        $patrons = User::whereIn('id', $patronIds)->get(['name', 'email']);
-        
-        // Soft delete patrons
-        $deletedCount = User::whereIn('id', $patronIds)->delete();
+        $deletedCount = DB::transaction(function() use ($patronIds) {
+            $patrons = PatronDetail::whereIn('id', $patronIds)->get();
+            $count = 0;
+            
+            foreach ($patrons as $patron) {
+                $user = $patron->user;
+                $patronId = $patron->id;
 
-        // Log activity
-        ActivityLog::log('patrons_bulk_deleted', null, [
-            'patron_count' => $deletedCount,
-            'deleted_patrons' => $patrons->pluck('name')->toArray()
-        ]);
+                // Rename unique fields to avoid constraint issues on future registration
+                $patron->update([
+                    'patron_code' => $patron->patron_code . '_deleted_' . $patronId,
+                    'mssv'        => $patron->mssv ? $patron->mssv . '_deleted_' . $patronId : null,
+                    'user_id'     => null,
+                ]);
+                $patron->delete();
+
+                if ($user) {
+                    $userId = $user->id;
+                    $user->update([
+                        'email'    => $user->email    . '_deleted_' . $userId,
+                        'username' => $user->username ? $user->username . '_deleted_' . $userId : null,
+                    ]);
+                    $user->delete();
+                }
+                
+                ActivityLog::log('patron_deleted', $patron, [
+                    'user_id' => $user?->id,
+                    'bulk' => true
+                ]);
+                
+                $count++;
+            }
+            return $count;
+        });
 
         return back()->with('success', "Đã xóa {$deletedCount} độc giả thành công.");
     }

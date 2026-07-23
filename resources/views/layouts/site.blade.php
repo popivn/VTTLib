@@ -56,6 +56,14 @@
             max-width: none;
         }
         
+        .container-fluid {
+            width: 100%;
+            padding-right: 1.5rem;
+            padding-left: 1.5rem;
+            margin-right: auto;
+            margin-left: auto;
+        }
+        
         /* Floating Animation */
         @keyframes float {
             0% { transform: translateY(0px); }

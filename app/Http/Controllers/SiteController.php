@@ -56,15 +56,15 @@ class SiteController extends Controller
 
         if ($request->has('offset')) {
             $offset = intval($request->query('offset'));
-            $perPage = intval($request->query('limit', 1));
+            $perPage = intval($request->query('limit', 4));
         } else {
             $page = intval($request->query('page', 1));
             if ($page === 1) {
-                $perPage = 10;
+                $perPage = 12;
                 $offset = 0;
             } else {
-                $perPage = 1;
-                $offset = 10 + ($page - 2);
+                $perPage = 4;
+                $offset = 12 + (($page - 2) * 4);
             }
         }
 
@@ -100,10 +100,10 @@ class SiteController extends Controller
                         $q->where('slug', 'video');
                     })
                     ->latest()
-                    ->take(6)
+                    ->take(12)
                     ->get();
             } else {
-                $tabNews = \App\Models\News::published()->latest()->take(6)->get();
+                $tabNews = \App\Models\News::published()->latest()->take(12)->get();
             }
             return view('site.pages.partials.home-news', compact('tabNews', 'newsType'));
         }
@@ -132,7 +132,7 @@ class SiteController extends Controller
                         ->whereIn('id', $bibIds)
                         // Giữ nguyên thứ tự sắp xếp theo bibIds
                         ->orderByRaw('FIELD(id, ' . implode(',', $bibIds) . ')')
-                        ->take(4)
+                        ->take(12)
                         ->get();
                 } else {
                     $newBooks = collect();
@@ -164,7 +164,7 @@ class SiteController extends Controller
         // Dữ liệu cho tab Tin Mới (Section 3) - Lấy tất cả tin mới không nhất thiết phải nổi bật
         $tabNews = \App\Models\News::published()
             ->latest()
-            ->take(6)
+            ->take(12)
             ->get();
 
         // Dữ liệu cho section Giới Thiệu Sách Hàng Tháng

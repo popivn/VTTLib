@@ -1,6 +1,6 @@
 <div class="relative group/medical-swiper overflow-hidden w-full animate-in fade-in duration-500">
-    <div class="swiper medical-swiper-container !pb-10">
-        <div class="swiper-wrapper flex flex-nowrap">
+    <div class="swiper medical-swiper-container !pb-1">
+        <div class="swiper-wrapper flex flex-nowrap !items-start">
             @forelse($newBooks as $book)
                 @php
                     $title = $book->fields->where('tag', '245')->first()?->subfields->where('code', 'a')->first()?->value ?? 'Không có nhan đề';
@@ -8,15 +8,18 @@
                             ?? $book->fields->where('tag', '700')->first()?->subfields->where('code', 'a')->first()?->value 
                             ?? 'Đang cập nhật tác giả';
                 @endphp
-                <div class="swiper-slide h-auto shrink-0 !w-[160px]">
-                    <div class="bg-white p-2.5 rounded-md border border-slate-100 hover:border-vttu-red/20 transition-all group flex flex-col shadow-sm h-full">
+                <div class="swiper-slide !h-auto shrink-0">
+                    <div class="bg-white p-2.5 rounded-md border border-slate-100 hover:border-vttu-red/20 transition-all group flex flex-col shadow-sm h-auto">
                         <!-- Book Cover -->
-                        <a href="{{ route('opac.book.show', $book->id) }}" class="block aspect-[3/4] bg-slate-50 rounded-sm mb-2 border border-slate-50 overflow-hidden relative">
-                            @if($book->cover_image)
-                                <img src="{{ asset('storage/' . $book->cover_image) }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
-                            @else
-                                <img src="{{ asset('assets/imgs/books/noimage.png') }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
-                            @endif
+                        <a href="{{ route('opac.book.show', $book->id) }}" class="block aspect-[3/4] bg-slate-900 rounded-sm mb-2 border border-slate-50 overflow-hidden relative group/img">
+                            @php
+                                $medImgUrl = $book->cover_image ? asset('storage/' . $book->cover_image) : asset('assets/imgs/books/noimage.png');
+                            @endphp
+                            <!-- Blurred Backdrop Image Fill -->
+                            <img src="{{ $medImgUrl }}" class="absolute inset-0 w-full h-full object-cover blur-lg scale-125 opacity-50 pointer-events-none">
+                            <div class="absolute inset-0 bg-black/10"></div>
+                            <!-- Main Foreground Image -->
+                            <img src="{{ $medImgUrl }}" class="relative z-10 w-full h-full object-contain group-hover/img:scale-105 transition-transform duration-500">
                             <div class="absolute top-1.5 right-1.5 z-10">
                                 @php
                                     $lang = app()->getLocale();

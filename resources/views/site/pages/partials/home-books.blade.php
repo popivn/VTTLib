@@ -1,5 +1,5 @@
 <div class="relative group/books-swiper overflow-hidden w-full">
-    <div class="swiper books-swiper-container !pb-10">
+    <div class="swiper books-swiper-container !pb-1">
         <div class="swiper-wrapper flex flex-nowrap">
             @include('site.pages.partials.home-books-slides', ['newBooks' => $newBooks])
         </div>

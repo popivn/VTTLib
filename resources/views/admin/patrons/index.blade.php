@@ -98,10 +98,12 @@
             <input type="hidden" name="per_page" value="{{ $perPage ?? 15 }}">
             <input type="hidden" name="date_from" value="{{ $dateFrom ?? '' }}">
             <input type="hidden" name="date_to" value="{{ $dateTo ?? '' }}">
+            <input type="hidden" name="expiry_status" value="{{ $expiryStatus ?? 'all' }}">
+            <input type="hidden" name="expiring_in_days" value="{{ $expiringInDays ?? '' }}">
         </form>
         
         <!-- Advanced Filters (Collapsible) -->
-        <div id="advancedFilters" class="hidden border-t border-border mt-3 pt-3">
+        <div id="advancedFilters" class="border-t border-border mt-3 pt-3">
             <form method="GET" action="{{ route('admin.patrons.index') }}" id="advancedFiltersForm" class="space-y-3">
                 <!-- Include search field and search input values -->
                 <input type="hidden" name="search_field" value="{{ $searchField ?? 'all' }}">
@@ -112,7 +114,7 @@
                     <!-- Left Column: Patron Group (Radio Buttons) -->
                     <div class="lg:border-r lg:border-border lg:pr-4">
                         <label class="block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">{{ __('Nhóm độc giả') }}</label>
-                        <div class="flex flex-col gap-1.5 max-h-40 overflow-y-auto pr-1">
+                        <div class="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-1">
                             <label class="flex items-center group cursor-pointer">
                                 <input type="radio" name="patron_group" value="all" {{ ($patronGroup ?? 'all') == 'all' ? 'checked' : '' }} 
                                     onchange="this.form.submit()" class="hidden peer">
@@ -176,6 +178,24 @@
                             <div class="space-y-1">
                                 <label class="text-[10px] font-black uppercase tracking-widest text-muted-foreground block ml-1">{{ __('Ngày đăng ký đến') }}</label>
                                 <input type="date" name="date_to" value="{{ $dateTo ?? '' }}" class="w-full bg-muted border border-border rounded px-3 py-2 text-xs font-bold text-foreground focus:bg-background focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Expiration Filters -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-border">
+                            <!-- Expiry Status -->
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-muted-foreground block ml-1">{{ __('Hạn thẻ bạn đọc') }}</label>
+                                <select name="expiry_status" class="w-full bg-muted border border-border rounded px-3 py-2 text-xs font-bold text-foreground focus:bg-background focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all">
+                                    <option value="all" {{ ($expiryStatus ?? 'all') == 'all' ? 'selected' : '' }}>{{ __('Tất cả trạng thái hạn') }}</option>
+                                    <option value="expired" {{ ($expiryStatus ?? '') == 'expired' ? 'selected' : '' }}>{{ __('Thẻ đã hết hạn') }}</option>
+                                    <option value="active" {{ ($expiryStatus ?? '') == 'active' ? 'selected' : '' }}>{{ __('Thẻ còn hạn') }}</option>
+                                </select>
+                            </div>
+                            <!-- Expiring in N days -->
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-muted-foreground block ml-1">{{ __('Sắp hết hạn trong (ngày)') }}</label>
+                                <input type="number" min="1" name="expiring_in_days" value="{{ $expiringInDays ?? '' }}" placeholder="{{ __('Ví dụ: 30, 60, 90...') }}" class="w-full bg-muted border border-border rounded px-3 py-2 text-xs font-bold text-foreground focus:bg-background focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all">
                             </div>
                         </div>
                     </div>
@@ -276,6 +296,9 @@
                     <option value="30" {{ ($perPage ?? 15) == 30 ? 'selected' : '' }}>30</option>
                     <option value="50" {{ ($perPage ?? 15) == 50 ? 'selected' : '' }}>50</option>
                     <option value="100" {{ ($perPage ?? 15) == 100 ? 'selected' : '' }}>100</option>
+                    <option value="1000" {{ ($perPage ?? 15) == 1000 ? 'selected' : '' }}>1000</option>
+                    <option value="2000" {{ ($perPage ?? 15) == 2000 ? 'selected' : '' }}>2000</option>
+                    <option value="unlimited" {{ ($perPage ?? 15) == 'unlimited' ? 'selected' : '' }}>{{ __('Không giới hạn') }}</option>
                 </select>
             </div>
 
@@ -999,6 +1022,24 @@ function updateBulkActions() {
     }
 }
 
+function openBulkEditModal() {
+    const checkboxes = document.querySelectorAll('input[name="selected_patrons[]"]:checked');
+    const selectedPatrons = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (selectedPatrons.length === 0) {
+        alert('{{ __("Vui lòng chọn ít nhất một bạn đọc để chỉnh sửa.") }}');
+        return;
+    }
+    
+    // Set patron IDs
+    document.getElementById('bulkEditPatronIds').value = selectedPatrons.join(',');
+    document.getElementById('selectedPatronsCount').textContent = selectedPatrons.length;
+    
+    // Show modal
+    document.getElementById('bulkEditModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
 function clearSelection() {
     const checkboxes = document.querySelectorAll('input[name="selected_patrons[]"]');
     checkboxes.forEach(cb => cb.checked = false);
@@ -1186,6 +1227,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const perPageSelect = document.querySelector('#advancedFiltersForm select[name="per_page"]');
             const dateFromInput = document.querySelector('#advancedFiltersForm input[name="date_from"]');
             const dateToInput = document.querySelector('#advancedFiltersForm input[name="date_to"]');
+            const expiryStatusSelect = document.querySelector('#advancedFiltersForm select[name="expiry_status"]');
+            const expiringInDaysInput = document.querySelector('#advancedFiltersForm input[name="expiring_in_days"]');
             
             if (statusSelect) {
                 document.querySelector('#mainSearchForm input[name="status"]').value = statusSelect.value;
@@ -1204,6 +1247,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (dateToInput) {
                 document.querySelector('#mainSearchForm input[name="date_to"]').value = dateToInput.value;
+            }
+            if (expiryStatusSelect) {
+                document.querySelector('#mainSearchForm input[name="expiry_status"]').value = expiryStatusSelect.value;
+            }
+            if (expiringInDaysInput) {
+                document.querySelector('#mainSearchForm input[name="expiring_in_days"]').value = expiringInDaysInput.value;
             }
         });
     }
@@ -1233,6 +1282,8 @@ function clearFilters() {
     url.searchParams.delete('branch');
     url.searchParams.delete('date_from');
     url.searchParams.delete('date_to');
+    url.searchParams.delete('expiry_status');
+    url.searchParams.delete('expiring_in_days');
     url.searchParams.delete('per_page');
     window.location.href = url.toString();
 }

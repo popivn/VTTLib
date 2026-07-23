@@ -30,7 +30,7 @@
                     </div>
 
                     <!-- Title -->
-                    <h1 class="text-sm md:text-base font-black text-foreground leading-snug">
+                    <h1 class="text-lg md:text-xl font-bold text-foreground !leading-normal my-2">
                         {{ $news->title }}
                     </h1>
 
@@ -79,7 +79,7 @@
         </div>
 
         <!-- Right Sidebar: Related News & Info -->
-        <aside class="lg:col-span-3 space-y-3">
+        <aside class="lg:col-span-3 space-y-3 sticky top-20 self-start">
             @php
                 $sidebarQuery = \App\Models\News::where('status', 'published')
                     ->where('id', '!=', $news->id)
@@ -103,11 +103,11 @@
                     </h3>
                     <div class="space-y-3">
                         @foreach($sidebarNews as $item)
-                            <a href="{{ $item->url }}" class="flex gap-2 group text-foreground hover:text-vttu-red transition-colors">
-                                <div class="w-12 h-12 bg-muted overflow-hidden flex-shrink-0">
-                                    <img src="{{ $item->featured_image ? (str_starts_with($item->featured_image, 'http') ? $item->featured_image : asset($item->featured_image)) : 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=120&q=80' }}" 
+                            <a href="{{ $item->url }}" class="flex gap-2.5 group text-foreground hover:text-vttu-red transition-colors items-center">
+                                <div class="w-20 h-14 rounded-sm overflow-hidden flex-shrink-0">
+                                    <img src="{{ $item->featured_image ? (str_starts_with($item->featured_image, 'http') ? $item->featured_image : asset($item->featured_image)) : 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=160&q=80' }}" 
                                          alt="{{ $item->title }}"
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                         class="w-full h-full object-cover rounded-sm group-hover:scale-105 transition-transform duration-300">
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <h4 class="text-xs font-bold text-[#A80D0D] hover:text-[#8f0b0b] transition-colors line-clamp-2 leading-snug">{{ $item->title }}</h4>

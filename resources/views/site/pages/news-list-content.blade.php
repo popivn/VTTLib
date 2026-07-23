@@ -3,7 +3,7 @@
         <!-- Left: News List & Filters -->
         <div class="lg:col-span-9 space-y-3">
             <!-- Filter bar -->
-            <div class="bg-card border border-border rounded-none p-3 shadow-xs space-y-3">
+            <div class="bg-card border border-border rounded-none p-3 shadow-xs">
                 <form action="{{ route('news.search') }}" method="GET" class="flex flex-col sm:flex-row gap-2">
                     <!-- Search Input -->
                     <div class="relative flex-1">
@@ -23,18 +23,6 @@
                         </select>
                     </div>
                 </form>
-
-                <!-- Popular Tags List -->
-                @if(isset($popularTags) && $popularTags->count() > 0)
-                    <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border">
-                        <span class="text-[10px] font-black uppercase text-muted-foreground mr-1.5">{{ __('Thẻ phổ biến:') }}</span>
-                        @foreach($popularTags as $t)
-                            <a href="{{ isset($category) ? route('news.category.tag', ['category_slug' => $category->slug, 'tag_slug' => $t->slug]) : route('news.tag', $t->slug) }}" class="px-2 py-0.5 bg-muted hover:bg-vttu-red/10 text-muted-foreground hover:text-vttu-red rounded-none text-[10px] font-bold border border-border transition-colors">
-                                #{{ $t->name }}
-                            </a>
-                        @endforeach
-                    </div>
-                @endif
             </div>
 
             <!-- News Cards Grid -->
@@ -61,7 +49,7 @@
                                             <i data-lucide="calendar" class="w-3.5 h-3.5 mr-1.5 flex-shrink-0"></i>
                                             <span>{{ $item->published_at ? $item->published_at->format('d/m/Y') : $item->created_at->format('d/m/Y') }}</span>
                                         </div>
-                                        <h3 class="text-xs font-black text-foreground group-hover:text-vttu-red transition-colors line-clamp-2 leading-snug">
+                                        <h3 class="text-sm font-bold text-foreground group-hover:text-vttu-red transition-colors line-clamp-2 !leading-snug">
                                             {{ $item->title }}
                                         </h3>
                                         <p class="text-muted-foreground text-[11px] line-clamp-3 leading-relaxed">
@@ -101,7 +89,7 @@
         </div>
 
         <!-- Right Column -->
-        <aside class="lg:col-span-3 space-y-3">
+        <aside class="lg:col-span-3 space-y-3 sticky top-20 self-start">
             @php
                 $sidebarQuery = \App\Models\News::where('status', 'published')
                     ->orderBy('published_at', 'desc');
@@ -124,14 +112,14 @@
                     </h3>
                     <div class="space-y-3">
                         @foreach($sidebarNews as $item)
-                            <a href="{{ $item->url }}" class="flex gap-2 group text-foreground hover:text-vttu-red transition-colors">
-                                <div class="w-12 h-12 bg-muted overflow-hidden flex-shrink-0">
-                                    <img src="{{ $item->featured_image ? (str_starts_with($item->featured_image, 'http') ? $item->featured_image : asset($item->featured_image)) : 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=120&q=80' }}" 
+                            <a href="{{ $item->url }}" class="flex gap-2.5 group text-foreground hover:text-vttu-red transition-colors items-center">
+                                <div class="w-20 h-14 rounded-sm overflow-hidden flex-shrink-0">
+                                    <img src="{{ $item->featured_image ? (str_starts_with($item->featured_image, 'http') ? $item->featured_image : asset($item->featured_image)) : 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=160&q=80' }}" 
                                          alt="{{ $item->title }}"
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                         class="w-full h-full object-cover rounded-sm group-hover:scale-105 transition-transform duration-300">
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <h4 class="text-xs font-bold text-[#A80D0D] hover:text-[#8f0b0b] transition-colors line-clamp-2 leading-snug">{{ $item->title }}</h4>
+                                    <h4 class="text-xs font-bold text-[#A80D0D] hover:text-[#8f0b0b] transition-colors line-clamp-2 !leading-snug">{{ $item->title }}</h4>
                                     <span class="text-[9px] text-muted-foreground font-bold mt-0.5 block uppercase tracking-wider">
                                         {{ $item->published_at ? $item->published_at->format('d/m/Y') : $item->created_at->format('d/m/Y') }}
                                     </span>
@@ -159,6 +147,24 @@
                     </a>
                 </div>
             </div>
+
+            <!-- Popular Tags Sidebar Box -->
+            @if(isset($popularTags) && $popularTags->count() > 0)
+                <div class="bg-card border border-border rounded-none p-3 shadow-xs space-y-3">
+                    <h3 class="text-xs font-black text-foreground uppercase tracking-wider flex items-center">
+                        <span class="w-1 h-3.5 bg-vttu-red rounded-none mr-2"></span>
+                        {{ __('THẺ PHỔ BIẾN') }}
+                    </h3>
+                    <div class="flex flex-wrap gap-1.5">
+                        @foreach($popularTags as $t)
+                            <a href="{{ isset($category) ? route('news.category.tag', ['category_slug' => $category->slug, 'tag_slug' => $t->slug]) : route('news.tag', $t->slug) }}" 
+                               class="px-2 py-1 bg-muted hover:bg-vttu-red/10 text-muted-foreground hover:text-vttu-red rounded-none text-[10px] font-bold border border-border transition-colors">
+                                #{{ $t->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </aside>
     </div>
 </div>

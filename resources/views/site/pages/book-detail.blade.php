@@ -11,10 +11,12 @@ $subfields[$sub->code] = $sub->value;
 $marcData[$field->tag] = $subfields;
 }
 
-// Nhan đề (245$a $b $c)
-$fullTitle = ($marcData['245']['a'] ?? 'Không có nhan đề') .
-(isset($marcData['245']['b']) ? ' ' . $marcData['245']['b'] : '') .
-(isset($marcData['245']['c']) ? ' / ' . $marcData['245']['c'] : '');
+// Nhan đề chính ($a $b)
+$displayTitle = ($marcData['245']['a'] ?? 'Không có nhan đề') .
+(isset($marcData['245']['b']) ? ' ' . $marcData['245']['b'] : '');
+
+// Nhan đề đầy đủ bao gồm thông tin trách nhiệm ($c)
+$fullTitle = $displayTitle . (isset($marcData['245']['c']) ? ' / ' . $marcData['245']['c'] : '');
 
 // Tác giả (100$a hoặc 700$a)
 $author = $marcData['100']['a'] ?? ($marcData['700']['a'] ?? '');
@@ -57,26 +59,26 @@ $summary = $marcData['520']['a'] ?? 'Nội dung đang được cập nhật...';
 @section('title', $fullTitle . ' - Chi tiết tài liệu - VTTLib')
 
 @section('content')
-<div class="bg-slate-50 min-h-screen pt-24 pb-12">
+<div class="bg-slate-50 min-h-screen pt-16 pb-8">
     <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Breadcrumb -->
-        <nav class="flex mb-8 text-sm font-medium" aria-label="Breadcrumb">
+        <nav class="flex mb-4 text-sm font-medium" aria-label="Breadcrumb">
             <ol class="flex items-center space-x-2">
                 <li><a href="{{ route('home') }}" class="text-slate-400 hover:text-vttu-red transition-colors">Trang chủ</a></li>
                 <li><i class="fas fa-chevron-right text-[10px] text-slate-300"></i></li>
                 <li><a href="{{ route('site.opac') }}" class="text-slate-400 hover:text-vttu-red transition-colors">Tra cứu OPAC</a></li>
                 <li><i class="fas fa-chevron-right text-[10px] text-slate-300"></i></li>
-                <li class="text-vttu-dark truncate max-w-[200px] md:max-w-md">{{ $fullTitle }}</li>
+                <li class="text-vttu-dark truncate max-w-[200px] md:max-w-md">{{ $displayTitle }}</li>
             </ol>
         </nav>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
             <!-- LEFT: Book Cover & Quick Actions -->
-            <div class="lg:col-span-4 space-y-6">
-                <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col items-center sticky top-28">
-                    <div class="w-full aspect-[3/4] bg-slate-50 rounded-3xl overflow-hidden shadow-2xl shadow-slate-200 mb-8 border border-slate-100 relative group">
+            <div class="lg:col-span-4 space-y-5">
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex flex-col items-center sticky top-24">
+                    <div class="w-full aspect-[3/4] bg-slate-50 rounded-xl overflow-hidden shadow-md mb-5 border border-slate-100 relative group">
                         @if($record->cover_image)
                         <img src="{{ asset('storage/' . $record->cover_image) }}" class="w-full h-full object-contain">
                         @else
@@ -87,27 +89,27 @@ $summary = $marcData['520']['a'] ?? 'Nội dung đang được cập nhật...';
                         </div>
                     </div>
 
-                    <div class="w-full space-y-3">
+                    <div class="w-full space-y-2.5">
                         @if($record->items->where('status', 'available')->count() > 0)
-                        <button type="button" onclick="confirmReservation({{ $record->id }}, '{{ addslashes($fullTitle) }}')" class="w-full py-4 bg-vttu-red text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-vttu-dark transition-all shadow-xl shadow-vttu-red/20 flex items-center justify-center gap-3">
+                        <button type="button" onclick="confirmReservation({{ $record->id }}, '{{ addslashes($fullTitle) }}')" class="w-full py-2.5 bg-vttu-red text-white rounded-lg font-black uppercase text-xs tracking-wider hover:bg-vttu-dark transition-all shadow-md flex items-center justify-center gap-2">
                             <i class="fas fa-shopping-basket"></i>
                             Đăng ký mượn ngay
                         </button>
                         @else
-                        <button disabled class="w-full py-4 bg-slate-200 text-slate-400 rounded-2xl font-black uppercase text-xs tracking-[0.2em] cursor-not-allowed flex items-center justify-center gap-3">
+                        <button disabled class="w-full py-2.5 bg-slate-200 text-slate-400 rounded-lg font-black uppercase text-xs tracking-wider cursor-not-allowed flex items-center justify-center gap-2">
                             <i class="fas fa-clock"></i>
                             Tài liệu tạm hết
                         </button>
                         @endif
 
-                        <button class="w-full py-4 bg-white text-vttu-dark border-2 border-slate-100 rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:border-vttu-red/20 hover:text-vttu-red transition-all flex items-center justify-center gap-3">
+                        <button class="w-full py-2.5 bg-white text-vttu-dark border border-slate-200 rounded-lg font-black uppercase text-xs tracking-wider hover:border-vttu-red/20 hover:text-vttu-red transition-all flex items-center justify-center gap-2">
                             <i class="far fa-heart"></i>
                             Thêm vào yêu thích
                         </button>
                     </div>
 
                     <!-- Additional Metadata -->
-                    <div class="w-full mt-8 pt-8 border-t border-slate-50 grid grid-cols-2 gap-4 text-center">
+                    <div class="w-full mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-4 text-center">
                         <div>
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lượt xem</p>
                             <p class="text-lg font-black text-vttu-dark">{{ number_format($record->view_count ?? 0) }}</p>
@@ -121,14 +123,20 @@ $summary = $marcData['520']['a'] ?? 'Nội dung đang được cập nhật...';
             </div>
 
             <!-- RIGHT: Book Information -->
-            <div class="lg:col-span-8 space-y-8">
+            <div class="lg:col-span-8 space-y-5">
 
                 <!-- Main Info Section -->
-                <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
-                    <div class="mb-8 pb-8 border-b border-slate-50">
-                        <h1 class="text-3xl md:text-4xl font-black text-vttu-dark tracking-tight leading-tight mb-4">
-                            {{ $fullTitle }}
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+                    <div class="mb-5 pb-4 border-b border-slate-100">
+                        <h1 class="text-xl md:text-2xl font-bold text-vttu-dark tracking-tight leading-snug mb-2">
+                            {{ $displayTitle }}
                         </h1>
+                        @if(isset($marcData['245']['c']))
+                        <p class="text-xs text-slate-500 font-medium mb-4 italic flex items-center gap-1.5">
+                            <i class="fas fa-info-circle text-[10px] text-vttu-red"></i>
+                            {{ $marcData['245']['c'] }}
+                        </p>
+                        @endif
                         <div class="flex flex-wrap items-center gap-6">
                             <div class="flex items-center gap-2">
                                 <div class="w-8 h-8 rounded-full bg-vttu-red/10 flex items-center justify-center text-vttu-red">
@@ -161,12 +169,12 @@ $summary = $marcData['520']['a'] ?? 'Nội dung đang được cập nhật...';
                     </div>
 
                     <!-- Detail Information -->
-                    <div class="space-y-6">
-                        <h3 class="flex items-center gap-3 text-sm font-black text-vttu-dark uppercase tracking-[0.2em] mb-6">
-                            <span class="w-8 h-1 bg-vttu-red rounded-full"></span>
+                    <div class="space-y-4">
+                        <h3 class="flex items-center gap-2.5 text-xs font-black text-vttu-dark uppercase tracking-wider mb-4">
+                            <span class="w-6 h-1 bg-vttu-red rounded-full"></span>
                             Thông tin chi tiết
                         </h3>
-                        <div class="space-y-4">
+                        <div class="space-y-3">
                             <!-- Tác giả -->
                             @if(!empty($author))
                             <div class="flex items-start">
@@ -253,32 +261,32 @@ $summary = $marcData['520']['a'] ?? 'Nội dung đang được cập nhật...';
                 </div>
 
                 <!-- Availability Section -->
-                <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
-                    <h3 class="flex items-center gap-3 text-sm font-black text-vttu-dark uppercase tracking-[0.2em] mb-8">
-                        <span class="w-8 h-1 bg-emerald-500 rounded-full"></span>
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+                    <h3 class="flex items-center gap-2.5 text-xs font-black text-vttu-dark uppercase tracking-wider mb-4">
+                        <span class="w-6 h-1 bg-emerald-500 rounded-full"></span>
                         Trạng thái các ấn phẩm hiện có
                     </h3>
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead>
                                 <tr class="text-left border-b border-slate-100">
-                                    <th class="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Số đăng ký</th>
-                                    <th class="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Kho tài liệu</th>
-                                    <th class="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Vị trí</th>
-                                    <th class="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Trạng thái</th>
+                                    <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Số đăng ký</th>
+                                    <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Kho tài liệu</th>
+                                    <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Vị trí</th>
+                                    <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Trạng thái</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
                                 @foreach($record->items as $item)
                                 <tr>
-                                    <td class="py-4 font-mono text-sm font-bold text-vttu-dark">{{ $item->accession_number }}</td>
-                                    <td class="py-4 text-sm font-bold text-slate-600">{{ $item->storageLocation->name ?? 'N/A' }}</td>
-                                    <td class="py-4 text-sm font-bold text-slate-600">{{ $item->shelf ?? 'Đang cập nhật' }}</td>
-                                    <td class="py-4 text-center">
+                                    <td class="py-3 font-mono text-xs font-bold text-vttu-dark">{{ $item->accession_number }}</td>
+                                    <td class="py-3 text-xs font-bold text-slate-600">{{ $item->storageLocation->name ?? 'N/A' }}</td>
+                                    <td class="py-3 text-xs font-bold text-slate-600">{{ $item->shelf ?? 'Đang cập nhật' }}</td>
+                                    <td class="py-3 text-center">
                                         @if($item->status == 'available')
-                                        <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-lg">Có thể mượn</span>
+                                        <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-md">Có thể mượn</span>
                                         @else
-                                        <span class="px-3 py-1 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-lg">Đang bận</span>
+                                        <span class="px-2.5 py-0.5 bg-rose-50 text-rose-500 text-[10px] font-bold uppercase rounded-md">Đang bận</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -289,13 +297,13 @@ $summary = $marcData['520']['a'] ?? 'Nội dung đang được cập nhật...';
                 </div>
 
                 <!-- Summary Section (Trường 520) -->
-                <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
-                    <h3 class="flex items-center gap-3 text-sm font-black text-vttu-dark uppercase tracking-[0.2em] mb-6">
-                        <span class="w-8 h-1 bg-vttu-red rounded-full"></span>
+                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+                    <h3 class="flex items-center gap-2.5 text-xs font-black text-vttu-dark uppercase tracking-wider mb-4">
+                        <span class="w-6 h-1 bg-vttu-red rounded-full"></span>
                         Tóm tắt nội dung
                     </h3>
                     <div class="prose prose-slate max-w-none">
-                        <p class="text-slate-600 leading-relaxed font-medium bg-slate-50 p-6 rounded-3xl border border-slate-100 italic">
+                        <p class="text-slate-600 leading-relaxed text-xs font-medium bg-slate-50 p-4 rounded-xl border border-slate-100 italic">
                             "{{ $summary }}"
                         </p>
                     </div>

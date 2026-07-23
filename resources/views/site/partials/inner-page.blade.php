@@ -631,13 +631,13 @@
                         }
                     </script>
                 @else
-                    <article class="bg-card text-card-foreground border border-border rounded-md shadow-sm overflow-hidden text-gray-500">
+                    <article class="bg-card text-card-foreground border border-border rounded-md shadow-sm text-gray-500">
                         @php 
                         $hasDarkBg = isset($sidebarIcons[$node->icon]);
                         $headerColors = $sidebarIcons[$node->icon] ?? ['from-muted/20 to-muted/10', '']; 
                     @endphp
                     @if($node->node_code !== 'huong-dan' && $node->node_code !== 'gioi-thieu')
-                    <div class="p-4 border-b border-border bg-gradient-to-r {{ $headerColors[0] }} opacity-90">
+                    <div class="p-4 border-b border-border bg-gradient-to-r {{ $headerColors[0] }} opacity-90 rounded-t-md">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded flex items-center justify-center border shadow-sm
                                         {{ $hasDarkBg ? 'bg-white/10 text-white border-white/20' : 'bg-vttu-red/10 text-vttu-red border-vttu-red/20' }}">
