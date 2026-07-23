@@ -401,8 +401,19 @@
             @endphp
 
             @if($hasChildren)
+            @php
+            $firstChild = $assignedChildren->first();
+            $firstChildUrl = ($firstChild && !blank($firstChild->route_name) && $firstChild->route_name !== '#' && Route::has($firstChild->route_name)) ? route($firstChild->route_name) : '#';
+            @endphp
             <div class="space-y-1.5" x-data="{ open: {{ $isParentActive ? 'true' : 'false' }} }">
-                <button @click="sidebarOpen ? (open = !open) : (sidebarOpen = true, open = true)"
+                <button @click="
+                    let willOpen = !sidebarOpen || !open;
+                    sidebarOpen = true;
+                    open = willOpen;
+                    if (willOpen && '{{ $firstChildUrl }}' !== '#') {
+                        window.location.href = '{{ $firstChildUrl }}';
+                    }
+                "
                     :class="sidebarOpen ? 'justify-between' : 'justify-center'"
                     class="w-full flex items-center px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-600 dark:hover:text-white rounded-2xl transition group">
                     <div class="flex items-center">

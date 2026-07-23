@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Models\PatronDetail;
 use App\Models\User;
 use App\Models\Role;
@@ -155,16 +156,13 @@ class PatronController extends Controller
     public function searchUsers(Request $request)
     {
         $query = $request->get('q');
-        $includeUserId = $request->get('include_user_id');
+        $patronId = $request->get('patron_id');
         if (empty($query)) return response()->json([]);
 
         $users = \App\Models\User::query()
-            ->where(function ($q) use ($includeUserId) {
-                $q->whereDoesntHave('patronDetail');
-                if (!empty($includeUserId)) {
-                    $q->orWhere('id', $includeUserId);
-                }
-            })
+            ->with(['patronDetail' => function($q) {
+                $q->select('id', 'user_id', 'patron_code', 'display_name');
+            }])
             ->where(function($q) use ($query) {
                 $q->where('name', 'LIKE', "%{$query}%")
                   ->orWhere('email', 'LIKE', "%{$query}%")
@@ -173,7 +171,31 @@ class PatronController extends Controller
             ->limit(10)
             ->get(['id', 'name', 'email', 'username']);
 
-        return response()->json($users);
+        $result = $users->map(function($user) use ($patronId) {
+            $isLinkedToOther = false;
+            $linkedPatronCode = null;
+            $linkedPatronName = null;
+
+            if ($user->patronDetail) {
+                if (empty($patronId) || $user->patronDetail->id != $patronId) {
+                    $isLinkedToOther = true;
+                    $linkedPatronCode = $user->patronDetail->patron_code;
+                    $linkedPatronName = $user->patronDetail->display_name;
+                }
+            }
+
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'username' => $user->username,
+                'is_linked_to_other' => $isLinkedToOther,
+                'linked_patron_code' => $linkedPatronCode,
+                'linked_patron_name' => $linkedPatronName,
+            ];
+        });
+
+        return response()->json($result);
     }
 
     public function edit($id)
@@ -204,12 +226,25 @@ class PatronController extends Controller
             'user' => $user?->toArray(),
         ];
 
+        $newUserId = $request->input('user_id') ?: null;
+
+        if (!empty($newUserId)) {
+            $isLinkedToOtherPatron = PatronDetail::where('user_id', $newUserId)
+                ->where('id', '!=', $patron->id)
+                ->exists();
+
+            if ($isLinkedToOtherPatron) {
+                return back()
+                    ->withErrors(['user_id' => __('Tài khoản này đã được liên kết với một độc giả khác.')])
+                    ->withInput();
+            }
+        }
+
         $validated = $request->validate([
             'user_id' => 'nullable|exists:users,id',
-            'patron_code' => 'required|string|unique:patron_details,patron_code,' . $patron->id,
-            'name' => 'required|string|max:255',
+            'patron_code' => ['required', 'string', Rule::unique('patron_details', 'patron_code')->ignore($patron->id)->whereNull('deleted_at')],
             'display_name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:users,email,' . $ignoreEmailUserId,
+            'email' => 'nullable|email|max:255',
             'patron_group_id' => 'required|exists:patron_groups,id',
             'registration_date' => 'required|date',
             'expiry_date' => 'required|date|after:registration_date',
@@ -224,40 +259,11 @@ class PatronController extends Controller
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        if (!empty($newUserId)) {
-            $isLinkedToOtherPatron = PatronDetail::where('user_id', $newUserId)
-                ->where('id', '!=', $patron->id)
-                ->exists();
-
-            if ($isLinkedToOtherPatron) {
-                return back()
-                    ->withErrors(['user_id' => __('Tài khoản này đã được liên kết với một độc giả khác.')])
-                    ->withInput();
-            }
-        }
-
-        $linkedUser = null;
-        if (!empty($newUserId)) {
-            $linkedUser = User::find($newUserId);
-        }
-
-        // Update user information
-        if ($linkedUser) {
-            $userUpdateData = [
-                'name' => $validated['name'],
-            ];
-
-            if (!empty($validated['email'])) {
-                $userUpdateData['email'] = $validated['email'];
-            }
-
-            $linkedUser->update($userUpdateData);
-        }
-
         // Update patron information
         $patronData = [
             'user_id' => $newUserId,
             'patron_code' => $validated['patron_code'],
+            'display_name' => $validated['display_name'],
             'patron_group_id' => $validated['patron_group_id'],
             'registration_date' => $validated['registration_date'],
             'expiry_date' => $validated['expiry_date'],
@@ -334,7 +340,7 @@ class PatronController extends Controller
         // Lưu thông tin mới để so sánh
         $newData = [
             'patron' => $patron->fresh()->toArray(),
-            'user' => $linkedUser?->fresh()?->toArray(),
+            'user' => $patron->fresh()->user?->toArray(),
         ];
 
         // Tính toán các thay đổi
@@ -410,18 +416,31 @@ class PatronController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'patron_code' => 'required|string|unique:patron_details,patron_code|max:50',
-            'name' => 'required|string|max:255',
+            'user_id' => [
+                'nullable',
+                'exists:users,id',
+                Rule::unique('patron_details', 'user_id')->whereNull('deleted_at'),
+            ],
+            'patron_code' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('patron_details', 'patron_code')->whereNull('deleted_at'),
+            ],
             'display_name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:users,email|max:255',
-            'password' => 'nullable|string|min:6|confirmed',
+            'email' => 'nullable|email|max:255',
             'patron_group_id' => 'required|exists:patron_groups,id',
             'registration_date' => 'required|date',
             'expiry_date' => 'required|date|after:registration_date',
             
             // Personal Information
             'id_card' => 'nullable|string|max:50',
-            'mssv' => 'nullable|string|unique:patron_details,mssv|max:50',
+            'mssv' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique('patron_details', 'mssv')->whereNull('deleted_at'),
+            ],
             'phone_contact' => 'nullable|string|max:20',
             'phone' => 'nullable|string|max:20',
             'fax' => 'nullable|string|max:20',
@@ -429,19 +448,11 @@ class PatronController extends Controller
             'gender' => 'nullable|in:male,female,other',
         ], [
             'patron_code.required' => 'Mã độc giả không được để trống',
+            'user_id.unique' => 'Tài khoản này đã được liên kết với một độc giả khác.',
             'patron_code.unique' => 'Mã độc giả đã tồn tại trong hệ thống. Vui lòng chọn mã khác.',
             'patron_code.max' => 'Mã độc giả không được vượt quá 50 ký tự',
-            'name.required' => 'Họ và tên không được để trống',
-            'name.max' => 'Họ và tên không được vượt quá 255 ký tự',
-            'display_name.required' => 'Tên hiển thị không được để trống',
-            'display_name.max' => 'Tên hiển thị không được vượt quá 255 ký tự',
-            'email.required' => 'Email không được để trống',
-            'email.email' => 'Email không đúng định dạng',
-            'email.unique' => 'Email đã tồn tại trong hệ thống. Vui lòng chọn email khác.',
-            'email.max' => 'Email không được vượt quá 255 ký tự',
-            'password.required' => 'Mật khẩu không được để trống',
-            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự',
-            'password.confirmed' => 'Xác nhận mật khẩu không khớp',
+            'display_name.required' => 'Họ và tên độc giả không được để trống',
+            'display_name.max' => 'Họ và tên độc giả không được vượt quá 255 ký tự',
             'patron_group_id.required' => 'Nhóm độc giả không được để trống',
             'patron_group_id.exists' => 'Nhóm độc giả không hợp lệ',
             'registration_date.required' => 'Ngày đăng ký không được để trống',
@@ -474,8 +485,37 @@ class PatronController extends Controller
         $validated = array_merge($validated, $additionalValidated);
 
         $patron = DB::transaction(function () use ($request, $validated) {
-            // 1. User (Only if manually linked via userSearch)
-            $userId = $request->input('user_id');
+            // 1. Check user_id, if empty, auto-create a new user
+            $userId = $request->input('user_id') ?: null;
+            if (empty($userId)) {
+                $userEmail = !empty($validated['email']) 
+                    ? $validated['email'] 
+                    : strtolower($validated['patron_code']) . '@vttu.edu.vn';
+
+                if (\App\Models\User::where('email', $userEmail)->exists()) {
+                    $userEmail = strtolower($validated['patron_code']) . '_' . \Illuminate\Support\Str::random(4) . '@vttu.edu.vn';
+                }
+
+                $username = strtolower($validated['patron_code']);
+                if (\App\Models\User::where('username', $username)->exists()) {
+                    $username = strtolower($validated['patron_code']) . '_' . \Illuminate\Support\Str::random(4);
+                }
+
+                $newUser = \App\Models\User::create([
+                    'name' => $validated['display_name'],
+                    'username' => $username,
+                    'email' => $userEmail,
+                    'password' => Hash::make('12345678'),
+                    'status' => 'active',
+                ]);
+
+                $patronRole = Role::where('name', 'patron')->first();
+                if ($patronRole) {
+                    $newUser->roles()->attach($patronRole->id);
+                }
+
+                $userId = $newUser->id;
+            }
 
             // 2. Image
             $imagePath = null;
@@ -485,7 +525,7 @@ class PatronController extends Controller
 
             // 3. Patron Detail
             $patron = PatronDetail::create([
-                'user_id' => $userId, // Use linked user_id from the search field
+                'user_id' => $userId,
                 'patron_code' => $validated['patron_code'],
                 'id_card' => $validated['id_card'] ?? null,
                 'mssv' => $validated['mssv'] ?? null,
@@ -531,7 +571,7 @@ class PatronController extends Controller
                 }
             }
 
-            ActivityLog::log('patron_created', $patron, ['name' => $validated['name']]);
+            ActivityLog::log('patron_created', $patron, ['name' => $validated['display_name']]);
 
             // 5. Update Barcode Counter and Save File
             $this->barcodeService->incrementCounter('patron', $validated['patron_code']);
@@ -581,8 +621,30 @@ class PatronController extends Controller
     public function destroy($id)
     {
         $patron = PatronDetail::findOrFail($id);
+        $user   = $patron->user;
+
+        // Free up unique fields in patron_details before soft delete
+        $patron->update([
+            'patron_code' => $patron->patron_code . '_deleted_' . $id,
+            'mssv'        => $patron->mssv ? $patron->mssv . '_deleted_' . $id : null,
+            'user_id'     => null,
+        ]);
         $patron->delete();
-        ActivityLog::log('patron_deleted', $patron);
+
+        // Also soft-delete the linked user, renaming unique fields first
+        if ($user) {
+            $userId = $user->id;
+            $user->update([
+                'email'    => $user->email    . '_deleted_' . $userId,
+                'username' => $user->username ? $user->username . '_deleted_' . $userId : null,
+            ]);
+            $user->delete();
+        }
+
+        ActivityLog::log('patron_deleted', $patron, [
+            'user_id' => $user?->id,
+        ]);
+
         return redirect()->route('admin.patrons.index')->with('success', __('Patron moved to archives.'));
     }
 

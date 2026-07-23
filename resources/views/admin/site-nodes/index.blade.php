@@ -227,14 +227,26 @@
                                         <div class="h-12 w-24 rounded-sm bg-muted flex items-center justify-center flex-shrink-0"><i data-lucide="image" class="w-4 h-4 text-muted-foreground"></i></div>
                                     @endif
                                     <div class="flex-1 min-w-0">
-                                        <h5 class="text-xs font-bold text-foreground truncate">{{ $banner->title }}</h5>
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <h5 class="text-xs font-bold text-foreground truncate">{{ $banner->title }}</h5>
+                                            <span id="banner-badge-{{ $banner->id }}" class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[8px] font-bold uppercase tracking-wider {{ $banner->status === 'active' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20' }} border">
+                                                {{ $banner->status === 'active' ? 'Hoạt động' : 'Ẩn' }}
+                                            </span>
+                                        </div>
                                         <a href="{{ $banner->link_url }}" target="_blank" class="text-[9px] text-blue-600 hover:underline truncate block">{{ $banner->link_url }}</a>
                                     </div>
                                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button type="button" 
+                                                id="banner-btn-{{ $banner->id }}"
+                                                onclick="toggleBannerStatus({{ $banner->id }})"
+                                                class="p-1.5 rounded-sm {{ $banner->status === 'active' ? 'bg-amber-500/10 hover:bg-amber-500 text-amber-600 hover:text-white border-amber-500/20' : 'bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white border-emerald-500/20' }} transition-all border" 
+                                                title="{{ $banner->status === 'active' ? __('Ẩn banner') : __('Hiện banner') }}">
+                                            <i data-lucide="{{ $banner->status === 'active' ? 'eye-off' : 'eye' }}" class="w-3 h-3"></i>
+                                        </button>
                                         <form action="{{ route('admin.site-nodes.delete-banner', $banner->id) }}" method="POST" class="inline" onsubmit="return confirm('{{ __('Xác nhận xóa banner này?') }}')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="p-1.5 rounded-sm bg-red-500/10 hover:bg-red-500 text-red-600 hover:text-white transition-all border border-red-500/20"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                                            <button type="submit" class="p-1.5 rounded-sm bg-red-500/10 hover:bg-red-500 text-red-600 hover:text-white transition-all border border-red-500/20" title="{{ __('Xóa banner') }}"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
                                         </form>
                                     </div>
                                 </div>
@@ -509,6 +521,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+function showToast(message, type = 'success') {
+    // Dispatch Alpine toast event configured in admin layout
+    window.dispatchEvent(new CustomEvent('toast', { 
+        detail: { message: message, type: type } 
+    }));
+
+    // Fallback to SweetAlert2 Toast if present
+    if (typeof Swal !== 'undefined') {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true
+        });
+        Toast.fire({
+            icon: type === 'danger' || type === 'error' ? 'error' : 'success',
+            title: message
+        });
+    }
+}
+
 function toggleStatus(nodeId) {
     fetch(`/topsecret/site-nodes/${nodeId}/toggle-status`, {
         method: 'POST',
@@ -518,9 +552,63 @@ function toggleStatus(nodeId) {
     .then(d => {
         if (d.success) {
             const badge = document.getElementById(`status-${nodeId}`);
-            badge.className = `inline-flex items-center px-2 py-1 rounded-sm text-[9px] font-bold text-white ${d.is_active ? 'bg-green-600' : 'bg-slate-400'}`;
-            badge.textContent = d.is_active ? 'Hoạt động' : 'Ẩn';
+            if (badge) {
+                badge.className = `inline-flex items-center px-2 py-1 rounded-sm text-[9px] font-bold text-white ${d.is_active ? 'bg-green-600' : 'bg-slate-400'}`;
+                badge.textContent = d.is_active ? 'Hoạt động' : 'Ẩn';
+            }
+            showToast(d.message || 'Cập nhật trạng thái node thành công!', 'success');
+        } else {
+            showToast(d.message || 'Lỗi khi cập nhật trạng thái', 'error');
         }
+    })
+    .catch(err => {
+        showToast('Lỗi kết nối khi cập nhật trạng thái', 'error');
+    });
+}
+
+function toggleBannerStatus(bannerId) {
+    const btn = document.getElementById(`banner-btn-${bannerId}`);
+    if (btn) btn.disabled = true;
+
+    fetch(`/topsecret/site-nodes/banner/${bannerId}/toggle-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) {
+            const badge = document.getElementById(`banner-badge-${bannerId}`);
+            const isActive = d.is_active;
+
+            if (badge) {
+                badge.className = `inline-flex items-center px-1.5 py-0.5 rounded-sm text-[8px] font-bold uppercase tracking-wider ${isActive ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'} border`;
+                badge.textContent = isActive ? 'Hoạt động' : 'Ẩn';
+            }
+
+            if (btn) {
+                btn.className = `p-1.5 rounded-sm ${isActive ? 'bg-amber-500/10 hover:bg-amber-500 text-amber-600 hover:text-white border-amber-500/20' : 'bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white border-emerald-500/20'} transition-all border`;
+                btn.title = isActive ? 'Ẩn banner' : 'Hiện banner';
+                btn.innerHTML = `<i data-lucide="${isActive ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>`;
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            }
+
+            showToast(d.message || 'Cập nhật trạng thái banner thành công!', 'success');
+        } else {
+            showToast(d.message || 'Lỗi khi cập nhật trạng thái banner', 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('Lỗi kết nối khi cập nhật trạng thái banner', 'error');
+    })
+    .finally(() => {
+        if (btn) btn.disabled = false;
     });
 }
 </script>

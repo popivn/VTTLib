@@ -9,9 +9,7 @@
                 <span class="badge bg-secondary order-display">{{ $item->order }}</span>
             </div>
             
-            <div class="me-3">
-                {!! $item->icon !!}
-            </div>
+
             
             <div class="flex-grow-1">
                 <strong>{{ $item->name }}</strong>

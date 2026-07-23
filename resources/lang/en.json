@@ -266,5 +266,22 @@
     "Delete_Confirmation": "Are you sure you want to delete this role?",
     "Delete_Role": "Delete Role",
     "Update_Sequence": "Update Changes",
-    "Số trang": "Page Count"
+    "Số trang": "Page Count",
+    "Liên kết tài khoản": "Link Account",
+    "Xoá liên kết": "Remove Link",
+    "Tài khoản hợp lệ": "Valid Account",
+    "Đã liên kết với tài khoản này": "Already linked to this account",
+    "Không tìm thấy": "Account Not Found",
+    "Vui lòng kiểm tra lại tên hoặc email.": "Please check the name or email again.",
+    "Chưa có tài khoản liên kết": "No linked account",
+    "Độc giả này chưa được gán tài khoản đăng nhập.": "This patron is not linked to any login account.",
+    "Register New Patron": "Register New Patron",
+    "Edit Patron": "Edit Patron",
+    "Initialize Identity": "Initialize Identity",
+    "Edit information for": "Edit information for",
+    "Update Patron Information": "Update Patron Information",
+    "Quy tắc hệ thống": "System Rule",
+    "Đã liên kết với độc giả khác": "Already linked to another patron",
+    "Tài khoản này đã được liên kết với độc giả khác:": "This account is already linked to another patron:",
+    "auth.failed": "These credentials do not match our records."
 }

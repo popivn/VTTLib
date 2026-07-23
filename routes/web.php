@@ -152,6 +152,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
     // Statistics
     Route::get('/statistics', [\App\Http\Controllers\Admin\StatisticsController::class, 'index'])->name('admin.statistics.index');
 
+    // OER Management
+    Route::prefix('oer')->name('admin.oer.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\OerController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Admin\OerController::class, 'store'])->name('store');
+        Route::put('/{id}', [\App\Http\Controllers\Admin\OerController::class, 'update'])->name('update');
+        Route::delete('/{id}', [\App\Http\Controllers\Admin\OerController::class, 'destroy'])->name('destroy');
+    });
+
     // Site Management
     Route::prefix('site-nodes')->name('admin.site-nodes.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\SiteNodeController::class, 'index'])->name('index');
@@ -183,6 +191,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
         
         // Banner Routes
         Route::post('/banner/add', [\App\Http\Controllers\Admin\SiteNodeController::class, 'addBanner'])->name('add-banner');
+        Route::post('/banner/{banner}/toggle-status', [\App\Http\Controllers\Admin\SiteNodeController::class, 'toggleBannerStatus'])->name('toggle-banner-status');
         Route::delete('/banner/{banner}', [\App\Http\Controllers\Admin\SiteNodeController::class, 'deleteBanner'])->name('delete-banner');
         
         // Page Builder Routes
@@ -602,6 +611,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
     // Digital Reports
     Route::get('/digital-reports', [\App\Http\Controllers\Admin\DigitalReportController::class, 'index'])->name('admin.digital.reports.index');
     Route::post('/digital-reports/generate', [\App\Http\Controllers\Admin\DigitalReportController::class, 'generate'])->name('admin.digital.reports.generate');
+    Route::post('/digital-reports/preview', [\App\Http\Controllers\Admin\DigitalReportController::class, 'preview'])->name('admin.digital.reports.preview');
+    Route::get('/digital-reports/history', [\App\Http\Controllers\Admin\DigitalReportController::class, 'history'])->name('admin.digital.reports.history');
+    Route::get('/digital-reports/history/{id}/download', [\App\Http\Controllers\Admin\DigitalReportController::class, 'historyDownload'])->name('admin.digital.reports.history.download');
+    Route::delete('/digital-reports/history/{id}', [\App\Http\Controllers\Admin\DigitalReportController::class, 'historyDelete'])->name('admin.digital.reports.history.delete');
+    Route::post('/digital-reports/history/clear', [\App\Http\Controllers\Admin\DigitalReportController::class, 'clearHistory'])->name('admin.digital.reports.history.clear');
 
     // Patron Surveys List
     Route::get('/patron-surveys', [\App\Http\Controllers\Admin\PatronSurveyController::class, 'index'])->name('admin.patron-surveys.index');

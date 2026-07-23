@@ -15,9 +15,9 @@
             <button @click="treeOpen = !treeOpen" 
                     class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold bg-vttu-red text-white hover:bg-vttu-dark rounded-md shadow-sm transition-all active:scale-95"
                     title="{{ __('Thu gọn / Mở rộng Cây Thư Mục') }}">
-                <i class="fas fa-folder-tree text-xs"></i>
+                <i class="fa-solid fa-bars text-xs"></i>
                 <span x-text="treeOpen ? 'Thu gọn Cây Thư Mục' : 'Mở Cây Thư Mục'"></span>
-                <i class="fas fa-chevron-left text-[10px] transition-transform duration-300" :class="!treeOpen && 'rotate-180'"></i>
+                <i class="fa-solid fa-angle-left text-xs transition-transform duration-300" :class="!treeOpen && 'rotate-180'"></i>
             </button>
 
             @if($currentFolderId)
@@ -27,10 +27,10 @@
                 @endphp
                 @if($activeFolder)
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 text-amber-600 border border-amber-500/30 text-xs font-bold rounded-md">
-                        <i class="fas fa-folder-open text-xs"></i>
+                        <i class="fa-solid fa-folder-open text-xs"></i>
                         <span>{{ $activeFolder->folder_name }}</span>
                         <a href="{{ request()->fullUrlWithQuery(['folder_id' => null]) }}" class="hover:text-rose-600 ml-1" title="Bỏ lọc thư mục">
-                            <i class="fas fa-times-circle"></i>
+                            <i class="fa-solid fa-circle-xmark text-xs"></i>
                         </a>
                     </span>
                 @endif
@@ -70,7 +70,7 @@
             <!-- Folder Tree Header -->
             <div class="p-3 bg-muted/40 border-b border-border flex items-center justify-between">
                 <h3 class="text-xs font-black uppercase tracking-wider text-vttu-dark flex items-center gap-2">
-                    <i class="fas fa-folder-tree text-vttu-red"></i>
+                    <i class="fa-solid fa-sitemap text-vttu-red"></i>
                     <span>Cây Thư Mục Tài Liệu</span>
                 </h3>
                 <span class="px-2 py-0.5 bg-vttu-red/10 text-vttu-red text-[10px] font-black rounded-full">
@@ -84,7 +84,7 @@
                 <a href="{{ request()->fullUrlWithQuery(['folder_id' => null]) }}" 
                    class="flex items-center justify-between px-3 py-2 rounded-md text-xs transition-all {{ !$currentFolderId ? 'bg-vttu-red text-white font-bold shadow-sm' : 'text-foreground hover:bg-muted/80' }}">
                     <div class="flex items-center gap-2 truncate">
-                        <i class="fas fa-layer-group text-xs {{ !$currentFolderId ? 'text-vttu-yellow' : 'text-vttu-red' }}"></i>
+                        <i class="fa-solid fa-layer-group text-xs {{ !$currentFolderId ? 'text-vttu-yellow' : 'text-vttu-red' }}"></i>
                         <span class="truncate">Tất cả tài liệu số</span>
                     </div>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ !$currentFolderId ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground' }}">
@@ -105,26 +105,39 @@
 
                     <div x-data="{ open: {{ ($isParentSelected || $hasChildSelected) ? 'true' : 'true' }} }" class="space-y-1">
                         <!-- Parent Folder Row -->
-                        <div class="flex items-center justify-between px-3 py-1.5 rounded-md text-xs transition-all {{ $isParentSelected ? 'bg-vttu-red text-white font-bold shadow-sm' : 'text-foreground hover:bg-vttu-red/5 hover:text-vttu-red' }}">
-                            <div class="flex items-center gap-2 truncate flex-1 min-w-0">
-                                @if($hasChildren)
-                                    <button @click="open = !open" class="p-0.5 text-muted-foreground hover:text-foreground focus:outline-none">
-                                        <i class="fas fa-chevron-right text-[9px] transition-transform duration-200" :class="open && 'rotate-90'"></i>
+                        @if($hasChildren)
+                            <div @click="open = !open" 
+                                 class="flex items-center justify-between px-3 py-1.5 rounded-md text-xs transition-all cursor-pointer text-foreground hover:bg-vttu-red/5 hover:text-vttu-red select-none">
+                                <div class="flex items-center gap-2 truncate flex-1 min-w-0">
+                                    <button type="button" class="p-0.5 text-muted-foreground hover:text-foreground focus:outline-none transition-transform" title="Thu gọn / Mở rộng">
+                                        <i class="fa-solid fa-angle-right text-[11px] transition-transform duration-200" :class="open && 'rotate-90'"></i>
                                     </button>
-                                @else
-                                    <span class="w-3"></span>
-                                @endif
 
-                                <a href="{{ request()->fullUrlWithQuery(['folder_id' => $folder->id]) }}" class="flex items-center gap-2 truncate flex-1">
-                                    <i class="{{ $isParentSelected ? 'fas fa-folder-open text-vttu-yellow' : 'fas fa-folder text-amber-500' }} text-xs"></i>
-                                    <span class="truncate font-semibold" title="{{ $folder->folder_name }}">{{ $folder->folder_name }}</span>
-                                </a>
+                                    <div class="flex items-center gap-2 truncate flex-1">
+                                        <i class="fa-solid fa-folder text-amber-500 text-xs" :class="open ? 'fa-folder-open' : 'fa-folder'"></i>
+                                        <span class="truncate font-semibold" title="{{ $folder->folder_name }}">{{ $folder->folder_name }}</span>
+                                    </div>
+                                </div>
+
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground">
+                                    {{ $totalSubResources }}
+                                </span>
                             </div>
+                        @else
+                            <div class="flex items-center justify-between px-3 py-1.5 rounded-md text-xs transition-all {{ $isParentSelected ? 'bg-vttu-red text-white font-bold shadow-sm' : 'text-foreground hover:bg-vttu-red/5 hover:text-vttu-red' }}">
+                                <div class="flex items-center gap-2 truncate flex-1 min-w-0">
+                                    <span class="w-3"></span>
+                                    <a href="{{ request()->fullUrlWithQuery(['folder_id' => $folder->id]) }}" class="flex items-center gap-2 truncate flex-1">
+                                        <i class="{{ $isParentSelected ? 'fa-solid fa-folder-open text-vttu-yellow' : 'fa-solid fa-folder text-amber-500' }} text-xs"></i>
+                                        <span class="truncate font-semibold" title="{{ $folder->folder_name }}">{{ $folder->folder_name }}</span>
+                                    </a>
+                                </div>
 
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $isParentSelected ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground' }}">
-                                {{ $totalSubResources }}
-                            </span>
-                        </div>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $isParentSelected ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground' }}">
+                                    {{ $totalSubResources }}
+                                </span>
+                            </div>
+                        @endif
 
                         <!-- Nested Child Folders (If Any) -->
                         @if($hasChildren)
@@ -140,7 +153,7 @@
                                     <a href="{{ request()->fullUrlWithQuery(['folder_id' => $child->id]) }}" 
                                        class="flex items-center justify-between px-2.5 py-1 rounded-md text-xs transition-all {{ $isChildSelected ? 'bg-vttu-red text-white font-bold shadow-sm' : 'text-muted-foreground hover:text-vttu-red hover:bg-vttu-red/5' }}">
                                         <div class="flex items-center gap-2 truncate">
-                                            <i class="{{ $isChildSelected ? 'fas fa-folder-open text-vttu-yellow' : 'fas fa-folder text-amber-400' }} text-[11px]"></i>
+                                            <i class="{{ $isChildSelected ? 'fa-solid fa-folder-open text-vttu-yellow' : 'fa-solid fa-folder text-amber-400' }} text-[11px]"></i>
                                             <span class="truncate" title="{{ $child->folder_name }}">{{ $child->folder_name }}</span>
                                         </div>
                                         <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold {{ $isChildSelected ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground' }}">
@@ -175,7 +188,7 @@
                             <option value="author" {{ ($currentField ?? 'title') === 'author' ? 'selected' : '' }}>{{ __('Tác giả') }}</option>
                             <option value="subject" {{ ($currentField ?? 'title') === 'subject' ? 'selected' : '' }}>{{ __('Chủ đề') }}</option>
                         </select>
-                        <i class="fas fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none"></i>
+                        <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none"></i>
                     </div>
                     
                     <!-- Keyword Search Input -->
@@ -186,7 +199,7 @@
                                placeholder="{{ __('Nhập từ khóa tìm kiếm tài liệu số...') }}"
                                class="w-full h-9 pl-3 pr-10 text-xs bg-background border border-border rounded-md outline-none focus:ring-1 focus:ring-vttu-red/30 transition-all placeholder:text-muted-foreground/60">
                         <div class="absolute right-0 top-0 h-9 px-3 flex items-center justify-center text-muted-foreground opacity-40">
-                            <i class="fas fa-search text-xs"></i>
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
                         </div>
                     </div>
                 </div>
@@ -194,14 +207,14 @@
                 <!-- Submit & Reset Buttons -->
                 <div class="flex gap-1.5 h-9 w-full md:w-auto">
                     <button type="submit" class="flex-1 md:flex-none px-5 bg-vttu-red text-white rounded-md hover:bg-vttu-dark active:scale-[0.97] transition-all shadow-sm flex items-center justify-center gap-1.5">
-                        <i class="fas fa-search text-xs"></i>
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
                         <span class="text-xs font-black uppercase tracking-wider">{{ __('Tìm') }}</span>
                     </button>
                     @if($keyword || $currentFolderId)
                         <a href="{{ request()->url() }}{{ request()->has('sort') ? '?sort='.request()->query('sort') : '' }}" 
                            class="px-3 bg-muted text-foreground border border-border rounded-md hover:bg-muted/80 transition-all flex items-center justify-center"
                            title="{{ __('Xóa bộ lọc') }}">
-                            <i class="fas fa-times text-xs"></i>
+                            <i class="fa-solid fa-xmark text-xs"></i>
                         </a>
                     @endif
                 </div>
@@ -211,7 +224,7 @@
             <div class="flex items-center justify-between text-vttu-red px-1">
                 <div class="flex items-center gap-2">
                     <div class="w-6 h-6 rounded bg-vttu-red/10 flex items-center justify-center shadow-sm">
-                        <i class="fas fa-database text-xs"></i>
+                        <i class="fa-solid fa-database text-xs"></i>
                     </div>
                     <span class="text-xs font-black uppercase tracking-wider">
                         {{ __('Tổng số kết quả') }}: <span class="text-sm ml-0.5 text-vttu-dark">{{ number_format($totalCount) }}</span> file
@@ -250,8 +263,8 @@
                                             {{ $item->title }}
                                         </h4>
                                         <div class="flex flex-wrap gap-2 pt-1 md:hidden">
-                                            <span class="text-[10px] text-vttu-red/70 font-bold italic"><i class="fas fa-user mr-0.5"></i> {{ $item->author ?: __('Đang cập nhật') }}</span>
-                                            <span class="text-[10px] text-slate-500 font-bold italic"><i class="fas fa-calendar mr-0.5"></i> {{ $item->updated_at ? $item->updated_at->format('d-m-Y') : 'N/A' }}</span>
+                                            <span class="text-[10px] text-vttu-red/70 font-bold italic"><i class="fa-solid fa-user mr-0.5"></i> {{ $item->author ?: __('Đang cập nhật') }}</span>
+                                            <span class="text-[10px] text-slate-500 font-bold italic"><i class="fa-regular fa-calendar mr-0.5"></i> {{ $item->updated_at ? $item->updated_at->format('d-m-Y') : 'N/A' }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -276,7 +289,7 @@
                         <tr>
                             <td colspan="5" class="py-16 text-center">
                                 <div class="flex flex-col items-center justify-center text-muted-foreground opacity-40">
-                                    <i class="fas fa-folder-open text-4xl mb-3"></i>
+                                    <i class="fa-solid fa-folder-open text-4xl mb-3"></i>
                                     <p class="text-xs font-bold uppercase tracking-widest">{{ __('Không tìm thấy tài liệu số nào trong thư mục này') }}</p>
                                 </div>
                             </td>

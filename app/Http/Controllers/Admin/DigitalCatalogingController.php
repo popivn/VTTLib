@@ -65,7 +65,7 @@ class DigitalCatalogingController extends Controller
             'language' => 'required|string',
             'pages' => 'nullable|integer|min:1',
             'file_resource' => ($isEdit ? 'nullable' : 'required') . '|file|mimes:pdf|max:51200',
-            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'cover_image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,apng,avif|max:20480',
         ];
 
         $request->validate($rules);

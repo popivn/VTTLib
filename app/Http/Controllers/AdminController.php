@@ -42,7 +42,7 @@ class AdminController extends Controller
         $totalFineAmount   = Fine::whereIn('status', ['pending', 'partial'])->sum('amount');
 
         $totalDigitalRes   = DigitalResource::where('status', 'published')->count();
-        $totalOER          = OpenEducationalResource::where('status', 'published')->count();
+        $totalOER          = OpenEducationalResource::where('is_active', true)->count();
         $totalNews         = News::where('status', 'published')->count();
 
         // ── LOAN TREND (last 12 months) ──

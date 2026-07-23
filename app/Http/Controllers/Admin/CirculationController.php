@@ -81,7 +81,7 @@ class CirculationController extends Controller
             ->limit(20)
             ->get();
 
-        $overdueLoans = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord'])
+        $overdueLoans = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy'])
             ->overdue()
             ->orderBy('due_date')
             ->get();
@@ -96,7 +96,7 @@ class CirculationController extends Controller
             ->get();
         
         // Get all active loans for the "Currently Borrowed" tab
-        $activeLoans = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord'])
+        $activeLoans = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy'])
             ->active()
             ->orderBy('loan_date', 'desc')
             ->get();
@@ -127,29 +127,34 @@ class CirculationController extends Controller
             // Find patron
             $patron = PatronDetail::where('patron_code', $validated['patron_code'])->first();
             if (!$patron) {
-                throw new \Exception(__('Không tìm thấy bạn đọc với mã đã nhập.'));
+                DB::rollBack();
+                return back()->with('warning', __('Không tìm thấy bạn đọc với mã đã nhập.'));
             }
             
             // Find book item
             $bookItem = BookItem::where('barcode', $validated['barcode'])->first();
             if (!$bookItem) {
-                throw new \Exception(__('Không tìm thấy tài liệu với mã vạch đã nhập.'));
+                DB::rollBack();
+                return back()->with('warning', __('Không tìm thấy tài liệu với mã vạch đã nhập.'));
             }
 
             // Check if patron can borrow
             if (!$patron->canBorrow()) {
-                throw new \Exception(__('Patron cannot borrow. Check loan limits or outstanding fines.'));
+                DB::rollBack();
+                return back()->with('warning', __('Bạn đọc không thể mượn sách. Vui lòng kiểm tra lại giới hạn mượn, hạn thẻ hoặc tiền phạt tồn đọng.'));
             }
 
             // Check if book is available
             if ($bookItem->status !== 'available') {
-                throw new \Exception(__('Book item is not available for loan.'));
+                DB::rollBack();
+                return back()->with('warning', __('Tài liệu hiện không ở trạng thái sẵn sàng để mượn.'));
             }
 
             // Get policy
             $policy = $patron->patronGroup?->activePolicy;
             if (!$policy) {
-                throw new \Exception(__('No active circulation policy for this patron group.'));
+                DB::rollBack();
+                return back()->with('warning', __('Chưa có quy định lưu thông đang hoạt động cho nhóm bạn đọc này.'));
             }
 
             // Create loan transaction
@@ -683,14 +688,31 @@ class CirculationController extends Controller
                         'name' => $patron->patronGroup?->name
                     ],
                     'current_loans' => $currentLoans,
-                    'active_loans' => $patron->activeLoans->map(function($loan) {
+                    'active_loans' => $patron->activeLoans()->with(['bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy'])->get()->map(function($loan) {
+                        $now = \Carbon\Carbon::now();
+                        $dueDate = $loan->due_date;
+                        $remainingDays = $dueDate ? ceil($now->diffInDays($dueDate, false)) : 0;
                         return [
                             'id' => $loan->id,
-                            'due_date' => $loan->due_date->toISOString(),
+                            'loan_date' => $loan->loan_date ? $loan->loan_date->format('d/m/Y') : 'N/A',
+                            'due_date' => $dueDate ? $dueDate->format('d/m/Y') : 'N/A',
+                            'due_date_iso' => $dueDate ? $dueDate->toISOString() : null,
+                            'renewal_count' => $loan->renewal_count ?? 0,
+                            'max_renewals' => $loan->policy?->max_renewals ?? 2,
+                            'remaining_days' => $remainingDays,
+                            'is_overdue' => $dueDate ? $now->greaterThan($dueDate) : false,
+                            'loaned_by' => $loan->loanedByUser?->name ?? $loan->loanedByUser?->username ?? 'staff',
+                            'notes' => $loan->notes ?? 'Sách đang mượn',
                             'book_item' => [
-                                'barcode' => $loan->bookItem->barcode,
+                                'barcode' => $loan->bookItem?->barcode ?? 'N/A',
+                                'price' => number_format($loan->bookItem?->price ?? 0),
+                                'location' => $loan->bookItem?->storageLocation?->name ?? $loan->bookItem?->location ?? 'Kho',
+                                'material_type' => $loan->bookItem?->storage_type ?? 'Giáo trình',
                                 'bibliographic_record' => [
-                                    'title' => $loan->bookItem->bibliographicRecord->title
+                                    'title' => $loan->bookItem?->bibliographicRecord?->title ?? 'N/A',
+                                    'author' => $loan->bookItem?->bibliographicRecord?->author ?? '',
+                                    'publisher' => $loan->bookItem?->bibliographicRecord?->publisher ?? '',
+                                    'publish_year' => $loan->bookItem?->bibliographicRecord?->publish_year ?? '',
                                 ]
                             ]
                         ];
@@ -1551,13 +1573,13 @@ class CirculationController extends Controller
 
             // Check if patron can borrow
             if (!$patron->canBorrow()) {
-                throw new \Exception(__('Bạn đọc không thể mượn sách. Kiểm tra giới hạn mượn hoặc phạt chưa thanh toán.'));
+                throw new \Exception(__('Bạn đọc không thể mượn sách. Vui lòng kiểm tra lại giới hạn mượn, hạn thẻ hoặc tiền phạt tồn đọng.'));
             }
 
             // Get policy
             $policy = $patron->patronGroup?->activePolicy;
             if (!$policy) {
-                throw new \Exception(__('Không có chính sách lưu thông đang hoạt động cho nhóm bạn đọc này.'));
+                throw new \Exception(__('Chưa có quy định lưu thông đang hoạt động cho nhóm bạn đọc này.'));
             }
 
             // Create loan transaction

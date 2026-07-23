@@ -15,10 +15,18 @@ class SecretLoginController extends Controller
 
     public function store(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required'],
         ]);
+
+        $loginInput = $request->input('username');
+        $fieldType = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        $credentials = [
+            $fieldType => $loginInput,
+            'password' => $request->input('password'),
+        ];
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
@@ -38,7 +46,7 @@ class SecretLoginController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'username' => 'Thông tin đăng danh hoặc mật khẩu không chính xác.',
+            'username' => trans('auth.failed'),
         ]);
     }
 

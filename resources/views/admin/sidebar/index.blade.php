@@ -640,28 +640,30 @@
 </style>
 @endpush
 
+@section('content')
+
 {{-- Add New Item Modal --}}
-<div id="addItemModal" class="modal">
+<div id="addItemModal" class="modal" style="display: none;">
     <div class="modal-backdrop" onclick="closeAddModal()"></div>
     <div class="modal-content">
-        <h3 class="text-sm font-bold border-b border-border pb-2 mb-3 uppercase text-foreground tracking-wider">{{ __('Add New Sidebar Item') }}</h3>
+        <h3 class="text-sm font-bold border-b border-border pb-2 mb-3 uppercase text-foreground tracking-wider">{{ __('Thêm mục Menu mới') }}</h3>
         <form id="addItemForm" method="POST">
             @csrf
             <div class="space-y-3">
                 <div class="flex flex-col">
-                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{{ __('Item Name') }} *</label>
-                    <input type="text" name="name" required class="input-field" placeholder="{{ __('Enter item name') }}">
+                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{{ __('Tên mục') }} *</label>
+                    <input type="text" name="name" required class="input-field" placeholder="{{ __('Nhập tên mục') }}">
                 </div>
                 <div class="flex flex-col">
-                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{{ __('Icon') }} (FontAwesome class)</label>
+                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{{ __('Biểu tượng (FontAwesome class)') }}</label>
                     <input type="text" name="icon" class="input-field" placeholder="fas fa-home" value="fas fa-circle">
                 </div>
                 <div class="flex flex-col">
-                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{{ __('Route Name') }}</label>
+                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{{ __('Tên Route') }}</label>
                     <input type="text" name="route_name" class="input-field" placeholder="admin.dashboard">
                 </div>
                 <div class="flex flex-col">
-                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{{ __('Parent Item') }}</label>
+                    <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{{ __('Mục cha') }}</label>
                     <select name="parent_id" class="input-field">
                         <option value="">{{ __('— Root Level —') }}</option>
                         @foreach($sidebarItems as $item)
@@ -671,18 +673,16 @@
                 </div>
                 <div class="flex items-center gap-2 mt-1">
                     <input type="checkbox" name="is_active" id="newItemActive" value="1" checked class="rounded-sm border-input bg-background text-primary focus:ring-primary h-4 w-4">
-                    <label for="newItemActive" class="text-xs font-semibold text-foreground cursor-pointer">{{ __('Active') }}</label>
+                    <label for="newItemActive" class="text-xs font-semibold text-foreground cursor-pointer">{{ __('Đang hoạt động') }}</label>
                 </div>
             </div>
             <div class="flex justify-end gap-2 mt-4 pt-2 border-t border-border">
-                <button type="button" onclick="closeAddModal()" class="btn-compact-secondary px-3 py-1">{{ __('Cancel') }}</button>
-                <button type="submit" class="btn-compact-primary px-3 py-1">{{ __('Add Item') }}</button>
+                <button type="button" onclick="closeAddModal()" class="btn-compact-secondary px-3 py-1">{{ __('Hủy') }}</button>
+                <button type="submit" class="btn-compact-primary px-3 py-1">{{ __('Thêm mục') }}</button>
             </div>
         </form>
     </div>
 </div>
-
-@section('content')
 
 {{-- Save overlay spinner --}}
 <div class="save-overlay" id="saveOverlay">
@@ -780,8 +780,7 @@
                     {{-- Order badge --}}
                     <span class="order-badge" title="Thứ tự">{{ $loop->index }}</span>
 
-                    {{-- Icon --}}
-                    <div class="item-icon-wrap">{!! $item->icon !!}</div>
+
 
                     {{-- Name / Route --}}
                     <div class="item-info">
@@ -829,7 +828,6 @@
                                 <i data-lucide="grip-vertical" class="w-4 h-4 text-muted-foreground"></i>
                             </div>
                             <span class="order-badge">{{ $loop->index }}</span>
-                            <div class="item-icon-wrap">{!! $child->icon !!}</div>
                             <div class="item-info">
                                 <div class="item-name">{{ $child->name }}</div>
                                 @if($child->route_name)
@@ -1154,12 +1152,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function openAddModal() {
     const modal = document.getElementById('addItemModal');
-    modal.classList.add('active');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10);
 }
 
 function closeAddModal() {
     const modal = document.getElementById('addItemModal');
     modal.classList.remove('active');
+    setTimeout(() => { modal.style.display = 'none'; }, 200);
     document.getElementById('addItemForm').reset();
 }
 

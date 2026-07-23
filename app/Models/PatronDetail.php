@@ -156,17 +156,18 @@ class PatronDetail extends Model
 
     /**
      * Get the display name for the patron
+     * Priority: patron_details.display_name > users.name > patron_code
      */
     public function getDisplayNameAttribute()
     {
-        return $this->user?->name ?? $this->patron_code;
+        return $this->attributes['display_name'] ?? $this->user?->name ?? $this->patron_code;
     }
 
     // Methods for patron management
     public function lock(string $reason, int $lockedBy): bool
     {
         $this->update(['card_status' => 'locked']);
-        
+
         $this->lockHistory()->create([
             'action' => PatronLockHistory::ACTION_LOCK,
             'reason' => $reason,
@@ -185,7 +186,7 @@ class PatronDetail extends Model
     public function unlock(string $reason, int $unlockedBy, float $unlockFee = 0): bool
     {
         $this->update(['card_status' => 'normal']);
-        
+
         $this->lockHistory()->create([
             'action' => PatronLockHistory::ACTION_UNLOCK,
             'reason' => $reason,
@@ -279,9 +280,9 @@ class PatronDetail extends Model
         $queueItem = $this->printQueue()->pending()->first();
         if ($queueItem) {
             $queueItem->cancel();
-            
+
             ActivityLog::log('patron_removed_from_print_queue', $this);
-            
+
             return true;
         }
 

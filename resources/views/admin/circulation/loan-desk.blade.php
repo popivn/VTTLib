@@ -12,22 +12,27 @@
             [ERROR] {{ session('error') }}
         </div>
     @endif
+    @if(session('warning'))
+        <div class="bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 p-3 text-xs rounded-sm font-medium">
+            [WARNING] {{ session('warning') }}
+        </div>
+    @endif
 
     <!-- Header -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div>
-            <h1 class="text-xl font-bold tracking-tight text-foreground">{{ __('Loan Desk') }}</h1>
-            <p class="text-xs text-muted-foreground">{{ __('Circulation Management - Loan, Return, Reading Room, Hold') }}</p>
+            <h1 class="text-xl font-bold tracking-tight text-foreground">{{ __('Bàn mượn trả sách (Loan Desk)') }}</h1>
+            <p class="text-xs text-muted-foreground">{{ __('Quản lý Lưu thông - Mượn, Trả, Đọc tại chỗ, Giữ lại sách') }}</p>
         </div>
         <div class="flex gap-2">
             <a href="{{ route('admin.circulation.reports.index') }}" class="btn-compact-secondary">
-                <i data-lucide="bar-chart-3" class="w-4 h-4 mr-1"></i><span>{{ __('Reports') }}</span>
+                <i data-lucide="bar-chart-3" class="w-4 h-4 mr-1"></i><span>{{ __('Báo cáo') }}</span>
             </a>
             <a href="{{ route('admin.circulation.tools') }}" class="btn-compact-secondary">
-                <i data-lucide="wrench" class="w-4 h-4 mr-1"></i><span>{{ __('Tools') }}</span>
+                <i data-lucide="wrench" class="w-4 h-4 mr-1"></i><span>{{ __('Công cụ') }}</span>
             </a>
             <a href="{{ route('admin.circulation.policies.index') }}" class="btn-compact-secondary">
-                <i data-lucide="settings" class="w-4 h-4 mr-1"></i><span>{{ __('Policies') }}</span>
+                <i data-lucide="settings" class="w-4 h-4 mr-1"></i><span>{{ __('Quy định') }}</span>
             </a>
         </div>
     </div>
@@ -61,7 +66,7 @@
                 <span>{{ __('Sách đang mượn') }}</span>
             </button>
             <button type="button" onclick="switchTab('requests')" id="requestsTab"
-                    class="px-4 py-2.5 text-xs font-semibold transition-all border-b-2 border-transparent text-muted-foreground hover:text-foreground shrink-0 flex items-center gap-1.5">
+                    class="px-4 py-2.5 text-xs font-semibold transition-all border-b-2 border-transparent text-muted-foreground hover:text-foreground border-r border-border shrink-0 flex items-center gap-1.5">
                 <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
                 <span>{{ __('Yêu cầu mượn') }}</span>
                 @php
@@ -70,6 +75,16 @@
                 @if($pendingCount > 0)
                     <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold bg-destructive text-destructive-foreground shadow-sm">
                         {{ $pendingCount }}
+                    </span>
+                @endif
+            </button>
+            <button type="button" onclick="switchTab('renew-overdue')" id="renewOverdueTab"
+                    class="px-4 py-2.5 text-xs font-semibold transition-all border-b-2 border-transparent text-muted-foreground hover:text-foreground shrink-0 flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-500"></i>
+                <span>{{ __('Gia Hạn Sách Quá Hạn') }}</span>
+                @if($overdueLoans->count() > 0)
+                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold bg-amber-500 text-white shadow-sm">
+                        {{ $overdueLoans->count() }}
                     </span>
                 @endif
             </button>
@@ -84,19 +99,19 @@
                         <i data-lucide="rotate-cw" class="w-3 h-3"></i> {{ __('Tải lại trang') }}
                     </button>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div class="space-y-4">
                     <div>
                         <h3 class="text-sm font-bold mb-3 text-emerald-500 flex items-center gap-1">
                             <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
-                            <span>{{ __('Checkout') }} ({{ __('Loan') }})</span>
+                            <span>{{ __('Cho mượn sách (Checkout)') }}</span>
                         </h3>
                         <form action="{{ route('admin.circulation.checkout') }}" method="POST" class="space-y-3 bg-card border border-border p-3 rounded-md shadow-sm">
                             @csrf
                             <div>
-                                <label class="block text-xs font-semibold mb-1 text-foreground">{{ __('Patron_Code') }} *</label>
+                                <label class="block text-xs font-semibold mb-1 text-foreground">{{ __('Mã bạn đọc') }} *</label>
                                 <div class="relative">
                                     <input type="text" id="patron_code" name="patron_code" required class="input-field pr-9" 
-                                        placeholder="{{ __('Scan_or_enter_patron_code') }}" autofocus>
+                                        placeholder="{{ __('Quét hoặc nhập mã bạn đọc...') }}" autofocus>
                                     <button type="button" onclick="searchPatronByCode(document.getElementById('patron_code').value)" 
                                         class="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors">
                                         <i data-lucide="search" class="w-4 h-4"></i>
@@ -104,10 +119,10 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold mb-1 text-foreground">{{ __('Book_Barcode') }} *</label>
+                                <label class="block text-xs font-semibold mb-1 text-foreground">{{ __('Mã vạch tài liệu') }} *</label>
                                 <div class="relative">
                                     <input type="text" id="book_barcode" name="barcode" required class="input-field pr-9" 
-                                        placeholder="{{ __('Scan_or_enter_barcode') }}">
+                                        placeholder="{{ __('Quét hoặc nhập mã vạch tài liệu...') }}">
                                     <button type="button" onclick="searchBookByBarcode(document.getElementById('book_barcode').value)" 
                                         class="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors">
                                         <i data-lucide="search" class="w-4 h-4"></i>
@@ -134,18 +149,18 @@
                         <i data-lucide="rotate-cw" class="w-3 h-3"></i> {{ __('Tải lại danh sách') }}
                     </button>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div class="space-y-4">
                     <div>
                         <h3 class="text-sm font-bold mb-3 text-blue-500 flex items-center gap-1">
                             <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
-                            <span>{{ __('Checkin') }} ({{ __('Return') }})</span>
+                            <span>{{ __('Trả sách (Checkin)') }}</span>
                         </h3>
                         <div class="bg-card border border-border p-3 rounded-md shadow-sm space-y-3">
                             <div>
-                                <label class="block text-xs font-semibold mb-1 text-foreground">{{ __('Patron_Code') }} *</label>
+                                <label class="block text-xs font-semibold mb-1 text-foreground">{{ __('Mã bạn đọc') }} *</label>
                                 <div class="relative">
                                     <input type="text" id="checkin_patron_code" name="patron_code" required class="input-field pr-9" 
-                                        placeholder="{{ __('Scan_or_enter_patron_code') }}" onchange="loadPatronActiveLoans()">
+                                        placeholder="{{ __('Quét hoặc nhập mã bạn đọc...') }}" onchange="loadPatronActiveLoans()">
                                     <button type="button" onclick="searchPatronByCode(document.getElementById('checkin_patron_code').value)" 
                                         class="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors">
                                         <i data-lucide="search" class="w-4 h-4"></i>
@@ -178,7 +193,7 @@
                         <i data-lucide="rotate-cw" class="w-3 h-3"></i> {{ __('Tải lại danh sách') }}
                     </button>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div class="space-y-4">
                     <div>
                         <h3 class="text-sm font-bold mb-3 text-purple-500 flex items-center gap-1">
                             <i data-lucide="book-open" class="w-4 h-4"></i>
@@ -265,7 +280,7 @@
                         <i data-lucide="rotate-cw" class="w-3 h-3"></i> {{ __('Tải lại danh sách') }}
                     </button>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div class="space-y-4">
                     <div>
                         <h3 class="text-sm font-bold mb-3 text-orange-500 flex items-center gap-1">
                             <i data-lucide="bookmark" class="w-4 h-4"></i>
@@ -357,41 +372,76 @@
                         <table class="w-full text-xs">
                             <thead class="bg-muted/50 border-b border-border text-muted-foreground uppercase text-[10px] font-semibold">
                                 <tr>
-                                    <th class="p-2 text-left">{{ __('Mã vạch') }}</th>
-                                    <th class="p-2 text-left">{{ __('Tên sách') }}</th>
-                                    <th class="p-2 text-left">{{ __('Người mượn') }}</th>
-                                    <th class="p-2 text-left">{{ __('Ngày mượn') }}</th>
-                                    <th class="p-2 text-left">{{ __('Hạn trả') }}</th>
-                                    <th class="p-2 text-center">{{ __('Trạng thái') }}</th>
+                                    <th class="p-2.5 text-center w-8"><input type="checkbox" checked disabled class="rounded"></th>
+                                    <th class="p-2.5 text-left w-28">{{ __('Mã tài liệu') }}</th>
+                                    <th class="p-2.5 text-left">{{ __('Mô tả') }}</th>
+                                    <th class="p-2.5 text-left">{{ __('Người mượn') }}</th>
+                                    <th class="p-2.5 text-right w-24">{{ __('Giá tiền') }}</th>
+                                    <th class="p-2.5 text-center w-24">{{ __('Ngày mượn') }}</th>
+                                    <th class="p-2.5 text-center w-24">{{ __('Hạn trả') }}</th>
+                                    <th class="p-2.5 text-left w-28">{{ __('Người thực hiện') }}</th>
+                                    <th class="p-2.5 text-left w-28">{{ __('Ghi chú') }}</th>
+                                    <th class="p-2.5 text-center w-20">{{ __('Thao tác') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
                                 @forelse($activeLoans as $loan)
+                                @php
+                                    $now = \Carbon\Carbon::now();
+                                    $dueDate = $loan->due_date;
+                                    $remainingDays = $dueDate ? ceil($now->diffInDays($dueDate, false)) : 0;
+                                    $title = $loan->bookItem->bibliographicRecord->title ?? 'N/A';
+                                    $author = $loan->bookItem->bibliographicRecord->author ?? '';
+                                    $publisher = $loan->bookItem->bibliographicRecord->publisher ?? '';
+                                    $year = $loan->bookItem->bibliographicRecord->publish_year ?? '';
+                                    $fullDesc = implode(' / ', array_filter([$title, $author, $publisher, $year]));
+                                @endphp
                                 <tr class="hover:bg-muted/30 transition-colors">
-                                    <td class="p-2 font-mono text-primary font-medium text-xs">{{ $loan->bookItem->barcode }}</td>
-                                    <td class="p-2 font-medium text-foreground max-w-xs truncate" title="{{ $loan->bookItem->bibliographicRecord->title ?? 'N/A' }}">{{ $loan->bookItem->bibliographicRecord->title ?? 'N/A' }}</td>
-                                    <td class="p-2">
-                                        <div class="font-medium text-foreground text-xs">{{ $loan->patron->display_name ?? $loan->patron->user->name ?? 'N/A' }}</div>
+                                    <td class="p-2.5 text-center"><input type="checkbox" checked disabled class="rounded text-primary"></td>
+                                    <td class="p-2.5 font-mono font-bold text-foreground text-xs">{{ $loan->bookItem->barcode }}</td>
+                                    <td class="p-2.5 text-xs">
+                                        <div class="font-medium text-foreground italic line-clamp-2" title="{{ $fullDesc }}">{{ $fullDesc }}</div>
+                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[10px]">
+                                            <div>Vị trí: <span class="text-blue-600 dark:text-blue-400 font-semibold">{{ $loan->bookItem->storageLocation->name ?? $loan->bookItem->location ?? 'Kho' }}</span></div>
+                                            <div>Loại: <span class="text-blue-600 dark:text-blue-400 font-semibold">{{ $loan->bookItem->storage_type ?? 'Giáo trình' }}</span></div>
+                                            <div>Gia hạn: <span class="text-destructive font-bold">{{ $loan->renewal_count ?? 0 }} (Lần)</span></div>
+                                            <div>Còn hạn: <span class="{{ $remainingDays < 0 ? 'text-destructive font-bold' : 'text-emerald-600 font-bold' }}">{{ $remainingDays }} (Ngày)</span></div>
+                                        </div>
+                                    </td>
+                                    <td class="p-2.5">
+                                        <div class="font-semibold text-foreground text-xs">{{ $loan->patron->display_name ?? $loan->patron->user->name ?? 'N/A' }}</div>
                                         <div class="text-[10px] text-muted-foreground font-mono">{{ $loan->patron->patron_code }}</div>
                                     </td>
-                                    <td class="p-2 text-[11px] text-muted-foreground">
-                                        {{ $loan->loan_date ? $loan->loan_date->format('d/m/Y H:i') : '-' }}
+                                    <td class="p-2.5 text-right font-medium text-foreground">{{ number_format($loan->bookItem->price ?? 0) }}đ</td>
+                                    <td class="p-2.5 text-center text-emerald-600 dark:text-emerald-400 font-semibold">
+                                        {{ $loan->loan_date ? $loan->loan_date->format('d/m/Y') : '-' }}
                                     </td>
-                                    <td class="p-2 text-[11px] {{ $loan->isOverdue() ? 'text-destructive font-bold' : 'text-muted-foreground' }}">
+                                    <td class="p-2.5 text-center {{ $loan->isOverdue() ? 'text-destructive font-bold' : 'text-emerald-600 dark:text-emerald-400 font-semibold' }}">
                                         {{ $loan->due_date ? $loan->due_date->format('d/m/Y') : '-' }}
                                         @if($loan->isOverdue())
                                             <span class="ml-1 text-[8px] bg-destructive/15 text-destructive px-1 py-0.5 rounded-sm uppercase tracking-wide">Quá hạn</span>
                                         @endif
                                     </td>
-                                    <td class="p-2 text-center">
-                                        <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded-sm bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20">
-                                            {{ __('Đang mượn') }}
-                                        </span>
+                                    <td class="p-2.5 text-muted-foreground text-xs">{{ $loan->loanedByUser->name ?? $loan->loanedByUser->username ?? 'staff' }}</td>
+                                    <td class="p-2.5 text-muted-foreground text-xs">{{ $loan->notes ?? 'Sách đang mượn' }}</td>
+                                    <td class="p-2.5 text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <button onclick="recallLoanTransaction('{{ $loan->bookItem->barcode }}', '{{ addslashes($title) }}')" 
+                                                    class="p-1 text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 rounded transition-colors" 
+                                                    title="{{ __("Triệu hồi") }}">
+                                                <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                            <button onclick="declareLostLoanTransaction('{{ $loan->bookItem->barcode }}', '{{ addslashes($title) }}')" 
+                                                    class="p-1 text-destructive hover:text-destructive/90 hover:bg-destructive/10 rounded transition-colors" 
+                                                    title="{{ __("Khai báo mất") }}">
+                                                <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="p-8 text-center text-muted-foreground italic">
+                                    <td colspan="10" class="p-8 text-center text-muted-foreground italic">
                                         {{ __('Không có sách nào đang được mượn.') }}
                                     </td>
                                 </tr>
@@ -517,6 +567,89 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Renew Overdue Tab Content -->
+            <div id="renewOverdueContent" class="space-y-3 hidden">
+                <div class="flex justify-between items-center bg-amber-500/10 border border-amber-500/20 p-3 rounded-md">
+                    <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                        <div>
+                            <h3 class="text-xs font-bold uppercase tracking-wider">{{ __('Gia Hạn Sách Quá Hạn') }}</h3>
+                            <p class="text-[11px] text-muted-foreground">{{ __('Danh sách các tài liệu mượn đã quá hạn cần được xử lý gia hạn hoặc thu phạt.') }}</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="window.location.reload()" class="btn-compact-secondary text-xs">
+                        <i data-lucide="rotate-cw" class="w-3.5 h-3.5 mr-1"></i>{{ __('Tải lại trang') }}
+                    </button>
+                </div>
+
+                @if($overdueLoans->count() > 0)
+                <div class="bg-card rounded-md border border-border overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead class="bg-muted/50 border-b border-border text-muted-foreground uppercase text-[10px] font-semibold">
+                                <tr>
+                                    <th class="p-2.5 text-left">{{ __('Bạn đọc') }}</th>
+                                    <th class="p-2.5 text-left">{{ __('Tài liệu') }}</th>
+                                    <th class="p-2.5 text-left">{{ __('Ngày mượn') }}</th>
+                                    <th class="p-2.5 text-left">{{ __('Hạn trả') }}</th>
+                                    <th class="p-2.5 text-left">{{ __('Số ngày quá hạn') }}</th>
+                                    <th class="p-2.5 text-left">{{ __('Lượt gia hạn') }}</th>
+                                    <th class="p-2.5 text-center">{{ __('Thao tác gia hạn') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-border">
+                                @foreach($overdueLoans as $loan)
+                                <tr class="hover:bg-muted/30">
+                                    <td class="p-2.5 font-medium">
+                                        <div class="font-bold text-foreground">{{ $loan->patron->display_name ?? $loan->patron->user->name ?? 'N/A' }}</div>
+                                        <div class="text-[10px] text-muted-foreground font-mono">{{ $loan->patron->patron_code }}</div>
+                                    </td>
+                                    <td class="p-2.5">
+                                        <div class="font-semibold text-foreground line-clamp-1">{{ $loan->bookItem->bibliographicRecord->title ?? 'N/A' }}</div>
+                                        <div class="text-[10px] text-muted-foreground font-mono">{{ $loan->bookItem->barcode }}</div>
+                                    </td>
+                                    <td class="p-2.5 text-muted-foreground">
+                                        {{ $loan->loan_date ? $loan->loan_date->format('d/m/Y') : 'N/A' }}
+                                    </td>
+                                    <td class="p-2.5 text-destructive font-semibold">
+                                        {{ $loan->due_date ? $loan->due_date->format('d/m/Y') : 'N/A' }}
+                                    </td>
+                                    <td class="p-2.5">
+                                        <span class="bg-destructive/10 text-destructive px-2 py-0.5 rounded-sm text-[10px] font-bold">
+                                            Quá {{ $loan->getOverdueDays() }} ngày
+                                        </span>
+                                    </td>
+                                    <td class="p-2.5 text-muted-foreground">
+                                        <span class="font-mono text-xs">{{ $loan->renewal_count }}/{{ $loan->policy->max_renewals ?? '?' }}</span>
+                                    </td>
+                                    <td class="p-2.5 text-center">
+                                        @if($loan->canRenew())
+                                        <form action="{{ route('admin.circulation.renew', $loan) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit" class="btn-compact-primary py-1 px-3 text-xs bg-amber-500 hover:bg-amber-600 border-amber-500 text-white">
+                                                <i data-lucide="rotate-cw" class="w-3.5 h-3.5 mr-1 inline"></i>{{ __('Gia hạn ngay') }}
+                                            </button>
+                                        </form>
+                                        @else
+                                        <span class="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded">
+                                            {{ __('Hết lượt gia hạn') }}
+                                        </span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @else
+                <div class="text-center text-muted-foreground py-10 bg-card border border-border rounded-md">
+                    <i data-lucide="check-circle-2" class="w-10 h-10 mx-auto mb-2 text-emerald-500/50"></i>
+                    <p class="text-xs font-semibold">{{ __('Không có tài liệu nào bị quá hạn hiện tại.') }}</p>
+                </div>
+                @endif
+            </div>
         </div>
     </div>
 
@@ -526,18 +659,18 @@
         <div class="p-3 bg-destructive/10 border-b border-destructive/20">
             <h3 class="text-sm font-bold text-destructive flex items-center gap-1.5">
                 <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                <span>{{ __('Overdue_Loans') }} ({{ $overdueLoans->count() }})</span>
+                <span>{{ __('Sách quá hạn') }} ({{ $overdueLoans->count() }})</span>
             </h3>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-xs">
                 <thead class="bg-muted/50 border-b border-border text-muted-foreground uppercase text-[10px] font-semibold">
                     <tr>
-                        <th class="p-2 text-left">{{ __('Patron') }}</th>
-                        <th class="p-2 text-left">{{ __('Book') }}</th>
-                        <th class="p-2 text-left">{{ __('Due_Date') }}</th>
-                        <th class="p-2 text-left">{{ __('Overdue_Days') }}</th>
-                        <th class="p-2 text-left">{{ __('Actions') }}</th>
+                        <th class="p-2 text-left">{{ __('Bạn đọc') }}</th>
+                        <th class="p-2 text-left">{{ __('Tài liệu') }}</th>
+                        <th class="p-2 text-left">{{ __('Hạn trả') }}</th>
+                        <th class="p-2 text-left">{{ __('Số ngày quá hạn') }}</th>
+                        <th class="p-2 text-left">{{ __('Thao tác') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border">
@@ -842,15 +975,14 @@ function switchTab(tabName) {
     window.history.pushState({}, '', url);
 
     // Hide all tab contents
-    document.getElementById('checkoutContent').classList.add('hidden');
-    document.getElementById('checkinContent').classList.add('hidden');
-    document.getElementById('readingRoomContent').classList.add('hidden');
-    document.getElementById('holdContent').classList.add('hidden');
-    document.getElementById('borrowedContent').classList.add('hidden');
-    document.getElementById('requestsContent').classList.add('hidden');
+    const contents = ['checkoutContent', 'checkinContent', 'readingRoomContent', 'holdContent', 'borrowedContent', 'requestsContent', 'renewOverdueContent'];
+    contents.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
     
     // Remove active/inactive classes from all tabs
-    const allTabs = ['checkout', 'checkin', 'readingRoom', 'hold', 'borrowed', 'requests'];
+    const allTabs = ['checkout', 'checkin', 'readingRoom', 'hold', 'borrowed', 'requests', 'renewOverdue'];
     allTabs.forEach(tab => {
         const el = document.getElementById(tab + 'Tab');
         if (el) {
@@ -860,6 +992,7 @@ function switchTab(tabName) {
                 'border-purple-500', 'text-purple-600', 'bg-purple-500/5', 'dark:text-purple-400',
                 'border-orange-500', 'text-orange-600', 'bg-orange-500/5', 'dark:text-orange-400',
                 'border-indigo-500', 'text-indigo-600', 'bg-indigo-500/5', 'dark:text-indigo-400',
+                'border-amber-500', 'text-amber-600', 'bg-amber-500/5', 'dark:text-amber-400',
                 'border-transparent', 'text-muted-foreground'
             );
             el.classList.add('border-transparent', 'text-muted-foreground');
@@ -867,13 +1000,14 @@ function switchTab(tabName) {
     });
     
     // Set active tab styles
-    const activeEl = document.getElementById((tabName === 'reading-room' ? 'readingRoom' : tabName) + 'Tab');
+    const tabKey = tabName === 'reading-room' ? 'readingRoom' : (tabName === 'renew-overdue' ? 'renewOverdue' : tabName);
+    const activeEl = document.getElementById(tabKey + 'Tab');
     if (activeEl) {
         activeEl.classList.remove('border-transparent', 'text-muted-foreground');
         if (tabName === 'checkout') {
             activeEl.classList.add('border-emerald-500', 'text-emerald-600', 'bg-emerald-500/5', 'dark:text-emerald-400');
         } else if (tabName === 'checkin') {
-            activeEl.classList.add('border-blue-500', 'text-blue-600', 'bg-blue-505', 'dark:bg-blue-500/5', 'dark:text-blue-400');
+            activeEl.classList.add('border-blue-500', 'text-blue-600', 'bg-blue-500/5', 'dark:text-blue-400');
         } else if (tabName === 'reading-room') {
             activeEl.classList.add('border-purple-500', 'text-purple-600', 'bg-purple-500/5', 'dark:text-purple-400');
             loadAllReadingRoomTransactions();
@@ -882,11 +1016,14 @@ function switchTab(tabName) {
             loadAllReservations();
         } else if (tabName === 'borrowed' || tabName === 'requests') {
             activeEl.classList.add('border-indigo-500', 'text-indigo-600', 'bg-indigo-500/5', 'dark:text-indigo-400');
+        } else if (tabName === 'renew-overdue') {
+            activeEl.classList.add('border-amber-500', 'text-amber-600', 'bg-amber-500/5', 'dark:text-amber-400');
         }
     }
     
     // Show selected content
-    const contentEl = document.getElementById(tabName === 'reading-room' ? 'readingRoomContent' : (tabName === 'hold' ? 'holdContent' : tabName + 'Content'));
+    const contentKey = tabName === 'reading-room' ? 'readingRoomContent' : (tabName === 'hold' ? 'holdContent' : (tabName === 'renew-overdue' ? 'renewOverdueContent' : tabName + 'Content'));
+    const contentEl = document.getElementById(contentKey);
     if (contentEl) {
         contentEl.classList.remove('hidden');
     }
@@ -896,7 +1033,7 @@ function switchTab(tabName) {
 window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get('tab');
-    if (tab && ['checkout', 'checkin', 'reading-room', 'hold', 'borrowed', 'requests'].includes(tab)) {
+    if (tab && ['checkout', 'checkin', 'reading-room', 'hold', 'borrowed', 'requests', 'renew-overdue'].includes(tab)) {
         switchTab(tab);
     }
     if (window.lucide) window.lucide.createIcons();
@@ -1198,21 +1335,28 @@ function displayPatronResult(patron) {
                 
                 <!-- Current Loans Table -->
                 ${loans > 0 ? `
-                    <div class="bg-muted/10 border border-border rounded-sm p-2.5">
-                        <h5 class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">{{ __("Tài liệu đang mượn") }} (${loans})</h5>
+                    <div class="bg-card border border-border rounded-md p-3 shadow-sm space-y-2">
+                        <h5 class="text-xs font-bold uppercase tracking-wider text-foreground mb-2 flex items-center justify-between">
+                            <span>{{ __("Tài liệu đang mượn") }} (${loans})</span>
+                        </h5>
                         <div class="overflow-x-auto">
-                            <table class="current-loans-table w-full text-xs">
-                                <thead>
-                                    <tr class="border-b border-border text-[9px] text-muted-foreground">
-                                        <th class="text-left pb-1 font-semibold uppercase">{{ __("Mã vạch") }}</th>
-                                        <th class="text-left pb-1 font-semibold uppercase">{{ __("Tên tài liệu") }}</th>
-                                        <th class="text-left pb-1 font-semibold uppercase">{{ __("Hết hạn") }}</th>
-                                        <th class="text-right pb-1 font-semibold uppercase">{{ __("Hành động") }}</th>
+                            <table class="current-loans-table w-full text-xs border border-border rounded-sm">
+                                <thead class="bg-muted/60 border-b border-border text-muted-foreground uppercase text-[10px] font-bold">
+                                    <tr>
+                                        <th class="p-2 text-center w-8"><input type="checkbox" checked disabled class="rounded"></th>
+                                        <th class="p-2 text-left w-28">{{ __("Mã tài liệu") }}</th>
+                                        <th class="p-2 text-left">{{ __("Mô tả") }}</th>
+                                        <th class="p-2 text-right w-24">{{ __("Giá tiền") }}</th>
+                                        <th class="p-2 text-center w-24">{{ __("Ngày mượn") }}</th>
+                                        <th class="p-2 text-center w-24">{{ __("Hạn trả") }}</th>
+                                        <th class="p-2 text-left w-28">{{ __("Người thực hiện") }}</th>
+                                        <th class="p-2 text-left w-28">{{ __("Ghi chú") }}</th>
+                                        <th class="p-2 text-center w-20">{{ __("Thao tác") }}</th>
                                     </tr>
                                 </thead>
-                                <tbody id="currentLoansTableBody">
+                                <tbody id="currentLoansTableBody" class="divide-y divide-border">
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted-foreground py-2 text-xs">
+                                        <td colspan="9" class="text-center text-muted-foreground py-4 text-xs">
                                             <i data-lucide="loader-2" class="w-4 h-4 mx-auto animate-spin text-primary inline mr-1"></i>
                                             {{ __("Đang tải...") }}
                                         </td>
@@ -1360,7 +1504,7 @@ function loadCurrentLoans(patronId) {
     if (patronLoans.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="4" class="text-center text-muted-foreground py-2 text-xs">
+                <td colspan="9" class="text-center text-muted-foreground py-4 text-xs italic">
                     {{ __("Không có tài liệu nào đang mượn") }}
                 </td>
             </tr>
@@ -1368,29 +1512,60 @@ function loadCurrentLoans(patronId) {
         return;
     }
     
-    // Generate table rows
     tbody.innerHTML = patronLoans.map(loan => {
-        const dueDate = loan.due_date ? new Date(loan.due_date).toLocaleDateString('vi-VN') : 'N/A';
-        const isOverdue = loan.due_date && new Date(loan.due_date) < new Date();
+        const loanDate = loan.loan_date ? new Date(loan.loan_date).toLocaleDateString('vi-VN') : 'N/A';
+        const dueDateObj = loan.due_date ? new Date(loan.due_date) : null;
+        const dueDateStr = dueDateObj ? dueDateObj.toLocaleDateString('vi-VN') : 'N/A';
+        const now = new Date();
+        const isOverdue = dueDateObj && dueDateObj < now;
         
+        // Remaining days calculation
+        const diffTime = dueDateObj ? (dueDateObj - now) : 0;
+        const remainingDays = dueDateObj ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) : 0;
+        
+        const title = loan.book_item?.bibliographic_record?.title || 'N/A';
+        const author = loan.book_item?.bibliographic_record?.author || '';
+        const publisher = loan.book_item?.bibliographic_record?.publisher || '';
+        const year = loan.book_item?.bibliographic_record?.publish_year || '';
+        const price = loan.book_item?.price ? (typeof loan.book_item.price === 'number' ? loan.book_item.price.toLocaleString('vi-VN') + 'đ' : loan.book_item.price) : '0đ';
+        const location = loan.book_item?.storage_location?.name || loan.book_item?.location || 'Kho';
+        const materialType = loan.book_item?.storage_type || 'Giáo trình';
+        const renewalCount = loan.renewal_count || 0;
+        const loanedBy = loan.loaned_by_user?.name || loan.loaned_by_user?.username || 'staff';
+        const notes = loan.notes || 'Sách đang mượn';
+
+        let descParts = [title];
+        if (author) descParts.push(author);
+        if (publisher) descParts.push(publisher);
+        if (year) descParts.push(year);
+        const fullDesc = descParts.join(' / ');
+
         return `
             <tr class="border-b border-border hover:bg-muted/20">
-                <td class="py-1.5 text-foreground font-mono text-[11px]">${loan.book_item?.barcode || 'N/A'}</td>
-                <td class="py-1.5 text-foreground text-xs max-w-[150px] truncate" title="${loan.book_item?.bibliographic_record?.title || 'N/A'}">
-                    ${loan.book_item?.bibliographic_record?.title || 'N/A'}
+                <td class="p-2 text-center"><input type="checkbox" checked disabled class="rounded text-primary"></td>
+                <td class="p-2 font-mono font-bold text-foreground text-xs">${loan.book_item?.barcode || 'N/A'}</td>
+                <td class="p-2 text-xs">
+                    <div class="font-medium text-foreground italic line-clamp-2" title="${fullDesc}">${fullDesc}</div>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[10px]">
+                        <div>Vị trí: <span class="text-blue-600 dark:text-blue-400 font-semibold">${location}</span></div>
+                        <div>Loại: <span class="text-blue-600 dark:text-blue-400 font-semibold">${materialType}</span></div>
+                        <div>Gia hạn: <span class="text-destructive font-bold">${renewalCount} (Lần)</span></div>
+                        <div>Còn hạn: <span class="${remainingDays < 0 ? 'text-destructive font-bold' : 'text-emerald-600 font-bold'}">${remainingDays} (Ngày)</span></div>
+                    </div>
                 </td>
-                <td class="py-1.5 text-[11px] ${isOverdue ? 'text-destructive font-bold' : 'text-muted-foreground'}">
-                    ${dueDate}
-                    ${isOverdue ? '⚠️' : ''}
-                </td>
-                <td class="py-1.5 text-right">
-                    <div class="flex justify-end gap-1">
-                        <button onclick="recallSpecificBook('${loan.book_item?.barcode || ''}', '${addslashes(loan.book_item?.bibliographic_record?.title || '')}')" 
+                <td class="p-2 text-right font-medium text-foreground">${price}</td>
+                <td class="p-2 text-center text-emerald-600 dark:text-emerald-400 font-semibold">${loanDate}</td>
+                <td class="p-2 text-center ${isOverdue ? 'text-destructive font-bold' : 'text-emerald-600 dark:text-emerald-400 font-semibold'}">${dueDateStr}</td>
+                <td class="p-2 text-muted-foreground text-xs">${loanedBy}</td>
+                <td class="p-2 text-muted-foreground text-xs">${notes}</td>
+                <td class="p-2 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        <button onclick="recallSpecificBook('${loan.book_item?.barcode || ''}', '${addslashes(title)}')" 
                                 class="p-1 text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 rounded transition-colors"
                                 title="{{ __("Triệu hồi") }}">
                             <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
                         </button>
-                        <button onclick="declareLostSpecificBook('${loan.book_item?.barcode || ''}', '${addslashes(loan.book_item?.bibliographic_record?.title || '')}')" 
+                        <button onclick="declareLostSpecificBook('${loan.book_item?.barcode || ''}', '${addslashes(title)}')" 
                                 class="p-1 text-destructive hover:text-destructive-foreground hover:bg-destructive/10 rounded transition-colors"
                                 title="{{ __("Khai báo mất") }}">
                             <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>

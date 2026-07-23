@@ -98,8 +98,9 @@
                     </div>
                 @endif
                 <!-- Tab: Information -->
-                <div x-show="activeTab === 'info'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                <div x-show="activeTab === 'info'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-4">
+                    <!-- Stats Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                         <div class="bg-card p-4 rounded-md shadow-sm border border-border">
                             <div class="w-8 h-8 bg-blue-500/10 text-blue-500 rounded flex items-center justify-center mb-3">
                                 <i data-lucide="book" class="w-4 h-4"></i>
@@ -130,44 +131,119 @@
                         </div>
                     </div>
 
-                    <div class="bg-card rounded-md p-4 shadow-sm border border-border">
-                        <h3 class="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-[0.2em] mb-4">
-                            <span class="w-4 h-1 bg-primary rounded-full"></span>
-                            Thông tin chi tiết
-                        </h3>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Họ và tên</label>
-                                    <p class="text-xs font-bold text-foreground bg-muted px-4 py-2.5 rounded border border-border">{{ $user->name }}</p>
-                                </div>
-                                <div>
-                                    <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Email</label>
-                                    <p class="text-xs font-bold text-foreground bg-muted px-4 py-2.5 rounded border border-border">{{ $user->email }}</p>
-                                </div>
-                                <div>
-                                    <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Số điện thoại</label>
-                                    <p class="text-xs font-bold bg-muted px-4 py-2.5 rounded border border-border {{ $patron?->phone ? 'text-foreground' : 'text-muted-foreground' }}">{{ $patron?->phone ?? 'Chưa cập nhật' }}</p>
-                                </div>
+                    <!-- BLOCK 1: Thông tin bạn đọc (patron_details) -->
+                    <div class="bg-card rounded-md shadow-sm border border-border overflow-hidden">
+                        <div class="flex items-center gap-2 px-4 py-3 bg-primary/5 border-b border-border">
+                            <i data-lucide="id-card" class="w-4 h-4 text-primary"></i>
+                            <h3 class="text-xs font-bold text-foreground uppercase tracking-[0.2em]">Thông tin bạn đọc</h3>
+                            <span class="ml-auto text-[9px] font-bold text-muted-foreground px-2 py-0.5 bg-muted rounded border border-border">patron_details</span>
+                        </div>
+                        @if($patron)
+                        <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Họ và tên bạn đọc</label>
+                                <p class="text-xs font-bold text-foreground bg-muted px-3 py-2 rounded border border-border">{{ $patron->attributes['display_name'] ?? '—' }}</p>
                             </div>
-                            <div class="space-y-3">
-                                <div>
-                                    <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Địa chỉ</label>
-                                    <p class="text-xs font-bold bg-muted px-4 py-2.5 rounded border border-border {{ $patron?->address ? 'text-foreground' : 'text-muted-foreground' }}">{{ $patron?->address ?? 'Chưa cập nhật' }}</p>
-                                </div>
-                                <div>
-                                    <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Ngày sinh</label>
-                                    <p class="text-xs font-bold bg-muted px-4 py-2.5 rounded border border-border {{ $patron?->dob ? 'text-foreground' : 'text-muted-foreground' }}">{{ $patron?->dob ? \Carbon\Carbon::parse($patron->dob)->format('d/m/Y') : 'Chưa cập nhật' }}</p>
-                                </div>
-                                <div>
-                                    <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Đơn vị/Lớp</label>
-                                    <p class="text-xs font-bold bg-muted px-4 py-2.5 rounded border border-border {{ $patron?->department ? 'text-foreground' : 'text-muted-foreground' }}">{{ $patron?->department ?? 'N/A' }}</p>
-                                </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Mã bạn đọc</label>
+                                <p class="text-xs font-bold text-foreground bg-muted px-3 py-2 rounded border border-border font-mono">{{ $patron->patron_code }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Nhóm độc giả</label>
+                                <p class="text-xs font-bold text-foreground bg-muted px-3 py-2 rounded border border-border">{{ $patron->patronGroup?->name ?? '—' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Trạng thái thẻ</label>
+                                <p class="bg-muted px-3 py-2 rounded border border-border">
+                                    @if($patron->card_status == 'normal')
+                                        <span class="text-[9px] font-bold text-emerald-500 uppercase">Hoạt động bình thường</span>
+                                    @elseif($patron->card_status == 'locked')
+                                        <span class="text-[9px] font-bold text-rose-500 uppercase">Đã khóa</span>
+                                    @else
+                                        <span class="text-[9px] font-bold text-amber-500 uppercase">{{ $patron->card_status }}</span>
+                                    @endif
+                                </p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Số điện thoại</label>
+                                <p class="text-xs font-bold bg-muted px-3 py-2 rounded border border-border {{ $patron->phone_contact ? 'text-foreground' : 'text-muted-foreground' }}">{{ $patron->phone_contact ?? '—' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Ngày sinh</label>
+                                <p class="text-xs font-bold bg-muted px-3 py-2 rounded border border-border {{ $patron->dob ? 'text-foreground' : 'text-muted-foreground' }}">{{ $patron->dob ? \Carbon\Carbon::parse($patron->dob)->format('d/m/Y') : '—' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Đơn vị / Lớp</label>
+                                <p class="text-xs font-bold bg-muted px-3 py-2 rounded border border-border {{ $patron->department ? 'text-foreground' : 'text-muted-foreground' }}">{{ $patron->department ?? '—' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">CCCD / MSSV</label>
+                                <p class="text-xs font-bold bg-muted px-3 py-2 rounded border border-border {{ $patron->id_card || $patron->mssv ? 'text-foreground' : 'text-muted-foreground' }}">{{ $patron->id_card ?? $patron->mssv ?? '—' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Ngày đăng ký</label>
+                                <p class="text-xs font-bold text-foreground bg-muted px-3 py-2 rounded border border-border">{{ $patron->registration_date ? \Carbon\Carbon::parse($patron->registration_date)->format('d/m/Y') : '—' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Ngày hết hạn</label>
+                                <p class="text-xs font-bold bg-muted px-3 py-2 rounded border border-border {{ $patron->expiry_date && \Carbon\Carbon::parse($patron->expiry_date)->isPast() ? 'text-rose-500' : 'text-foreground' }}">
+                                    {{ $patron->expiry_date ? \Carbon\Carbon::parse($patron->expiry_date)->format('d/m/Y') : '—' }}
+                                    @if($patron->expiry_date && \Carbon\Carbon::parse($patron->expiry_date)->isPast())
+                                        <span class="text-[8px] text-rose-500 ml-1">(Đã hết hạn)</span>
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+                        @else
+                        <div class="p-6 text-center text-xs text-muted-foreground font-bold">
+                            <i data-lucide="user-x" class="w-8 h-8 mx-auto mb-2 text-muted-foreground/50"></i>
+                            Tài khoản này chưa được liên kết với hồ sơ bạn đọc nào.
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- BLOCK 2: Thông tin tài khoản (users) -->
+                    <div class="bg-card rounded-md shadow-sm border border-border overflow-hidden">
+                        <div class="flex items-center gap-2 px-4 py-3 bg-muted/50 border-b border-border">
+                            <i data-lucide="user-circle" class="w-4 h-4 text-muted-foreground"></i>
+                            <h3 class="text-xs font-bold text-foreground uppercase tracking-[0.2em]">Thông tin tài khoản</h3>
+                            <span class="ml-auto text-[9px] font-bold text-muted-foreground px-2 py-0.5 bg-muted rounded border border-border">users</span>
+                        </div>
+                        <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Tên hiển thị (name)</label>
+                                <p class="text-xs font-bold text-foreground bg-muted px-3 py-2 rounded border border-border">{{ $user->name }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Tên đăng nhập (username)</label>
+                                <p class="text-xs font-bold bg-muted px-3 py-2 rounded border border-border {{ $user->username ? 'text-foreground font-mono' : 'text-muted-foreground' }}">{{ $user->username ?? '—' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Email</label>
+                                <p class="text-xs font-bold text-foreground bg-muted px-3 py-2 rounded border border-border">{{ $user->email }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Vai trò</label>
+                                <p class="text-xs font-bold text-foreground bg-muted px-3 py-2 rounded border border-border">{{ $user->roles->pluck('display_name')->implode(', ') ?: 'Bạn đọc' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Trạng thái tài khoản</label>
+                                <p class="bg-muted px-3 py-2 rounded border border-border">
+                                    @if($user->status == 'active')
+                                        <span class="text-[9px] font-bold text-emerald-500 uppercase">Đang hoạt động</span>
+                                    @else
+                                        <span class="text-[9px] font-bold text-rose-500 uppercase">{{ $user->status ?? 'N/A' }}</span>
+                                    @endif
+                                </p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Ngày tạo tài khoản</label>
+                                <p class="text-xs font-bold text-foreground bg-muted px-3 py-2 rounded border border-border">{{ $user->created_at ? $user->created_at->format('d/m/Y H:i') : '—' }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
+
 
                 <!-- Tab: Loan History -->
                 <div x-show="activeTab === 'history'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-4">

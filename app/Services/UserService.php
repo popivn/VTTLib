@@ -183,16 +183,16 @@ class UserService
      */
     public function getUsersForRoot(?string $search = null, ?int $roleId = null, int $perPage = 10)
     {
-        $query = User::select(['id', 'name', 'username', 'email', 'status', 'created_at', 'updated_at'])
+        $query = User::select(['users.id', 'users.name', 'users.username', 'users.email', 'users.status', 'users.created_at', 'users.updated_at'])
             ->with(['roles' => function($query) {
                 $query->select('roles.id', 'roles.name', 'roles.display_name');
             }]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('username', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('users.username', 'like', "%{$search}%")
+                  ->orWhere('users.email', 'like', "%{$search}%");
             });
         }
 

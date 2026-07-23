@@ -168,61 +168,125 @@
             <table class="w-full text-left border-collapse">
                 <thead class="bg-muted/50 border-b border-border text-muted-foreground uppercase font-bold text-[10px] tracking-wider">
                     <tr>
-                        <th class="py-2 px-3 w-16">ID</th>
-                        <th class="py-2 px-3 w-40">{{ __('Leader / Type') }}</th>
-                        <th class="py-2 px-3">{{ __('Primary Content') }}</th>
-                        <th class="py-2 px-3 w-32">{{ __('Number of Fields') }}</th>
-                        <th class="py-2 px-3 w-28">{{ __('Status') }}</th>
-                        <th class="py-2 px-3 w-56 text-right">{{ __('Actions') }}</th>
+                        <th class="py-2.5 px-3.5 w-32">{{ __('ID / KÝ HIỆU') }}</th>
+                        <th class="py-2.5 px-3.5">{{ __('NỘI DUNG CHÍNH') }}</th>
+                        <th class="py-2.5 px-3.5 w-48">{{ __('THỂ LOẠI / SỐ LƯỢNG') }}</th>
+                        <th class="py-2.5 px-3.5 w-28">{{ __('TRẠNG THÁI') }}</th>
+                        <th class="py-2.5 px-3.5 w-44 text-right">{{ __('THAO TÁC') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border">
                     @forelse($records as $record)
                     @php
-                    $title = '';
-                    $author = '';
+                    $marcData = [];
                     foreach ($record->fields as $field) {
-                        if ($field->tag === '245') {
-                            foreach ($field->subfields as $sub) {
-                                if ($sub->code === 'a') $title = $sub->value;
-                            }
+                        $subfields = [];
+                        foreach ($field->subfields as $sub) {
+                            $subfields[$sub->code] = $sub->value;
                         }
-                        if ($field->tag === '100') {
-                            foreach ($field->subfields as $sub) {
-                                if ($sub->code === 'a') $author = $sub->value;
-                            }
+                        if (!isset($marcData[$field->tag])) {
+                            $marcData[$field->tag] = $subfields;
+                        } else {
+                            $marcData[$field->tag] = array_merge($marcData[$field->tag], $subfields);
                         }
                     }
+
+                    // Classification & Cutter / Call Number
+                    $ddcVal = $marcData['082']['a'] ?? ($marcData['090']['a'] ?? '');
+                    $cutterVal = $marcData['082']['b'] ?? ($marcData['090']['b'] ?? ($marcData['090']['c'] ?? ''));
+
+                    // Author
+                    $author = $marcData['100']['a'] ?? ($marcData['700']['a'] ?? '');
+
+                    // Title components
+                    $titleA = !empty($marcData['245']['a']) ? rtrim(trim($marcData['245']['a']), ' /:-') : '';
+                    $titleB = !empty($marcData['245']['b']) ? rtrim(trim($marcData['245']['b']), ' /:-') : '';
+                    $titleC = !empty($marcData['245']['c']) ? rtrim(trim($marcData['245']['c']), ' /:-') : '';
+
+                    // Publication components
+                    $pubPlace = rtrim(trim($marcData['260']['a'] ?? ($marcData['264']['a'] ?? '')), ' :-/;');
+                    $publisher = rtrim(trim($marcData['260']['b'] ?? ($marcData['264']['b'] ?? '')), ' :-/;');
+                    $pubYear = rtrim(trim($marcData['260']['c'] ?? ($marcData['264']['c'] ?? '')), ' :-/;.[]');
+
+                    $pubParts = [];
+                    if ($pubPlace) $pubParts[] = $pubPlace;
+                    if ($publisher) $pubParts[] = $publisher;
+                    $pubLocation = implode(' : ', $pubParts);
+                    if ($pubYear) {
+                        $pubLocation = ($pubLocation ? $pubLocation . ' , ' : '') . $pubYear;
+                    }
+
+                    $mainTitle = $titleA ?: __('Untitled');
+                    $fullTitleDisplay = $mainTitle
+                        . ($titleB ? ' : ' . $titleB : '')
+                        . ($titleC ? ' / ' . $titleC : '')
+                        . ($pubLocation ? ' . - ' . $pubLocation : '');
+
+                    // Physical description (300)
+                    $physPages = trim($marcData['300']['a'] ?? '');
+                    $physDetails = trim($marcData['300']['b'] ?? '');
+                    $physSize = trim($marcData['300']['c'] ?? '');
+                    $physAcc = trim($marcData['300']['e'] ?? '');
+                    $physParts = array_filter([$physPages, $physDetails, $physSize, $physAcc]);
+                    $physDesc = implode('; ', $physParts);
+
+                    // Note & Summary
+                    $note = $marcData['500']['a'] ?? ($marcData['504']['a'] ?? ($marcData['505']['a'] ?? ''));
+                    $summary = $marcData['520']['a'] ?? '';
+
+                    // Category Name
+                    $categoryName = $record->documentType ? $record->documentType->name : ($record->record_type === 'book' ? 'Books - Sách' : ucfirst($record->record_type));
+                    $itemCount = $record->items ? $record->items->count() : 0;
                     @endphp
-                    <tr class="table-row-hover group cursor-pointer"
+                    <tr class="record-row table-row-hover group cursor-pointer hover:bg-muted/40 transition-colors"
+                        data-id="{{ $record->id }}"
                         data-edit-url="{{ route('admin.marc.book.form', $record->id) }}"
-                        title="{{ __('Edit') }}">
-                        <td class="py-2 px-3 font-mono text-muted-foreground text-xs">#{{ $record->id }}</td>
-                        <td class="py-2 px-3">
-                            <span class="block font-mono text-[9px] text-muted-foreground/80 leading-none">{{ $record->leader }}</span>
-                            <span class="inline-block px-1.5 py-0.5 bg-primary/10 text-primary rounded-sm text-[9px] font-bold uppercase mt-1 border border-primary/20">
-                                {{ $record->record_type }}
-                            </span>
+                        title="{{ __('Click to expand details, double-click to edit') }}">
+                        
+                        <!-- ID & Call Numbers -->
+                        <td class="py-3 px-3.5 align-top">
+                            <div class="font-bold text-foreground text-sm leading-tight">{{ $record->id }}</div>
+                            @if($ddcVal)
+                            <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 leading-none">{{ $ddcVal }}</div>
+                            @endif
+                            @if($cutterVal)
+                            <div class="text-xs font-semibold text-sky-600 dark:text-sky-400 mt-0.5 leading-none">{{ $cutterVal }}</div>
+                            @endif
                         </td>
-                        <td class="py-2 px-3">
-                            <div class="font-bold text-xs">{{ $title ?: __('Title Unknown') }}</div>
-                            <div class="text-[10px] text-muted-foreground mt-0.5 leading-none">{{ $author ?: __('Author Unknown') }}</div>
+
+                        <!-- Main Content (Author & Title & Publication) -->
+                        <td class="py-3 px-3.5 align-top border-l border-border/60">
+                            @if($author)
+                            <div class="font-bold text-xs text-red-900 dark:text-red-400 mb-0.5 leading-tight hover:underline">
+                                {{ $author }}
+                            </div>
+                            @endif
+                            <div class="text-xs text-foreground/90 leading-normal">
+                                {{ $fullTitleDisplay }}
+                            </div>
                         </td>
-                        <td class="py-2 px-3 text-muted-foreground text-xs">
-                            {{ __('Includes :count fields', ['count' => $record->fields->count()]) }}
+
+                        <!-- Category & Total Items -->
+                        <td class="py-3 px-3.5 align-top text-xs text-muted-foreground leading-relaxed">
+                            <div><span class="font-medium">{{ __('Thể loại') }}:</span> <span class="text-sky-600 dark:text-sky-400 font-semibold">{{ $categoryName }}</span></div>
+                            <div><span class="font-medium">{{ __('Tổng số') }}:</span> <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $itemCount }}</span></div>
                         </td>
-                        <td class="py-2 px-3">
+
+                        <!-- Status -->
+                        <td class="py-3 px-3.5 align-top">
                             @if($record->isApproved())
-                            <span class="inline-flex px-1.5 py-0.5 rounded-sm text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                {{ __('Approved') }}
+                            <span class="inline-flex px-2 py-0.5 rounded-sm text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                {{ __('Đã duyệt') }}
                             </span>
                             @else
-                            <span class="inline-flex px-1.5 py-0.5 rounded-sm text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                {{ __('Pending Approval') }}
+                            <span class="inline-flex px-2 py-0.5 rounded-sm text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                {{ __('Chờ duyệt') }}
                             </span>
                             @endif
                         </td>
-                        <td class="py-2 px-3 text-right">
+
+                        <!-- Actions -->
+                        <td class="py-3 px-3.5 align-top text-right">
                             <div class="flex justify-end items-center gap-1">
                                 <a href="{{ route('admin.marc.book.form', $record->id) }}?tab=0"
                                    class="btn-icon-compact text-blue-500"
@@ -252,16 +316,56 @@
                                 <button type="button"
                                         class="delete-record btn-icon-danger"
                                         data-id="{{ $record->id }}"
-                                        data-title="{{ $title }}"
+                                        data-title="{{ $mainTitle }}"
                                         title="{{ __('Delete') }}">
                                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                 </button>
                             </div>
                         </td>
                     </tr>
+
+                    <!-- Expanded Detail Row (Single-click) -->
+                    <tr id="detail-{{ $record->id }}" class="hidden bg-muted/20 dark:bg-slate-900/40 border-b border-border/80 transition-all duration-200">
+                        <td colspan="5" class="py-2.5 px-4">
+                            <div class="ml-2 pl-4 border-l-2 border-primary/40 space-y-1.5 text-xs text-foreground/90 font-sans">
+                                @if($author)
+                                <div class="flex gap-2">
+                                    <span class="font-semibold text-muted-foreground w-28 shrink-0">{{ __('Tác giả') }}:</span>
+                                    <span class="font-bold text-red-900 dark:text-red-400">{{ $author }}</span>
+                                </div>
+                                @endif
+                                
+                                <div class="flex gap-2">
+                                    <span class="font-semibold text-muted-foreground w-28 shrink-0">{{ __('Nhan đề') }}:</span>
+                                    <span class="text-foreground font-normal">{{ $fullTitleDisplay }}</span>
+                                </div>
+
+                                @if($physDesc)
+                                <div class="flex gap-2">
+                                    <span class="font-semibold text-muted-foreground w-28 shrink-0">{{ __('Mô tả vật lý') }}:</span>
+                                    <span class="text-foreground">{{ $physDesc }}</span>
+                                </div>
+                                @endif
+
+                                @if($note)
+                                <div class="flex gap-2">
+                                    <span class="font-semibold text-muted-foreground w-28 shrink-0">{{ __('Ghi chú') }}:</span>
+                                    <span class="text-foreground">{{ $note }}</span>
+                                </div>
+                                @endif
+
+                                @if($summary)
+                                <div class="flex gap-2">
+                                    <span class="font-semibold text-muted-foreground w-28 shrink-0">{{ __('Tóm tắt') }}:</span>
+                                    <span class="text-muted-foreground leading-relaxed">{{ $summary }}</span>
+                                </div>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="py-8 text-center text-muted-foreground italic text-xs">
+                        <td colspan="5" class="py-8 text-center text-muted-foreground italic text-xs">
                             <i data-lucide="database-backup" class="w-8 h-8 text-muted-foreground/35 mx-auto mb-2"></i>
                             <p>{{ __('No records found') }}</p>
                         </td>
@@ -395,11 +499,37 @@
         });
     });
     
-    // Double-click to edit with tab=0
-    document.querySelectorAll('tbody tr[data-edit-url]').forEach(row => {
-        row.addEventListener('dblclick', function() {
+    // Single-click to expand detail row, Double-click to edit record form
+    let clickTimer = null;
+    let preventClick = false;
+
+    document.querySelectorAll('tbody tr.record-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('a, button, input, select, label')) {
+                return;
+            }
+            const recordId = this.dataset.id;
+            clickTimer = setTimeout(() => {
+                if (!preventClick) {
+                    const detailRow = document.getElementById('detail-' + recordId);
+                    if (detailRow) {
+                        detailRow.classList.toggle('hidden');
+                    }
+                }
+                preventClick = false;
+            }, 220);
+        });
+
+        row.addEventListener('dblclick', function(e) {
+            if (e.target.closest('a, button, input, select, label')) {
+                return;
+            }
+            clearTimeout(clickTimer);
+            preventClick = true;
             const editUrl = this.getAttribute('data-edit-url');
-            window.location.href = editUrl + '?tab=0';
+            if (editUrl) {
+                window.location.href = editUrl + '?tab=0';
+            }
         });
     });
 </script>

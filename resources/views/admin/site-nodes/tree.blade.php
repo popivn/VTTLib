@@ -75,7 +75,7 @@
 
     <!-- Actions -->
     <div class="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity flex-shrink-0">
-        @if($node['has_content'])
+        @if(!empty($node['has_content']))
         @php
             $previewUrl = '#';
             if (!empty($node['redirect_to'])) {

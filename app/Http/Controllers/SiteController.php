@@ -69,7 +69,14 @@ class SiteController extends Controller
         }
 
         $newBooks = $query->where('status', 'approved')
-            ->latest()
+            ->orderBy(
+                \App\Models\BookItem::select('accession_number')
+                    ->whereColumn('bibliographic_record_id', 'bibliographic_records.id')
+                    ->orderBy('accession_number', 'desc')
+                    ->limit(1),
+                'desc'
+            )
+            ->orderBy('id', 'desc')
             ->offset($offset)
             ->limit($perPage)
             ->get();
@@ -957,42 +964,52 @@ class SiteController extends Controller
               ->get();
         }
 
-        // Nạp dữ liệu OER nếu truy cập trang tài nguyên giáo dục mở (chỉ load list, không phải landing page)
+        // Nạp dữ liệu OER nếu truy cập trang tài nguyên giáo dục mở
         if ($code === 'tai-nguyen-giao-duc-mo' || $siteNode->masterpage === 'oer') {
             $sort = request()->query('sort', 'latest');
-            $subject = request()->query('subject');
+            $subjectId = request()->query('subject_id');
             $keyword = request()->query('q');
             
-            $query = \App\Models\OpenEducationalResource::where('status', 'published');
+            $query = \App\Models\OpenEducationalResource::where('is_active', true)->with('subject');
             
-            if ($subject) {
-                $query->where('subjects', 'like', '%' . $subject . '%');
+            if ($subjectId) {
+                $query->where('subject_id', $subjectId);
             }
             
             if ($keyword) {
                 $query->where(function($q) use ($keyword) {
                     $q->where('title', 'like', '%' . $keyword . '%')
-                      ->orWhere('authors', 'like', '%' . $keyword . '%')
-                      ->orWhere('description', 'like', '%' . $keyword . '%');
+                      ->orWhere('author', 'like', '%' . $keyword . '%')
+                      ->orWhere('publisher', 'like', '%' . $keyword . '%');
                 });
             }
 
             switch ($sort) {
+                case 'oldest_updated':
+                    $query->orderBy('updated_at', 'asc');
+                    break;
                 case 'most_viewed':
                     $query->orderBy('view_count', 'desc');
                     break;
                 case 'most_downloaded':
                     $query->orderBy('download_count', 'desc');
                     break;
+                case 'latest':
                 default:
-                    $query->latest();
+                    $query->orderBy('sort_order', 'asc')->orderBy('id', 'desc');
+                    break;
             }
             
-            $extraData['resources'] = $query->paginate(15)->withQueryString();
-            $extraData['totalCount'] = $query->count();
+            $extraData['oerResources'] = $query->paginate(15)->withQueryString();
+            $extraData['totalOerCount'] = \App\Models\OpenEducationalResource::where('is_active', true)->count();
+            $extraData['oerSubjects'] = \App\Models\OerSubject::where('is_active', true)->withCount('resources')->orderBy('sort_order')->get();
             $extraData['currentSort'] = $sort;
-            $extraData['currentSubject'] = $subject;
+            $extraData['currentSubjectId'] = $subjectId;
             $extraData['keyword'] = $keyword;
+
+            // Also set legacy variables for compatibility
+            $extraData['resources'] = $extraData['oerResources'];
+            $extraData['totalCount'] = $extraData['totalOerCount'];
         }
 
         // Nạp dữ liệu CSDL trực tuyến nếu truy cập trang cơ sở dữ liệu

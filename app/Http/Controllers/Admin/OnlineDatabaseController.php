@@ -46,7 +46,7 @@ class OnlineDatabaseController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'image_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,apng,avif|max:20480',
             'image_url' => 'nullable|string|max:2048',
             'url' => 'nullable|string|max:2048',
             'hd_url' => 'nullable|string|max:2048',
@@ -86,7 +86,7 @@ class OnlineDatabaseController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'image_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,apng,avif|max:20480',
             'image_url' => 'nullable|string|max:2048',
             'url' => 'nullable|string|max:2048',
             'hd_url' => 'nullable|string|max:2048',

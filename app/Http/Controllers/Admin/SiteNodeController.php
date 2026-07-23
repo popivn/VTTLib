@@ -395,9 +395,7 @@ class SiteNodeController extends Controller
         foreach ($elements as $element) {
             if ($element['parent_id'] == $parentId) {
                 $children = $this->buildTree($elements, $element['id']);
-                if ($children) {
-                    $element['children'] = $children;
-                }
+                $element['children'] = $children;
                 // Add has_content flag
                 $element['has_content'] = !empty($element['route_name']) || !empty($element['url']) || ($element['display_type'] === 'page');
                 $branch[] = $element;
@@ -662,8 +660,8 @@ class SiteNodeController extends Controller
     {
         $request->validate([
             'site_name' => 'required|string|max:255',
-            'site_logo' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp,ico|max:2048',
-            'book_intro_image' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+            'site_logo' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp,ico,gif,apng|max:20480',
+            'book_intro_image' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp,gif,apng|max:20480',
         ]);
 
         \App\Models\SystemSetting::set('site_name', $request->input('site_name'), 'site');
@@ -717,7 +715,7 @@ class SiteNodeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'url' => 'required|url|max:255',
-            'logo_path' => 'required|image|mimes:png,jpg,jpeg,svg,webp,ico|max:2048',
+            'logo_path' => 'required|file|mimes:png,jpg,jpeg,svg,webp,ico,gif,apng,avif|max:20480',
         ]);
 
         try {
@@ -761,7 +759,7 @@ class SiteNodeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'url' => 'required|url|max:255',
-            'logo_path' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp,ico|max:2048',
+            'logo_path' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp,ico,gif,apng,avif|max:20480',
         ]);
 
         try {
@@ -820,7 +818,7 @@ class SiteNodeController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'link_url' => 'required|url|max:255',
-            'image_path' => 'required|image|mimes:png,jpg,jpeg,svg,webp,gif|max:5120',
+            'image_path' => 'required|file|mimes:png,jpg,jpeg,svg,webp,gif,apng,avif|max:20480',
         ]);
 
         try {
@@ -872,6 +870,42 @@ class SiteNodeController extends Controller
             return back()->with('success', __('Xóa banner thành công!'));
         } catch (\Exception $e) {
             return back()->with('error', 'Lỗi khi xóa banner: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Toggle banner status (active/inactive)
+     */
+    public function toggleBannerStatus(\App\Models\Banner $banner)
+    {
+        try {
+            $newStatus = ($banner->status === 'active') ? 'inactive' : 'active';
+            $banner->update(['status' => $newStatus]);
+
+            // Log activity
+            activity_log('banner_status_toggled', $banner, [
+                'title' => $banner->title,
+                'status' => $newStatus
+            ]);
+
+            if (request()->wantsJson() || request()->ajax() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => true,
+                    'message' => __('Cập nhật trạng thái banner thành công!'),
+                    'status' => $newStatus,
+                    'is_active' => ($newStatus === 'active')
+                ]);
+            }
+
+            return back()->with('success', __('Cập nhật trạng thái banner thành công!'));
+        } catch (\Exception $e) {
+            if (request()->wantsJson() || request()->ajax() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lỗi khi cập nhật trạng thái banner: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Lỗi khi cập nhật trạng thái banner: ' . $e->getMessage());
         }
     }
 }

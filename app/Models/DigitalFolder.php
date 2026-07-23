@@ -18,6 +18,11 @@ class DigitalFolder extends Model
         'language'
     ];
 
+    public function getNameAttribute(): string
+    {
+        return $this->folder_name ?? '';
+    }
+
     public function resources(): HasMany
     {
         return $this->hasMany(DigitalResource::class, 'folder_id');

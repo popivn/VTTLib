@@ -23,7 +23,7 @@ class MarcBookController extends Controller
 
     public function index(Request $request)
     {
-        $query = BibliographicRecord::with('fields.subfields');
+        $query = BibliographicRecord::with(['fields.subfields', 'items', 'documentType']);
 
         // Advanced search filters
         if ($request->filled('search')) {
