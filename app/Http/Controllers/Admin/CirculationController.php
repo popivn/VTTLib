@@ -92,7 +92,7 @@ class CirculationController extends Controller
             ->get();
         
         // Get all loan transactions for stats calculation
-        $allLoanTransactions = LoanTransaction::with(['patron', 'bookItem.bibliographicRecord'])
+        $allLoanTransactions = LoanTransaction::with(['patron', 'bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy'])
             ->get();
         
         // Get all active loans for the "Currently Borrowed" tab
@@ -279,9 +279,6 @@ class CirculationController extends Controller
         }
     }
 
-    /**
-     * Renew loan
-     */
     public function renew(Request $request, LoanTransaction $loan)
     {
         try {
@@ -295,11 +292,28 @@ class CirculationController extends Controller
                 'last_renewal_date' => Carbon::now()
             ]);
 
-            return back()->with('success', __('Loan renewed successfully. New due date: :date', [
+            $message = __('Loan renewed successfully. New due date: :date', [
                 'date' => $loan->due_date->format('d/m/Y')
-            ]));
+            ]);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'due_date' => $loan->due_date->format('d/m/Y'),
+                    'renewal_count' => $loan->renewal_count
+                ]);
+            }
+
+            return back()->with('success', $message);
 
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
             return back()->with('error', $e->getMessage());
         }
     }
@@ -694,9 +708,10 @@ class CirculationController extends Controller
                         $remainingDays = $dueDate ? ceil($now->diffInDays($dueDate, false)) : 0;
                         return [
                             'id' => $loan->id,
-                            'loan_date' => $loan->loan_date ? $loan->loan_date->format('d/m/Y') : 'N/A',
-                            'due_date' => $dueDate ? $dueDate->format('d/m/Y') : 'N/A',
+                            'loan_date' => $loan->loan_date ? $loan->loan_date->toISOString() : null,
+                            'due_date' => $dueDate ? $dueDate->toISOString() : null,
                             'due_date_iso' => $dueDate ? $dueDate->toISOString() : null,
+                            'status' => $loan->status,
                             'renewal_count' => $loan->renewal_count ?? 0,
                             'max_renewals' => $loan->policy?->max_renewals ?? 2,
                             'remaining_days' => $remainingDays,

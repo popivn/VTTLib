@@ -426,6 +426,22 @@
                                     <td class="p-2.5 text-muted-foreground text-xs">{{ $loan->notes ?? 'Sách đang mượn' }}</td>
                                     <td class="p-2.5 text-center">
                                         <div class="flex items-center justify-center gap-1">
+                                            @if($loan->canRenew())
+                                            <form action="{{ route('admin.circulation.renew', $loan) }}" method="POST" class="inline">
+                                                @csrf
+                                                <button type="submit" 
+                                                        class="p-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded transition-colors" 
+                                                        title="{{ __("Gia hạn") }}">
+                                                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </form>
+                                            @else
+                                            <button disabled 
+                                                    class="p-1 text-muted-foreground/40 cursor-not-allowed rounded" 
+                                                    title="{{ __("Đã hết lượt gia hạn") }} ({{ $loan->renewal_count }}/{{ $loan->policy->max_renewals ?? '?' }})">
+                                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                            @endif
                                             <button onclick="recallLoanTransaction('{{ $loan->bookItem->barcode }}', '{{ addslashes($title) }}')" 
                                                     class="p-1 text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 rounded transition-colors" 
                                                     title="{{ __("Triệu hồi") }}">
@@ -1374,7 +1390,7 @@ function displayPatronResult(patron) {
         const isLoanTabActive = document.getElementById('readingRoomContent').classList.contains('hidden');
         if (loans > 0 && isLoanTabActive && document.getElementById('currentLoansTableBody')) {
             setTimeout(() => {
-                loadCurrentLoans(patron.data.id);
+                loadCurrentLoans(patron.data.id, patron.data.active_loans);
             }, 100);
         }
         
@@ -1493,13 +1509,13 @@ function displayBookError() {
 }
 
 // Load current loans for patron
-function loadCurrentLoans(patronId) {
+function loadCurrentLoans(patronId, activeLoans = null) {
     const tbody = document.getElementById('currentLoansTableBody');
     if (!tbody) return;
     
-    const patronLoans = loanTransactionsData ? loanTransactionsData.filter(loan => 
+    const patronLoans = activeLoans ? activeLoans : (loanTransactionsData ? loanTransactionsData.filter(loan => 
         loan.patron_detail_id === patronId && loan.status === 'borrowed'
-    ) : [];
+    ) : []);
     
     if (patronLoans.length === 0) {
         tbody.innerHTML = `
@@ -1531,6 +1547,8 @@ function loadCurrentLoans(patronId) {
         const location = loan.book_item?.storage_location?.name || loan.book_item?.location || 'Kho';
         const materialType = loan.book_item?.storage_type || 'Giáo trình';
         const renewalCount = loan.renewal_count || 0;
+        const maxRenewals = loan.max_renewals !== undefined ? loan.max_renewals : (loan.policy?.max_renewals ?? 2);
+        const canRenew = (!loan.status || loan.status === 'borrowed') && renewalCount < maxRenewals;
         const loanedBy = loan.loaned_by_user?.name || loan.loaned_by_user?.username || 'staff';
         const notes = loan.notes || 'Sách đang mượn';
 
@@ -1539,6 +1557,25 @@ function loadCurrentLoans(patronId) {
         if (publisher) descParts.push(publisher);
         if (year) descParts.push(year);
         const fullDesc = descParts.join(' / ');
+
+        let renewBtn = '';
+        if (canRenew) {
+            renewBtn = `
+                <button onclick="renewSpecificBook(${loan.id}, '${loan.book_item?.barcode || ''}', '${addslashes(title)}')" 
+                        class="p-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded transition-colors"
+                        title="{{ __("Gia hạn") }}">
+                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                </button>
+            `;
+        } else {
+            renewBtn = `
+                <button disabled 
+                        class="p-1 text-muted-foreground/40 cursor-not-allowed rounded"
+                        title="{{ __("Đã hết lượt gia hạn") }} (${renewalCount}/${maxRenewals})">
+                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                </button>
+            `;
+        }
 
         return `
             <tr class="border-b border-border hover:bg-muted/20">
@@ -1560,6 +1597,7 @@ function loadCurrentLoans(patronId) {
                 <td class="p-2 text-muted-foreground text-xs">${notes}</td>
                 <td class="p-2 text-center">
                     <div class="flex items-center justify-center gap-1">
+                        ${renewBtn}
                         <button onclick="recallSpecificBook('${loan.book_item?.barcode || ''}', '${addslashes(title)}')" 
                                 class="p-1 text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 rounded transition-colors"
                                 title="{{ __("Triệu hồi") }}">
@@ -1643,6 +1681,59 @@ function declareLostSpecificBook(barcode, title) {
     });
 }
 
+// Renew specific book
+function renewSpecificBook(loanId, barcode, title) {
+    if (!loanId) {
+        Swal.fire(getSwalConfig('{{ __("Lỗi") }}', 'error', { text: '{{ __("Không thể gia hạn tài liệu này") }}' }));
+        return;
+    }
+    
+    Swal.fire(getSwalConfig('{{ __("Xác nhận gia hạn tài liệu") }}', 'warning', {
+        html: `Bạn có chắc chắn muốn gia hạn tài liệu <strong>${title}</strong>?<br><small>${barcode}</small>`,
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        confirmButtonText: '{{ __("Gia hạn") }}',
+        cancelButtonText: '{{ __("Hủy") }}'
+    })).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire(getSwalConfig('{{ __("Đang xử lý") }}', 'info', {
+                text: '{{ __("Đang gia hạn tài liệu...") }}',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            }));
+            
+            const renewUrl = '{{ route("admin.circulation.renew", ":id") }}'.replace(':id', loanId);
+            
+            fetch(renewUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire(getSwalConfig('{{ __("Thành công") }}', 'success', { text: data.message || '{{ __("Gia hạn tài liệu thành công") }}' }));
+                    const patronCode = document.getElementById('patron_code').value.trim();
+                    if (patronCode) {
+                        searchPatronByCode(patronCode);
+                    } else {
+                        setTimeout(() => { window.location.reload(); }, 1500);
+                    }
+                } else {
+                    Swal.fire(getSwalConfig('{{ __("Lỗi") }}', 'error', { text: data.message }));
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                Swal.fire(getSwalConfig('{{ __("Lỗi") }}', 'error', { text: '{{ __("Có lỗi xảy ra khi gia hạn tài liệu") }}' }));
+            });
+        }
+    });
+}
+
 function showRecallModal() {
     document.getElementById('recallModal').classList.remove('hidden');
     if (window.lucide) window.lucide.createIcons();
@@ -1674,7 +1765,7 @@ function loadPatronBooksForDeclareLost() {
         .then(response => response.json())
         .then(data => {
             if (data.success && data.data.current_loans > 0) {
-                loadCurrentLoansForDeclareLost(data.data.id);
+                loadCurrentLoansForDeclareLost(data.data.id, data.data.active_loans);
             } else {
                 updateHTMLAndRefreshIcons('declareLostBooksList', `<div class="text-muted-foreground text-xs text-center py-4">{{ __("Bạn đọc không có tài liệu đang mượn") }}</div>`);
             }
@@ -1684,11 +1775,11 @@ function loadPatronBooksForDeclareLost() {
         });
 }
 
-function loadCurrentLoansForDeclareLost(patronId) {
+function loadCurrentLoansForDeclareLost(patronId, activeLoans = null) {
     const listDiv = document.getElementById('declareLostBooksList');
-    const patronLoans = loanTransactionsData ? loanTransactionsData.filter(loan => 
+    const patronLoans = activeLoans ? activeLoans : (loanTransactionsData ? loanTransactionsData.filter(loan => 
         loan.patron_detail_id === patronId && loan.status === 'borrowed'
-    ) : [];
+    ) : []);
     
     if (patronLoans.length === 0) {
         updateHTMLAndRefreshIcons(listDiv, `<div class="text-muted-foreground text-xs text-center py-4">{{ __("Bạn đọc không có tài liệu đang mượn") }}</div>`);
