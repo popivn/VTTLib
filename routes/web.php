@@ -511,6 +511,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
     
     // Circulation main operations
     Route::get('/circulation', [\App\Http\Controllers\Admin\CirculationController::class, 'loanDesk'])->name('admin.circulation.loan-desk');
+    Route::get('/circulation/tab-content', [\App\Http\Controllers\Admin\CirculationController::class, 'tabContent'])->name('admin.circulation.tab-content');
+    Route::get('/circulation/logs', [\App\Http\Controllers\Admin\CirculationController::class, 'activityLogs'])->name('admin.circulation.logs');
+    Route::get('/circulation/book-management', [\App\Http\Controllers\Admin\CirculationController::class, 'bookManagement'])->name('admin.circulation.book-management');
     Route::get('/circulation/requests', function() {
         return redirect()->route('admin.circulation.loan-desk', ['tab' => 'requests']);
     })->name('admin.circulation.requests');

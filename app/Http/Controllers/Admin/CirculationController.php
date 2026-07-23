@@ -76,16 +76,6 @@ class CirculationController extends Controller
      */
     public function loanDesk()
     {
-        $recentLoans = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord'])
-            ->orderBy('created_at', 'desc')
-            ->limit(20)
-            ->get();
-
-        $overdueLoans = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy'])
-            ->overdue()
-            ->orderBy('due_date')
-            ->get();
-            
         // Get all lock history with patron relationships
         $allLockHistory = \App\Models\PatronLockHistory::with(['patron.user', 'lockedBy', 'unlockedBy'])
             ->orderBy('created_at', 'desc')
@@ -94,21 +84,29 @@ class CirculationController extends Controller
         // Get all loan transactions for stats calculation
         $allLoanTransactions = LoanTransaction::with(['patron', 'bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy'])
             ->get();
-        
-        // Get all active loans for the "Currently Borrowed" tab
-        $activeLoans = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy'])
-            ->active()
-            ->orderBy('loan_date', 'desc')
-            ->get();
-
-        // Get loan requests (reservations) for the "Loan Requests" tab
-        $loanRequests = Reservation::with(['patron.user', 'bibliographicRecord.fields.subfields', 'bookItem'])
-            ->whereIn('status', ['pending', 'ready'])
-            ->latest()
-            ->get();
             
-        return view('admin.circulation.loan-desk', compact('recentLoans', 'overdueLoans', 'allLockHistory', 'allLoanTransactions', 'activeLoans', 'loanRequests'));
+        return view('admin.circulation.loan-desk', compact('allLockHistory', 'allLoanTransactions'));
     }
+
+    /**
+     * Return partial HTML for a specific loan desk tab (AJAX)
+     */
+    public function tabContent(Request $request)
+    {
+        $tab = $request->get('tab', 'checkout');
+        $allowedTabs = ['checkout', 'reading-room', 'hold'];
+
+        if (!in_array($tab, $allowedTabs)) {
+            return response()->json(['error' => 'Invalid tab'], 400);
+        }
+
+        $view = 'admin.circulation.tabs.' . $tab;
+        return response()->json([
+            'html' => view($view)->render(),
+            'tab'  => $tab,
+        ]);
+    }
+
 
     /**
      * Process checkout (loan)
@@ -2058,5 +2056,67 @@ class CirculationController extends Controller
                 'message' => 'Error loading transactions: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Display circulation activity logs (Nhật ký lưu thông)
+     */
+    public function activityLogs(Request $request)
+    {
+        $query = LoanTransaction::with([
+            'patron.user', 
+            'bookItem.bibliographicRecord', 
+            'bookItem.storageLocation',
+            'loanedByUser', 
+            'policy'
+        ]);
+
+        // Simple filtering
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('patron', function($pq) use ($search) {
+                    $pq->where('patron_code', 'like', "%{$search}%")
+                       ->orWhere('display_name', 'like', "%{$search}%");
+                })->orWhereHas('bookItem', function($bq) use ($search) {
+                    $bq->where('barcode', 'like', "%{$search}%")
+                       ->orWhereHas('bibliographicRecord', function($brq) use ($search) {
+                           $brq->where('title', 'like', "%{$search}%")
+                               ->orWhere('author', 'like', "%{$search}%");
+                       });
+                });
+            });
+        }
+
+        $logs = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        return view('admin.circulation.activity-logs', compact('logs'));
+    }
+
+    /**
+     * Display circulation book management page (Quản lý sách)
+     */
+    public function bookManagement()
+    {
+        $overdueLoans = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy'])
+            ->overdue()
+            ->orderBy('due_date')
+            ->get();
+
+        $activeLoans = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy'])
+            ->active()
+            ->orderBy('loan_date', 'desc')
+            ->get();
+
+        $loanRequests = Reservation::with(['patron.user', 'bibliographicRecord.fields.subfields', 'bookItem'])
+            ->whereIn('status', ['pending', 'ready'])
+            ->latest()
+            ->get();
+
+        return view('admin.circulation.book-management', compact('overdueLoans', 'activeLoans', 'loanRequests'));
     }
 }
