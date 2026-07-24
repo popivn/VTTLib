@@ -212,6 +212,76 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
         }
     });
 
+    // User Guides Management
+    Route::get('/user-guides', function() {
+        $parent = \App\Models\SiteNode::where('node_code', 'huong-dan')->first();
+        $subNodes = $parent ? $parent->children()->where('is_active', true)->orderBy('sort_order')->get() : collect();
+        return view('admin.user-guides.index', compact('parent', 'subNodes'));
+    })->name('admin.user-guides.index');
+
+    Route::post('/user-guides/{siteNode}', function(\Illuminate\Http\Request $request, \App\Models\SiteNode $siteNode) {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'condition_title' => 'nullable|string|max:255',
+            'condition_desc' => 'nullable|string|max:1000',
+            'steps_title' => 'nullable|string|max:255',
+            'steps' => 'nullable|array',
+            'steps.*.title' => 'nullable|string|max:255',
+            'steps.*.content' => 'nullable|string|max:5000',
+            'video_title' => 'nullable|string|max:255',
+            'video_source' => 'required|in:file,url',
+            'embed_video_url' => 'nullable|string|max:1000',
+            'video_file' => 'nullable|file|mimes:mp4,webm,ogg,mov,avi,mkv|max:102400',
+        ]);
+
+        $existingJson = json_decode($siteNode->content_json ?? '{}', true) ?: [];
+        $uploadedVideoUrl = $existingJson['uploaded_video_url'] ?? '';
+        $embedVideoUrl = $validated['embed_video_url'] ?? ($existingJson['embed_video_url'] ?? ($existingJson['video_url'] ?? ''));
+
+        if ($request->hasFile('video_file')) {
+            $path = $request->file('video_file')->store('user-guides', 'public');
+            $uploadedVideoUrl = asset('storage/' . $path);
+        }
+
+        $videoSource = $validated['video_source'];
+        $activeVideoUrl = ($videoSource === 'file' && !empty($uploadedVideoUrl)) ? $uploadedVideoUrl : $embedVideoUrl;
+
+        // Clean steps array
+        $stepsList = [];
+        if (!empty($validated['steps']) && is_array($validated['steps'])) {
+            foreach ($validated['steps'] as $idx => $step) {
+                if (!empty($step['title']) || !empty($step['content'])) {
+                    $stepsList[] = [
+                        'step_number' => count($stepsList) + 1,
+                        'title' => $step['title'] ?? '',
+                        'content' => $step['content'] ?? '',
+                    ];
+                }
+            }
+        }
+
+        $contentData = [
+            'title' => $validated['title'],
+            'condition_title' => $validated['condition_title'] ?? '',
+            'condition_desc' => $validated['condition_desc'] ?? '',
+            'steps_title' => $validated['steps_title'] ?? 'Các bước thực hiện:',
+            'steps' => $stepsList,
+            'video_title' => $validated['video_title'] ?? '',
+            'video_source' => $videoSource,
+            'uploaded_video_url' => $uploadedVideoUrl,
+            'embed_video_url' => $embedVideoUrl,
+            'video_url' => $activeVideoUrl,
+        ];
+
+        $siteNode->update([
+            'display_name' => $validated['title'],
+            'content_json' => json_encode($contentData, JSON_UNESCAPED_UNICODE)
+        ]);
+
+        $tab = $request->input('tab', $siteNode->node_code);
+        return redirect()->to(route('admin.user-guides.index', ['tab' => $tab]))->with('success', __('Đã cập nhật thông tin hướng dẫn thành công!'));
+    })->name('admin.user-guides.update');
+
     // Statistics
     Route::get('/statistics', [\App\Http\Controllers\Admin\StatisticsController::class, 'index'])->name('admin.statistics.index');
 
