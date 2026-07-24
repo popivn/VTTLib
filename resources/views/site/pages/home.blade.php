@@ -16,13 +16,26 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
             <div class="swiper-wrapper">
                 @if(isset($banners) && $banners->count() > 0)
                     @foreach($banners as $banner)
-                        <div class="swiper-slide w-full h-auto relative">
+                        <div class="swiper-slide w-full relative group overflow-hidden" style="aspect-ratio: 1792/592;">
                             @if($banner->link_url)
-                                <a href="{{ $banner->link_url }}" class="block w-full h-auto">
+                                <a href="{{ $banner->link_url }}" class="block w-full h-full">
                             @endif
                                 <img src="{{ asset('storage/' . $banner->image_url) }}" 
                                      alt="{{ $banner->title }}" 
-                                     class="w-full h-auto block">
+                                     class="w-full h-full object-cover block group-hover:scale-105 transition-transform duration-700 ease-out">
+
+                                <!-- Hover Overlay & Description (Centered) -->
+                                <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center text-center p-6 md:p-12 pointer-events-none">
+                                    <h3 class="text-white font-black text-base md:text-2xl lg:text-3xl drop-shadow-lg tracking-wide transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300 ease-out">
+                                        {{ $banner->title }}
+                                    </h3>
+                                    @if($banner->description)
+                                        <div class="w-12 h-0.5 bg-vttu-yellow my-2 md:my-3 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-300 delay-75"></div>
+                                        <p class="text-white/95 text-xs md:text-base font-medium max-w-2xl line-clamp-3 drop-shadow leading-relaxed transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300 delay-100 ease-out">
+                                            {{ $banner->description }}
+                                        </p>
+                                    @endif
+                                </div>
                             @if($banner->link_url)
                                 </a>
                             @endif
@@ -30,7 +43,7 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                     @endforeach
                 @else
                     <!-- Fallback if no banners are added -->
-                    <div class="swiper-slide w-full h-[400px] flex items-center justify-center bg-slate-100">
+                    <div class="swiper-slide w-full flex items-center justify-center bg-slate-100" style="aspect-ratio: 1792/592;">
                         <div class="text-center p-8">
                             <i class="fas fa-image text-slate-300 text-5xl mb-3"></i>
                             <p class="text-slate-400 font-medium">Vui lòng thêm banner trong trang quản trị.</p>
@@ -482,21 +495,15 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                             </div>
                             <div class="space-y-2 relative z-10">
                                 <div class="flex justify-between items-center p-3 bg-white/10 backdrop-blur-sm rounded-sm border border-white/10 hover:bg-white/20 transition-all">
-                                    <span class="font-medium text-white/90 text-[11px] uppercase tracking-widest">{{ __('Thứ 2 - Thứ 6') }}</span>
+                                    <span class="font-medium text-white/90 text-[11px] uppercase tracking-widest">{{ __('Thứ 2 - Thứ 7') }}</span>
                                     <span class="font-bold text-vttu-yellow text-sm">
                                         {{ date('H:i', strtotime(\App\Models\SystemSetting::get('opening_time_weekday', '07:30'))) }} - {{ date('H:i', strtotime(\App\Models\SystemSetting::get('closing_time_weekday', '20:00'))) }}
                                     </span>
                                 </div>
                                 <div class="flex justify-between items-center p-3 bg-white/10 backdrop-blur-sm rounded-sm border border-white/10 hover:bg-white/20 transition-all">
-                                    <span class="font-medium text-white/90 text-[11px] uppercase tracking-widest">{{ __('Thứ 7') }}</span>
+                                    <span class="font-medium text-white/90 text-[11px] uppercase tracking-widest">{{ __('CN & Ngày lễ') }}</span>
                                     <span class="font-bold text-vttu-yellow text-sm">
-                                        {{ date('H:i', strtotime(\App\Models\SystemSetting::get('opening_time_sat', '08:00'))) }} - {{ date('H:i', strtotime(\App\Models\SystemSetting::get('closing_time_sat', '17:00'))) }}
-                                    </span>
-                                </div>
-                                <div class="flex justify-between items-center p-3 bg-white/10 backdrop-blur-sm rounded-sm border border-white/10 hover:bg-white/20 transition-all">
-                                    <span class="font-medium text-white/90 text-[11px] uppercase tracking-widest">{{ __('Chủ Nhật') }}</span>
-                                    <span class="font-bold text-vttu-yellow text-sm">
-                                        {{ date('H:i', strtotime(\App\Models\SystemSetting::get('opening_time_sun', '08:00'))) }} - {{ date('H:i', strtotime(\App\Models\SystemSetting::get('closing_time_sun', '17:00'))) }}
+                                        {{ \App\Models\SystemSetting::get('sunday_holiday_hours', 'Nghỉ') }}
                                     </span>
                                 </div>
                             </div>

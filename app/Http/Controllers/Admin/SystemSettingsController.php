@@ -32,6 +32,10 @@ class SystemSettingsController extends Controller
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'website' => 'nullable|url|max:255',
+            'footer_description' => 'nullable|string|max:500',
+            'facebook_url' => 'nullable|url|max:255',
+            'youtube_url' => 'nullable|url|max:255',
+            'zalo_url' => 'nullable|url|max:255',
         ]);
 
         foreach ($data as $key => $value) {
@@ -46,10 +50,8 @@ class SystemSettingsController extends Controller
         $data = $request->validate([
             'opening_time_weekday' => 'nullable|string',
             'closing_time_weekday' => 'nullable|string',
-            'opening_time_sat' => 'nullable|string',
-            'closing_time_sat' => 'nullable|string',
-            'opening_time_sun' => 'nullable|string',
-            'closing_time_sun' => 'nullable|string',
+            'sunday_holiday_hours' => 'nullable|string|max:255',
+            'service_hours_note' => 'nullable|string|max:500',
         ]);
 
         foreach ($data as $key => $value) {

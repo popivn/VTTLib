@@ -44,6 +44,69 @@ Route::get('/emergency-clear-cache', function() {
     }
 });
 
+// Footer Visitor Statistics Endpoint (Async AJAX)
+Route::get('/footer-stats', function() {
+    $onlineTotal = \Illuminate\Support\Facades\Cache::remember('stat_online_total', 30, function() {
+        $c = \Illuminate\Support\Facades\DB::table('website_access_logs')
+            ->where('created_at', '>=', now()->subMinutes(5))
+            ->distinct('ip_address')
+            ->count('ip_address');
+        return max($c, 1);
+    });
+
+    $onlineMembers = \Illuminate\Support\Facades\Cache::remember('stat_online_members', 30, function() {
+        return \Illuminate\Support\Facades\DB::table('website_access_logs')
+            ->where('created_at', '>=', now()->subMinutes(5))
+            ->whereNotNull('user_id')
+            ->distinct('user_id')
+            ->count('user_id');
+    });
+
+    $onlineGuests = max(0, $onlineTotal - $onlineMembers);
+
+    $totalVisits = \Illuminate\Support\Facades\Cache::remember('stat_total_visits', 60, function() {
+        return \Illuminate\Support\Facades\DB::table('website_access_logs')->count();
+    });
+
+    $today = \Illuminate\Support\Facades\Cache::remember('stat_today_visits', 60, function() {
+        return \Illuminate\Support\Facades\DB::table('website_access_logs')
+            ->whereDate('created_at', \Carbon\Carbon::today())
+            ->count();
+    });
+
+    $yesterday = \Illuminate\Support\Facades\Cache::remember('stat_yesterday_visits', 300, function() {
+        return \Illuminate\Support\Facades\DB::table('website_access_logs')
+            ->whereDate('created_at', \Carbon\Carbon::yesterday())
+            ->count();
+    });
+
+    $month = \Illuminate\Support\Facades\Cache::remember('stat_month_visits', 300, function() {
+        return \Illuminate\Support\Facades\DB::table('website_access_logs')
+            ->whereMonth('created_at', \Carbon\Carbon::now()->month)
+            ->whereYear('created_at', \Carbon\Carbon::now()->year)
+            ->count();
+    });
+
+    $daysOperating = \Illuminate\Support\Facades\Cache::remember('stat_days_operating', 3600, function() {
+        $firstLog = \Illuminate\Support\Facades\DB::table('website_access_logs')->min('created_at');
+        if ($firstLog) {
+            return max(1, (int) now()->diffInDays(\Carbon\Carbon::parse($firstLog)) + 1);
+        }
+        return 1;
+    });
+
+    return response()->json([
+        'total_visits' => number_format($totalVisits),
+        'online_total' => number_format($onlineTotal),
+        'online_members' => number_format($onlineMembers),
+        'online_guests' => number_format($onlineGuests),
+        'today' => number_format($today),
+        'yesterday' => number_format($yesterday),
+        'month' => number_format($month),
+        'days_operating' => number_format($daysOperating),
+    ]);
+});
+
 // Barcode Generation (Public access for image display)
 Route::get('/barcode/{code}', [\App\Http\Controllers\Admin\BarcodeController::class, 'show'])->name('admin.barcode.show');
 
@@ -191,6 +254,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
         
         // Banner Routes
         Route::post('/banner/add', [\App\Http\Controllers\Admin\SiteNodeController::class, 'addBanner'])->name('add-banner');
+        Route::put('/banner/{banner}', [\App\Http\Controllers\Admin\SiteNodeController::class, 'updateBanner'])->name('update-banner');
         Route::post('/banner/{banner}/toggle-status', [\App\Http\Controllers\Admin\SiteNodeController::class, 'toggleBannerStatus'])->name('toggle-banner-status');
         Route::delete('/banner/{banner}', [\App\Http\Controllers\Admin\SiteNodeController::class, 'deleteBanner'])->name('delete-banner');
         
@@ -634,3 +698,5 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
 Route::middleware(['auth', 'role:visitor'])->group(function () {
     // Visitor-specific functionality
 });
+
+

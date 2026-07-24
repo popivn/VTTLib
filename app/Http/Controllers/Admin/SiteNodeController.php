@@ -817,6 +817,7 @@ class SiteNodeController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
             'link_url' => 'required|url|max:255',
             'image_path' => 'required|file|mimes:png,jpg,jpeg,svg,webp,gif,apng,avif|max:20480',
         ]);
@@ -828,6 +829,7 @@ class SiteNodeController extends Controller
             // Create banner record
             $banner = \App\Models\Banner::create([
                 'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
                 'link_url' => $validated['link_url'],
                 'image_url' => $imagePath,
                 'status' => 'active',
@@ -845,6 +847,45 @@ class SiteNodeController extends Controller
             return back()->with('success', __('Thêm banner thành công!'));
         } catch (\Exception $e) {
             return back()->with('error', 'Lỗi khi thêm banner: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update an existing banner
+     */
+    public function updateBanner(Request $request, \App\Models\Banner $banner)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'link_url' => 'required|url|max:255',
+            'image_path' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp,gif,apng,avif|max:20480',
+        ]);
+
+        try {
+            $data = [
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'link_url' => $validated['link_url'],
+            ];
+
+            if ($request->hasFile('image_path')) {
+                if ($banner->image_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($banner->image_url)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($banner->image_url);
+                }
+                $data['image_url'] = $request->file('image_path')->store('banners', 'public');
+            }
+
+            $banner->update($data);
+
+            activity_log('banner_updated', $banner, [
+                'title' => $banner->title,
+                'link_url' => $banner->link_url
+            ]);
+
+            return back()->with('success', __('Cập nhật banner thành công!'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Lỗi khi cập nhật banner: ' . $e->getMessage());
         }
     }
 

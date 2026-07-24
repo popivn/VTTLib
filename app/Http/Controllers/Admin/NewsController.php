@@ -111,9 +111,15 @@ class NewsController extends Controller
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'meta_keywords' => 'nullable|string|max:255',
-            'tags' => 'nullable|array',
-            'tags.*' => 'string'
+            'tags' => 'nullable|string',
         ]);
+
+        // Process tags input string into an array of names
+        $tagNames = [];
+        if (!empty($request->input('tags'))) {
+            $tagNames = array_filter(array_map('trim', explode(',', $request->input('tags'))));
+        }
+        unset($validated['tags']);
 
         // Handle image upload or URL
         if ($request->hasFile('featured_image_file')) {
@@ -150,8 +156,8 @@ class NewsController extends Controller
             $news = News::create($validated);
 
             // Sync tags
-            if (!empty($validated['tags'])) {
-                $news->syncTags($validated['tags']);
+            if (!empty($tagNames)) {
+                $news->syncTags($tagNames);
             }
 
             // Log activity
@@ -167,22 +173,16 @@ class NewsController extends Controller
                 ->with('success', 'Tạo tin tức thành công!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()
-                ->withInput()
-                ->with('error', 'Lỗi khi tạo tin tức: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
 
     /**
-     * Show the specified news.
+     * Display the specified news.
      */
     public function show(News $news)
     {
         $news->load(['category', 'author', 'tags']);
-        
-        // Increment view count
-        $news->incrementView();
-        
         return view('admin.news.show', compact('news'));
     }
 
@@ -191,11 +191,9 @@ class NewsController extends Controller
      */
     public function edit(News $news)
     {
-        $news->load('tags');
-        $categories = NewsCategory::active()->orderBy('name')->get();
-        $tags = NewsTag::active()->orderBy('name')->get();
-        
-        return view('admin.news.edit', compact('news', 'categories', 'tags'));
+        $categories = NewsCategory::active()->get();
+        $news->load(['tags']);
+        return view('admin.news.edit', compact('news', 'categories'));
     }
 
     /**
@@ -220,9 +218,15 @@ class NewsController extends Controller
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string',
             'meta_keywords' => 'nullable|string|max:255',
-            'tags' => 'nullable|array',
-            'tags.*' => 'string'
+            'tags' => 'nullable|string',
         ]);
+
+        // Process tags input string into an array of names
+        $tagNames = [];
+        if (!empty($request->input('tags'))) {
+            $tagNames = array_filter(array_map('trim', explode(',', $request->input('tags'))));
+        }
+        unset($validated['tags']);
 
         // Handle image upload or URL
         if ($request->hasFile('featured_image_file')) {
@@ -251,11 +255,11 @@ class NewsController extends Controller
             $news->update($validated);
 
             // Sync tags
-            if (!empty($validated['tags'])) {
-                $news->syncTags($validated['tags']);
+            if (!empty($tagNames)) {
+                $news->syncTags($tagNames);
             } else {
                 $news->tags()->detach();
-            }
+            }           
 
             // Log activity
             activity_log('news_updated', $news, [

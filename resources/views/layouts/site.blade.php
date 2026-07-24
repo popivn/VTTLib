@@ -389,27 +389,76 @@
     <footer class="bg-vttu-dark text-white/90 border-t border-white/5 py-8 md:py-12 mt-8 transition-colors duration-200">
         <div class="container mx-auto px-4 md:px-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-                <!-- About -->
+                @php
+                    $footerAddress = \App\Models\SystemSetting::get('address');
+                    $footerPhone = \App\Models\SystemSetting::get('phone');
+                    $footerEmail = \App\Models\SystemSetting::get('email');
+                    $footerDesc = \App\Models\SystemSetting::get('footer_description');
+                    $fbUrl = \App\Models\SystemSetting::get('facebook_url');
+                    $ytUrl = \App\Models\SystemSetting::get('youtube_url');
+                    $zaloUrl = \App\Models\SystemSetting::get('zalo_url');
+                    $libNameVi = \App\Models\SystemSetting::get('library_name_vi');
+                @endphp
+                <!-- About & Access Counter -->
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2 group cursor-default">
                         <div class="w-8 h-8 rounded-sm bg-white/10 flex items-center justify-center text-vttu-yellow group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-all duration-300 shadow-sm border border-white/10">
                             <i class="fas fa-book-open text-xs"></i>
                         </div>
-                        <span class="font-black text-sm uppercase tracking-tighter text-white">{{ __('Thư viện số') }}</span>
+                        <span class="font-black text-sm uppercase tracking-tighter text-white">{{ $libNameVi ?: __('Thư viện số') }}</span>
                     </div>
-                    <p class="text-xs leading-relaxed text-white/60 max-w-xs">
-                        {{ __('Nền tảng quản lý thư viện hiện đại, hiệu quả và toàn diện. Nâng tầm trải nghiệm nghiên cứu và học tập.') }}
-                    </p>
-                    <div class="flex items-center gap-2 pt-1">
-                        <a href="#" class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-white/60 hover:bg-vttu-yellow hover:text-vttu-dark active:scale-90 transition-all border border-white/10">
-                            <i class="fab fa-facebook-f text-xs"></i>
-                        </a>
-                        <a href="#" class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-white/60 hover:bg-vttu-yellow hover:text-vttu-dark active:scale-90 transition-all border border-white/10">
-                            <i class="fab fa-youtube text-xs"></i>
-                        </a>
-                        <a href="#" class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-white/60 hover:bg-vttu-yellow hover:text-vttu-dark active:scale-90 transition-all border border-white/10">
-                            <i class="fas fa-envelope text-xs"></i>
-                        </a>
+                    @if(!empty($footerDesc))
+                        <p class="text-xs leading-relaxed text-white/60 max-w-xs">
+                            {{ $footerDesc }}
+                        </p>
+                    @endif
+                    
+                    @if(!empty($fbUrl) || !empty($ytUrl) || !empty($zaloUrl))
+                        <div class="flex items-center gap-2 pt-1">
+                            @if(!empty($fbUrl))
+                                <a href="{{ $fbUrl }}" target="_blank" rel="noopener noreferrer" title="Facebook" class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-white/60 hover:bg-vttu-yellow hover:text-vttu-dark active:scale-90 transition-all border border-white/10">
+                                    <i class="fab fa-facebook-f text-xs"></i>
+                                </a>
+                            @endif
+                            @if(!empty($ytUrl))
+                                <a href="{{ $ytUrl }}" target="_blank" rel="noopener noreferrer" title="YouTube" class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-white/60 hover:bg-vttu-yellow hover:text-vttu-dark active:scale-90 transition-all border border-white/10">
+                                    <i class="fab fa-youtube text-xs"></i>
+                                </a>
+                            @endif
+                            @if(!empty($zaloUrl))
+                                <a href="{{ $zaloUrl }}" target="_blank" rel="noopener noreferrer" title="Zalo / Contact" class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-white/60 hover:bg-vttu-yellow hover:text-vttu-dark active:scale-90 transition-all border border-white/10">
+                                    <i class="fas fa-comments text-xs"></i>
+                                </a>
+                            @endif
+                        </div>
+                    @endif
+
+                    <!-- Visitor Statistics Block (Clean Simple Text & Async AJAX) -->
+                    <div class="pt-3 mt-3 border-t border-white/10 text-xs leading-relaxed text-white/80 space-y-1.5 font-sans">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span id="stat-total-visits" class="font-black text-sm text-white">...</span>
+                            <span class="text-white/70">{{ __('Tổng lượt truy cập') }}</span>
+                            <span id="stat-online-total" class="font-black text-sm text-white ml-2">...</span>
+                            <span class="text-white/70">{{ __('Số lượt online') }}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-wrap pl-2">
+                            <span id="stat-online-members" class="font-black text-xs text-white">...</span>
+                            <span class="text-white/70">{{ __('Thành viên online') }}</span>
+                            <span id="stat-online-guests" class="font-black text-xs text-white ml-2">...</span>
+                            <span class="text-white/70">{{ __('Khách online') }}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span id="stat-today" class="font-black text-xs text-white">...</span>
+                            <span class="text-white/70">{{ __('Trong ngày') }}</span>
+                            <span id="stat-yesterday" class="font-black text-xs text-white ml-1.5">...</span>
+                            <span class="text-white/70">{{ __('Hôm qua') }}</span>
+                            <span id="stat-month" class="font-black text-xs text-white ml-1.5">...</span>
+                            <span class="text-white/70">{{ __('Trong tháng') }}</span>
+                        </div>
+                        <div class="pt-1 text-[10px] text-vttu-yellow/90 font-semibold flex items-center gap-1">
+                            <i class="fas fa-history text-[9px]"></i>
+                            <span>{{ __('Hệ thống đã trải qua') }} <strong id="stat-days-operating" class="text-white font-black">...</strong> {{ __('ngày từ lượt truy cập đầu tiên') }}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -512,26 +561,32 @@
                         <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-vttu-yellow/80">{{ __('Liên hệ') }}</h3>
                     </div>
                     <div class="space-y-3">
-                        <div class="flex items-start gap-3 group">
-                            <div class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-vttu-yellow flex-shrink-0 group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-colors border border-white/10 shadow-sm">
-                                <i class="fas fa-map-marker-alt text-xs"></i>
+                        @if(!empty($footerAddress))
+                            <div class="flex items-start gap-3 group">
+                                <div class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-vttu-yellow flex-shrink-0 group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-colors border border-white/10 shadow-sm">
+                                    <i class="fas fa-map-marker-alt text-xs"></i>
+                                </div>
+                                <span class="text-xs leading-relaxed text-white/60 group-hover:text-white transition-colors font-medium">
+                                    {{ $footerAddress }}
+                                </span>
                             </div>
-                            <span class="text-xs leading-relaxed text-white/60 group-hover:text-white transition-colors font-medium">
-                                {{ __('Quốc Lộ 1A, Tân Phú Thạnh, Châu Thành A, Hậu Giang') }}
-                            </span>
-                        </div>
-                        <div class="flex items-center gap-3 group">
-                            <div class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-vttu-yellow flex-shrink-0 group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-colors border border-white/10 shadow-sm">
-                                <i class="fas fa-phone-alt text-xs"></i>
+                        @endif
+                        @if(!empty($footerPhone))
+                            <div class="flex items-center gap-3 group">
+                                <div class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-vttu-yellow flex-shrink-0 group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-colors border border-white/10 shadow-sm">
+                                    <i class="fas fa-phone-alt text-xs"></i>
+                                </div>
+                                <span class="text-xs text-white/60 group-hover:text-white transition-colors font-medium">{{ $footerPhone }}</span>
                             </div>
-                            <span class="text-xs text-white/60 group-hover:text-white transition-colors font-medium">{{ __('0293 3504 345') }}</span>
-                        </div>
-                        <div class="flex items-center gap-3 group">
-                            <div class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-vttu-yellow flex-shrink-0 group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-colors border border-white/10 shadow-sm">
-                                <i class="fas fa-envelope text-xs"></i>
+                        @endif
+                        @if(!empty($footerEmail))
+                            <div class="flex items-center gap-3 group">
+                                <div class="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-vttu-yellow flex-shrink-0 group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-colors border border-white/10 shadow-sm">
+                                    <i class="fas fa-envelope text-xs"></i>
+                                </div>
+                                <span class="text-xs text-white/60 group-hover:text-white transition-colors font-medium truncate">{{ __('Mail') }}: {{ $footerEmail }}</span>
                             </div>
-                            <span class="text-xs text-white/60 group-hover:text-white transition-colors font-medium truncate">{{ __('Mail') }}: {{ __('thuvien@vttu.edu.vn') }}</span>
-                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -557,6 +612,36 @@
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
+
+            // Async AJAX loading for Visitor Statistics (No impact on page load speed)
+            fetch('/footer-stats', {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    var elTotal = document.getElementById('stat-total-visits');
+                    var elOnlineTotal = document.getElementById('stat-online-total');
+                    var elOnlineMembers = document.getElementById('stat-online-members');
+                    var elOnlineGuests = document.getElementById('stat-online-guests');
+                    var elToday = document.getElementById('stat-today');
+                    var elYesterday = document.getElementById('stat-yesterday');
+                    var elMonth = document.getElementById('stat-month');
+                    var elDaysOperating = document.getElementById('stat-days-operating');
+
+                    if (elTotal) elTotal.textContent = data.total_visits;
+                    if (elOnlineTotal) elOnlineTotal.textContent = data.online_total;
+                    if (elOnlineMembers) elOnlineMembers.textContent = data.online_members;
+                    if (elOnlineGuests) elOnlineGuests.textContent = data.online_guests;
+                    if (elToday) elToday.textContent = data.today;
+                    if (elYesterday) elYesterday.textContent = data.yesterday;
+                    if (elMonth) elMonth.textContent = data.month;
+                    if (elDaysOperating) elDaysOperating.textContent = data.days_operating;
+                })
+                .catch(function(err) {
+                    console.error('Error fetching footer stats:', err);
+                });
         });
     </script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

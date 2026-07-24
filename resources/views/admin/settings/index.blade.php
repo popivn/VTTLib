@@ -103,6 +103,38 @@
                                     class="w-full h-9 px-3 py-1.5 text-sm border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
                             </div>
 
+                            <div class="space-y-1">
+                                <label class="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{{ __('Footer Short Description') }}</label>
+                                <textarea name="footer_description" rows="2"
+                                    class="w-full px-3 py-1.5 text-sm border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                                    placeholder="{{ __('Enter short description for footer...') }}">{{ \App\Models\SystemSetting::get('footer_description') }}</textarea>
+                            </div>
+
+                            <!-- SOCIAL LINKS -->
+                            <div class="pt-2 border-t border-border space-y-3">
+                                <h3 class="text-[11px] font-bold uppercase tracking-wider text-primary">{{ __('Social Media Links') }}</h3>
+                                <div class="space-y-2">
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Facebook URL</label>
+                                        <input type="url" name="facebook_url" value="{{ \App\Models\SystemSetting::get('facebook_url') }}"
+                                            placeholder="https://facebook.com/..."
+                                            class="w-full h-9 px-3 py-1.5 text-sm border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] text-muted-foreground uppercase tracking-wider">YouTube URL</label>
+                                        <input type="url" name="youtube_url" value="{{ \App\Models\SystemSetting::get('youtube_url') }}"
+                                            placeholder="https://youtube.com/..."
+                                            class="w-full h-9 px-3 py-1.5 text-sm border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] text-muted-foreground uppercase tracking-wider">Zalo / Other Social URL</label>
+                                        <input type="url" name="zalo_url" value="{{ \App\Models\SystemSetting::get('zalo_url') }}"
+                                            placeholder="https://zalo.me/..."
+                                            class="w-full h-9 px-3 py-1.5 text-sm border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="pt-2">
                                 <button type="submit" class="btn-compact-primary w-full h-9 justify-center">
                                     {{ __('Update Information') }}
@@ -213,9 +245,9 @@
                                 <form action="{{ route('admin.settings.policy.update') }}" method="POST">
                                     @csrf
                                     <div class="space-y-3 max-w-xl">
-                                        <!-- Thứ 2 - Thứ 6 -->
+                                        <!-- Thứ 2 - Thứ 7 -->
                                         <div class="bg-muted/10 rounded border border-border p-3">
-                                            <h4 class="text-xs font-bold uppercase tracking-wider mb-2 text-primary">{{ __('Thứ 2 - Thứ 6') }}</h4>
+                                            <h4 class="text-xs font-bold uppercase tracking-wider mb-2 text-primary">{{ __('Thứ 2 - Thứ 7') }}</h4>
                                             <div class="grid grid-cols-2 gap-3">
                                                 <div class="space-y-1">
                                                     <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{{ __('Opening Time') }}</label>
@@ -230,37 +262,25 @@
                                             </div>
                                         </div>
 
-                                        <!-- Thứ 7 -->
+                                        <!-- Chủ nhật & Ngày lễ -->
                                         <div class="bg-muted/10 rounded border border-border p-3">
-                                            <h4 class="text-xs font-bold uppercase tracking-wider mb-2 text-primary">{{ __('Thứ 7') }}</h4>
-                                            <div class="grid grid-cols-2 gap-3">
-                                                <div class="space-y-1">
-                                                    <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{{ __('Opening Time') }}</label>
-                                                    <input type="time" name="opening_time_sat" value="{{ \App\Models\SystemSetting::get('opening_time_sat', '08:00') }}" 
-                                                        class="w-full h-8 bg-background border border-border rounded px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all">
-                                                </div>
-                                                <div class="space-y-1">
-                                                    <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{{ __('Closing Time') }}</label>
-                                                    <input type="time" name="closing_time_sat" value="{{ \App\Models\SystemSetting::get('closing_time_sat', '17:00') }}" 
-                                                        class="w-full h-8 bg-background border border-border rounded px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all">
-                                                </div>
+                                            <h4 class="text-xs font-bold uppercase tracking-wider mb-2 text-primary">{{ __('Chủ nhật & Ngày lễ') }}</h4>
+                                            <div class="space-y-1">
+                                                <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{{ __('Mô tả thời gian') }}</label>
+                                                <input type="text" name="sunday_holiday_hours" value="{{ \App\Models\SystemSetting::get('sunday_holiday_hours', 'Nghỉ') }}" 
+                                                    placeholder="VD: Nghỉ, 08:00 - 12:00, Liên hệ trước..."
+                                                    class="w-full h-8 bg-background border border-border rounded px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all">
                                             </div>
                                         </div>
 
-                                        <!-- Chủ Nhật -->
+                                        <!-- Ghi chú -->
                                         <div class="bg-muted/10 rounded border border-border p-3">
-                                            <h4 class="text-xs font-bold uppercase tracking-wider mb-2 text-primary">{{ __('Chủ Nhật') }}</h4>
-                                            <div class="grid grid-cols-2 gap-3">
-                                                <div class="space-y-1">
-                                                    <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{{ __('Opening Time') }}</label>
-                                                    <input type="time" name="opening_time_sun" value="{{ \App\Models\SystemSetting::get('opening_time_sun', '08:00') }}" 
-                                                        class="w-full h-8 bg-background border border-border rounded px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all">
-                                                </div>
-                                                <div class="space-y-1">
-                                                    <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{{ __('Closing Time') }}</label>
-                                                    <input type="time" name="closing_time_sun" value="{{ \App\Models\SystemSetting::get('closing_time_sun', '17:00') }}" 
-                                                        class="w-full h-8 bg-background border border-border rounded px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all">
-                                                </div>
+                                            <h4 class="text-xs font-bold uppercase tracking-wider mb-2 text-primary">{{ __('Ghi chú') }}</h4>
+                                            <div class="space-y-1">
+                                                <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{{ __('Ghi chú hiển thị trên trang thời gian phục vụ') }}</label>
+                                                <input type="text" name="service_hours_note" value="{{ \App\Models\SystemSetting::get('service_hours_note', 'Lịch phục vụ có thể thay đổi tùy theo kế hoạch đào tạo của Nhà trường.') }}" 
+                                                    placeholder="VD: Lịch phục vụ có thể thay đổi..."
+                                                    class="w-full h-8 bg-background border border-border rounded px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all">
                                             </div>
                                         </div>
                                     </div>

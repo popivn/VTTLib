@@ -219,7 +219,7 @@ class SiteNodeSeeder extends Seeder
                 'node_name' => 'Hướng dẫn',
                 'display_name' => 'Hướng dẫn sử dụng',
                 'description' => 'Cẩm nang hướng dẫn sử dụng các dịch vụ và tiện ích tại Thư viện số VTTU.',
-                'masterpage' => 'help',
+                'masterpage' => null,
                 'icon' => 'fas fa-book-open-reader',
                 'display_type' => 'menu',
                 'language' => 'vi',

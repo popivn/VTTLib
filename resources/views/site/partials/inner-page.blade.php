@@ -204,7 +204,7 @@
                     @endif
                 @elseif($node->node_code === 'chuong-trinh-dao-tao-vttu' || $node->node_code === 'khung-chuong-trinh-dao-tao')
                     @include('site.pages.partials.curriculum-content')
-                @elseif($node->node_code === 'huong-dan' || $node->masterpage === 'help')
+                @elseif($node->node_code === 'huong-dan')
                     @include('site.pages.huong-dan-content')
                 @elseif($node->node_code === 'tai-nguyen-giao-duc-mo' || $node->masterpage === 'oer')
                     <div class="flex items-center justify-between mb-2">
@@ -234,67 +234,71 @@
                     @endif
                 @elseif(isset($customContent) && $customContent === true)
                     @php
-                        $openingTime = \App\Models\SystemSetting::get('opening_time', '08:00');
-                        $closingTime = \App\Models\SystemSetting::get('closing_time', '17:00');
-                        // Format time để hiển thị
-                        $openingTimeFormatted = \Carbon\Carbon::createFromFormat('H:i', $openingTime)->format('H:i');
-                        $closingTimeFormatted = \Carbon\Carbon::createFromFormat('H:i', $closingTime)->format('H:i');
+                        $openingTimeWeekday = \App\Models\SystemSetting::get('opening_time_weekday');
+                        $closingTimeWeekday = \App\Models\SystemSetting::get('closing_time_weekday');
+                        $openingTimeFormatted = $openingTimeWeekday ? date('H:i', strtotime($openingTimeWeekday)) : '';
+                        $closingTimeFormatted = $closingTimeWeekday ? date('H:i', strtotime($closingTimeWeekday)) : '';
+                        
+                        $sundayHoliday = \App\Models\SystemSetting::get('sunday_holiday_hours');
+                        $serviceNote = \App\Models\SystemSetting::get('service_hours_note');
+                        
+                        $phone = \App\Models\SystemSetting::get('phone');
+                        $email = \App\Models\SystemSetting::get('email');
+                        $address = \App\Models\SystemSetting::get('address');
+                        $libraryNameVi = \App\Models\SystemSetting::get('library_name_vi');
                     @endphp
                     <!-- Custom Content từ page -->
                     <!-- Hero Section with Background Image -->
-                    <div class="relative rounded-lg overflow-hidden shadow-lg mb-8 h-96"
-                         style="background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 100%), url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1200&h=600&fit=crop'); background-size: cover; background-position: center;">
+                    <div class="relative rounded-2xl overflow-hidden shadow-xl mb-8 min-h-[480px] flex items-center justify-center p-6 md:p-10"
+                         style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(15, 23, 42, 0.55) 100%), url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1200&h=600&fit=crop'); background-size: cover; background-position: center;">
                         
                         <!-- Content Box -->
-                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+                        <div class="w-full flex flex-col items-center justify-center text-center relative z-10">
                             <!-- Header Text -->
-                            <div class="mb-6">
-                                <h1 class="text-3xl md:text-4xl font-black text-vttu-red tracking-wider mb-1">
-                                    THƯ VIỆN
-                                </h1>
-                                <h2 class="text-2xl md:text-3xl font-black text-vttu-red tracking-wider">
-                                    ĐẠI HỌC VÔ TRƯỜNG TOẢN
-                                </h2>
-                                <div class="w-24 h-1 bg-vttu-red mx-auto mt-3"></div>
+                            <div class="mb-4">
+                                <div class="inline-block px-4 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-2">
+                                    <h1 class="text-xs md:text-sm font-bold text-vttu-yellow tracking-widest uppercase">
+                                        THƯ VIỆN {{ $libraryNameVi }}
+                                    </h1>
+                                </div>
                             </div>
 
                             <!-- Main Title -->
-                            <div class="mb-8">
-                                <h3 class="text-2xl md:text-4xl font-black text-gray-900 tracking-widest" 
-                                    style="text-shadow: 2px 2px 0 rgba(255,255,255,0.3); letter-spacing: 0.15em;">
-                                    THỜI GIAN PHỤC VỤ
-                                </h3>
+                            <div class="mb-6">
+                                <h2 class="text-2xl md:text-4xl font-black text-white tracking-widest uppercase drop-shadow-md">
+                                    {{ __('THỜI GIAN PHỤC VỤ') }}
+                                </h2>
+                                <div class="w-16 h-1 bg-vttu-yellow mx-auto mt-2 rounded-full"></div>
                             </div>
 
                             <!-- Clock Icon Box -->
-                            <div class="relative mb-8">
-                                <div class="w-24 h-24 bg-gradient-to-br from-vttu-red to-vttu-dark rounded-full flex items-center justify-center border-4 border-white shadow-lg">
-                                    <div class="text-white text-3xl">
+                            <div class="relative mb-6">
+                                <div class="w-20 h-20 bg-gradient-to-br from-vttu-red via-vttu-red to-vttu-dark rounded-full flex items-center justify-center border-4 border-white shadow-2xl ring-4 ring-white/20">
+                                    <div class="text-vttu-yellow text-3xl animate-pulse">
                                         <i class="fas fa-clock"></i>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Info Box 1 -->
-                            <div class="bg-white/95 backdrop-blur border-4 border-vttu-red rounded-lg px-8 py-6 mb-6 max-w-md shadow-lg">
-                                <div class="text-gray-900">
-                                    <p class="text-sm font-bold uppercase tracking-wider mb-3 text-vttu-dark">
+                            <!-- 2 Columns Info Boxes Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mx-auto">
+                                <!-- Info Box 1: Mon-Sat -->
+                                <div class="bg-white/95 backdrop-blur border-2 border-vttu-red rounded-xl p-5 shadow-lg flex flex-col justify-center items-center">
+                                    <p class="text-xs font-black uppercase tracking-wider mb-2 text-vttu-dark">
                                         {{ __('Thứ Hai - Thứ Bảy') }}
                                     </p>
-                                    <p class="text-4xl font-black text-gray-900 tracking-tight">
+                                    <p class="text-2xl lg:text-3xl font-black text-gray-900 tracking-tight">
                                         {{ $openingTimeFormatted }} - {{ $closingTimeFormatted }}
                                     </p>
                                 </div>
-                            </div>
 
-                            <!-- Info Box 2 -->
-                            <div class="bg-white/95 backdrop-blur border-4 border-vttu-red rounded-lg px-8 py-6 max-w-md shadow-lg">
-                                <div class="text-gray-900">
-                                    <p class="text-sm font-bold uppercase tracking-wider mb-2 text-vttu-dark">
-                                        {{ __('Chủ nhật và các ngày lễ') }}
+                                <!-- Info Box 2: Sunday & Holidays -->
+                                <div class="bg-white/95 backdrop-blur border-2 border-vttu-red rounded-xl p-5 shadow-lg flex flex-col justify-center items-center">
+                                    <p class="text-xs font-black uppercase tracking-wider mb-2 text-vttu-dark">
+                                        {{ __('Chủ nhật & Ngày Lễ') }}
                                     </p>
-                                    <p class="text-2xl font-black text-gray-900 tracking-widest" style="letter-spacing: 0.1em;">
-                                        KHÔNG HOẠT ĐỘNG
+                                    <p class="text-lg lg:text-xl font-black text-vttu-red tracking-wide uppercase">
+                                        {{ $sundayHoliday }}
                                     </p>
                                 </div>
                             </div>
@@ -327,7 +331,7 @@
                                 <div>
                                     <h4 class="text-lg font-bold text-gray-900 mb-2">{{ __('Ngày nghỉ') }}</h4>
                                     <p class="text-gray-700 text-sm leading-relaxed">
-                                        {{ __('Thư viện không hoạt động vào Chủ nhật, các ngày lễ, Tết theo quy định của Trường Đại học Võ Trường Toản.') }}
+                                        {{ __('Trạng thái:') }} <strong>{{ $sundayHoliday }}</strong>. {{ $serviceNote }}
                                     </p>
                                 </div>
                             </div>
@@ -335,19 +339,21 @@
                     </div>
 
                     <!-- Notice Section -->
-                    <div class="bg-vttu-red/10 border border-vttu-red/30 rounded-lg p-6 mb-8">
-                        <div class="flex gap-4">
-                            <div class="text-vttu-red text-2xl flex-shrink-0">
-                                <i class="fas fa-info-circle"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-900 mb-2">{{ __('Thông báo quan trọng') }}</h4>
-                                <p class="text-gray-700 text-sm leading-relaxed">
-                                    {{ __('Vào các ngày lễ, Tết Dương lịch, Tết Âm lịch và các dịp lễ kỷ niệm theo quy định của nhà trường, thư viện sẽ đóng cửa. Vui lòng liên hệ với thư viện để biết thêm thông tin chi tiết.') }}
-                                </p>
+                    @if(!empty($serviceNote))
+                        <div class="bg-vttu-red/10 border border-vttu-red/30 rounded-lg p-6 mb-8">
+                            <div class="flex gap-4">
+                                <div class="text-vttu-red text-2xl flex-shrink-0">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900 mb-2">{{ __('Thông báo quan trọng') }}</h4>
+                                    <p class="text-gray-700 text-sm leading-relaxed">
+                                        {{ $serviceNote }}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
 
                     <!-- Contact Section -->
                     <div class="bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg p-6 border border-slate-200">
@@ -359,7 +365,7 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-gray-600 font-bold uppercase">{{ __('Điện thoại') }}</p>
-                                    <p class="text-gray-900 font-semibold">+84 (0) xxx xxxx</p>
+                                    <p class="text-gray-900 font-semibold">{{ $phone }}</p>
                                 </div>
                             </div>
                             <div class="flex gap-3">
@@ -368,7 +374,7 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-gray-600 font-bold uppercase">{{ __('Email') }}</p>
-                                    <p class="text-gray-900 font-semibold">library@vttu.edu.vn</p>
+                                    <p class="text-gray-900 font-semibold">{{ $email }}</p>
                                 </div>
                             </div>
                             <div class="flex gap-3">
@@ -377,7 +383,11 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-gray-600 font-bold uppercase">{{ __('Địa chỉ') }}</p>
-                                    <p class="text-gray-900 font-semibold">Tầng 3, Tòa A</p>
+                                    <p class="text-gray-900 font-semibold">{{ $address }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                                 </div>
                             </div>
                         </div>
@@ -702,6 +712,89 @@
                                 @include('site.pages.de-nghi-bo-sung-content')
                             @elseif($node->node_code === 'khao-sat-y-kien' || $node->node_code === 'sb-khao-sat' || $node->node_code === 'khao-sat')
                                 @include('site.pages.khao-sat-y-kien-content')
+                            @elseif($node->node_code === 'thoi-gian-phuc-vu')
+                                @php
+                                    $openTime = \App\Models\SystemSetting::get('opening_time_weekday');
+                                    $closeTime = \App\Models\SystemSetting::get('closing_time_weekday');
+                                    $sundayHoliday = \App\Models\SystemSetting::get('sunday_holiday_hours');
+                                    $serviceNote = \App\Models\SystemSetting::get('service_hours_note');
+                                    
+                                    $phone = \App\Models\SystemSetting::get('phone');
+                                    $email = \App\Models\SystemSetting::get('email');
+                                    $address = \App\Models\SystemSetting::get('address');
+                                @endphp
+                                <div class="space-y-6">
+                                    <div class="flex flex-col md:flex-row items-center gap-8 bg-slate-50 p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
+                                        <div class="flex-shrink-0 w-full md:w-1/2 rounded-2xl overflow-hidden shadow-lg border border-slate-200">
+                                            <img src="/assets/images/thoi-gian-phuc-vu.png" onerror="this.src='https://img.freepik.com/free-vector/modern-office-open-hours-sign-concept_23-2148545161.jpg'" alt="Thời gian phục vụ" class="w-full h-auto object-cover">
+                                        </div>
+                                        <div class="w-full md:w-1/2 space-y-6">
+                                            <div>
+                                                <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tight">{{ __('GIỜ MỞ CỬA THƯ VIỆN') }}</h3>
+                                                <div class="w-16 h-1 bg-vttu-red rounded-full mt-1"></div>
+                                            </div>
+                                            <div class="space-y-4">
+                                                <div class="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+                                                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl shrink-0">
+                                                        <i class="fas fa-calendar-alt"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">{{ __('Thứ Hai - Thứ Bảy') }}</div>
+                                                        <div class="text-xl font-black text-slate-800">{{ date('H:i', strtotime($openTime)) }} - {{ date('H:i', strtotime($closeTime)) }}</div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-4 p-4 bg-rose-50/50 rounded-xl shadow-sm border border-rose-100">
+                                                    <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center text-xl shrink-0">
+                                                        <i class="fas fa-calendar-times"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-xs font-bold text-rose-400 uppercase tracking-wider">{{ __('Chủ nhật & Ngày Lễ') }}</div>
+                                                        <div class="text-xl font-black text-rose-600 uppercase">{{ $sundayHoliday }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @if(!empty($serviceNote))
+                                                <p class="text-xs text-slate-500 italic font-medium leading-relaxed">* {{ __('Lưu ý') }}: {{ $serviceNote }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <!-- Thông tin liên hệ lấy từ Tab General Settings -->
+                                    <div class="bg-gradient-to-r from-slate-50 to-slate-100 rounded-2xl p-6 border border-slate-200">
+                                        <h4 class="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
+                                            <i class="fas fa-headset text-vttu-red"></i> {{ __('Thông tin liên hệ & Hỗ trợ') }}
+                                        </h4>
+                                        <div class="grid md:grid-cols-3 gap-4">
+                                            <div class="flex gap-3 items-center bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm">
+                                                <div class="w-10 h-10 bg-vttu-red/10 text-vttu-red rounded-lg flex items-center justify-center flex-shrink-0">
+                                                    <i class="fas fa-phone"></i>
+                                                </div>
+                                                <div class="overflow-hidden">
+                                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{{ __('Điện thoại') }}</p>
+                                                    <p class="text-slate-800 font-bold text-xs truncate">{{ $phone }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-3 items-center bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm">
+                                                <div class="w-10 h-10 bg-vttu-red/10 text-vttu-red rounded-lg flex items-center justify-center flex-shrink-0">
+                                                    <i class="fas fa-envelope"></i>
+                                                </div>
+                                                <div class="overflow-hidden">
+                                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{{ __('Email') }}</p>
+                                                    <p class="text-slate-800 font-bold text-xs truncate">{{ $email }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-3 items-center bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm">
+                                                <div class="w-10 h-10 bg-vttu-red/10 text-vttu-red rounded-lg flex items-center justify-center flex-shrink-0">
+                                                    <i class="fas fa-map-pin"></i>
+                                                </div>
+                                                <div class="overflow-hidden">
+                                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{{ __('Địa chỉ') }}</p>
+                                                    <p class="text-slate-800 font-bold text-xs truncate">{{ $address }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             @else
                                 {!! $node->content !!}
                             @endif

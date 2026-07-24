@@ -188,6 +188,10 @@
                                     <input type="url" name="link_url" required placeholder="https://..." class="w-full h-9 bg-background border border-border rounded-sm px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none transition-all">
                                 </div>
                                 <div class="space-y-1.5 sm:col-span-2">
+                                    <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{{ __('Mô tả Banner') }}</label>
+                                    <input type="text" name="description" placeholder="{{ __('Mô tả ngắn về banner (tùy chọn)...') }}" class="w-full h-9 bg-background border border-border rounded-sm px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary outline-none transition-all">
+                                </div>
+                                <div class="space-y-1.5 sm:col-span-2">
                                     <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{{ __('Ảnh Banner') }} *</label>
                                     <label class="flex items-center gap-1.5 px-2.5 h-9 bg-background border border-border border-dashed rounded-sm cursor-pointer hover:bg-muted/50 transition-all group">
                                         <i data-lucide="cloud-upload" class="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0"></i>
@@ -214,7 +218,7 @@
                     <!-- List Banners -->
                     @php $banners = \App\Models\Banner::orderBy('sort_order')->orderBy('created_at', 'desc')->get(); @endphp
                     @if($banners->count() > 0)
-                        <div class="space-y-0 border border-border rounded overflow-hidden">
+                        <div class="space-y-0 border border-border rounded overflow-hidden" x-data="{ editingBanner: null }">
                             @foreach($banners as $banner)
                                 <div class="flex items-center gap-2 p-2.5 bg-card border-b border-border last:border-b-0 hover:bg-muted/50 transition-all group">
                                     @if($banner->image_url && file_exists(storage_path('app/public/' . $banner->image_url)))
@@ -233,9 +237,18 @@
                                                 {{ $banner->status === 'active' ? 'Hoạt động' : 'Ẩn' }}
                                             </span>
                                         </div>
-                                        <a href="{{ $banner->link_url }}" target="_blank" class="text-[9px] text-blue-600 hover:underline truncate block">{{ $banner->link_url }}</a>
+                                        @if($banner->description)
+                                            <p class="text-[10px] text-muted-foreground truncate mt-0.5">{{ $banner->description }}</p>
+                                        @endif
+                                        <a href="{{ $banner->link_url }}" target="_blank" class="text-[9px] text-blue-600 hover:underline truncate block mt-0.5">{{ $banner->link_url }}</a>
                                     </div>
                                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button type="button"
+                                                @click="editingBanner = { id: {{ $banner->id }}, title: '{{ addslashes($banner->title) }}', description: '{{ addslashes($banner->description ?? '') }}', link_url: '{{ addslashes($banner->link_url) }}', image_url: '{{ asset('storage/' . $banner->image_url) }}', action: '{{ route('admin.site-nodes.update-banner', $banner->id) }}' }"
+                                                class="p-1.5 rounded-sm bg-blue-500/10 hover:bg-blue-500 text-blue-600 hover:text-white border-blue-500/20 transition-all border"
+                                                title="{{ __('Sửa banner') }}">
+                                            <i data-lucide="pencil" class="w-3 h-3"></i>
+                                        </button>
                                         <button type="button" 
                                                 id="banner-btn-{{ $banner->id }}"
                                                 onclick="toggleBannerStatus({{ $banner->id }})"
@@ -251,6 +264,52 @@
                                     </div>
                                 </div>
                             @endforeach
+
+                            <!-- Edit Banner Modal -->
+                            <div x-show="editingBanner" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+                                <div class="bg-card border border-border rounded-lg shadow-xl w-full max-w-md p-4 space-y-3" @click.outside="editingBanner = null">
+                                    <div class="flex items-center justify-between pb-2 border-b border-border">
+                                        <h3 class="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                                            <i data-lucide="pencil" class="w-4 h-4"></i>
+                                            {{ __('Chỉnh sửa Banner') }}
+                                        </h3>
+                                        <button type="button" @click="editingBanner = null" class="text-muted-foreground hover:text-foreground p-1 rounded">
+                                            <i data-lucide="x" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                    <form :action="editingBanner?.action" method="POST" enctype="multipart/form-data" class="space-y-3" x-data="{ newFileName: '' }">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="space-y-1.5">
+                                            <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{{ __('Tên Banner') }} *</label>
+                                            <input type="text" name="title" x-model="editingBanner.title" required class="w-full h-9 bg-background border border-border rounded-sm px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary outline-none">
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{{ __('Mô tả Banner') }}</label>
+                                            <input type="text" name="description" x-model="editingBanner.description" placeholder="{{ __('Mô tả ngắn về banner...') }}" class="w-full h-9 bg-background border border-border rounded-sm px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary outline-none">
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{{ __('Link URL Redirect') }} *</label>
+                                            <input type="url" name="link_url" x-model="editingBanner.link_url" required class="w-full h-9 bg-background border border-border rounded-sm px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary outline-none">
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{{ __('Thay đổi ảnh (Tùy chọn)') }}</label>
+                                            <div class="flex items-center gap-2">
+                                                <img :src="editingBanner?.image_url" class="h-10 w-20 object-contain rounded border border-border bg-background flex-shrink-0">
+                                                <label class="flex-1 flex items-center gap-1.5 px-2.5 h-9 bg-background border border-border border-dashed rounded-sm cursor-pointer hover:bg-muted/50 transition-all">
+                                                    <i data-lucide="cloud-upload" class="w-4 h-4 text-muted-foreground flex-shrink-0"></i>
+                                                    <span class="text-xs text-muted-foreground truncate" x-text="newFileName || 'Chọn ảnh mới...'"></span>
+                                                    <input type="file" name="image_path" accept="image/*" class="hidden" @change="newFileName = $event.target.files[0]?.name">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-end gap-2 pt-2 border-t border-border">
+                                            <button type="button" @click="editingBanner = null" class="px-3 py-1.5 bg-muted hover:bg-muted/80 text-muted-foreground text-xs font-bold rounded-sm">{{ __('Hủy') }}</button>
+                                            <button type="submit" class="px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-sm shadow-sm">{{ __('Lưu thay đổi') }}</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     @else
                         <div class="flex flex-col items-center justify-center p-4 bg-muted/20 border border-border border-dashed rounded text-center">
