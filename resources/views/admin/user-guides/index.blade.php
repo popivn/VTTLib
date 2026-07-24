@@ -62,6 +62,8 @@
                 $conditionDesc = $json['condition_desc'] ?? '';
                 $stepsTitle = $json['steps_title'] ?? 'Các bước thực hiện:';
                 $steps = $json['steps'] ?? [];
+                $section2Title = $json['section2_title'] ?? '';
+                $section2Steps = $json['section2_steps'] ?? [];
                 $videoTitle = $json['video_title'] ?? 'Bạn đọc vui lòng xem video hướng dẫn dưới đây:';
                 $uploadedVideoUrl = $json['uploaded_video_url'] ?? '';
                 $embedVideoUrl = $json['embed_video_url'] ?? ($json['video_url'] ?? '');
@@ -76,6 +78,7 @@
                           uploadedFileName: '',
                           newFilePreviewUrl: '',
                           stepsList: {{ json_encode(!empty($steps) ? $steps : [['title' => '', 'content' => '', 'link_url' => '']]) }},
+                          section2StepsList: {{ json_encode(!empty($section2Steps) ? $section2Steps : []) }},
                           addStep() {
                               this.stepsList.push({ title: '', content: '', link_url: '' });
                           },
@@ -83,6 +86,12 @@
                               if (this.stepsList.length > 1) {
                                   this.stepsList.splice(index, 1);
                               }
+                          },
+                          addSection2Step() {
+                              this.section2StepsList.push({ title: '', content: '', link_url: '' });
+                          },
+                          removeSection2Step(index) {
+                              this.section2StepsList.splice(index, 1);
                           },
                           formatText(index, command, value = null) {
                               let editor = document.getElementById('visual_editor_' + '{{ $node->node_code }}' + '_' + index);
@@ -98,8 +107,25 @@
                               }
                               this.stepsList[index].content = editor.innerHTML;
                           },
+                          formatSection2Text(index, command, value = null) {
+                              let editor = document.getElementById('visual_editor_sec2_' + '{{ $node->node_code }}' + '_' + index);
+                              if (!editor) return;
+                              editor.focus();
+                              if (command === 'createLink') {
+                                  let url = prompt('Nhập đường dẫn URL liên kết (Ví dụ: /opac hoặc https://...):', 'https://');
+                                  if (url) {
+                                      document.execCommand('createLink', false, url);
+                                  }
+                              } else {
+                                  document.execCommand(command, false, value);
+                              }
+                              this.section2StepsList[index].content = editor.innerHTML;
+                          },
                           syncContent(index, event) {
                               this.stepsList[index].content = event.target.innerHTML;
+                          },
+                          syncSection2Content(index, event) {
+                              this.section2StepsList[index].content = event.target.innerHTML;
                           },
                           get activePreviewUrl() {
                               if (this.videoSource === 'file') {
@@ -223,6 +249,80 @@
                                     </div>
                                 </div>
 
+                                <!-- 2.5 Section 2 Steps Management (e.g. Gia hạn tài liệu) -->
+                                <div class="space-y-3 pt-3 border-t border-border">
+                                    <div class="flex items-center justify-between">
+                                        <label class="text-[10px] font-bold text-primary uppercase tracking-wide flex items-center gap-1.5">
+                                            <i class="fas fa-list-ol"></i>
+                                            {{ __('Các bước thực hiện Phần 2 (Tùy chọn - Ví dụ: Gia hạn)') }}
+                                        </label>
+                                        <button type="button" @click="addSection2Step()" class="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-bold rounded-md border border-primary/20 flex items-center gap-1 transition-all">
+                                            <i class="fas fa-plus text-[9px]"></i>
+                                            {{ __('Thêm bước phần 2') }}
+                                        </button>
+                                    </div>
+
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{{ __('Tiêu đề khối Phần 2') }}</label>
+                                        <input type="text" name="section2_title" value="{{ $section2Title }}" placeholder="Ví dụ: 2. Gia hạn tài liệu trực tuyến:" class="w-full h-9 bg-background border border-border rounded-lg px-3 text-xs text-foreground focus:ring-1 focus:ring-primary outline-none font-bold">
+                                    </div>
+
+                                    <!-- Dynamic Section 2 Steps Container -->
+                                    <div class="space-y-4 pt-1" x-show="section2StepsList.length > 0 || '{{ $node->node_code }}' === 'muon-truoc-gia-han'">
+                                        <template x-for="(step, index) in section2StepsList" :key="index">
+                                            <div class="p-4 bg-muted/20 border border-border rounded-xl space-y-3 relative group hover:border-primary/40 transition-all shadow-xs">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[10px] font-bold bg-secondary text-secondary-foreground">
+                                                        <span>{{ __('Phần 2 - Bước') }}</span>
+                                                        <span x-text="index + 1"></span>
+                                                    </span>
+
+                                                    <button type="button" @click="removeSection2Step(index)" class="text-muted-foreground hover:text-red-500 text-xs p-1 transition-colors" title="Xóa bước này">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </div>
+
+                                                <!-- Step Title -->
+                                                <div class="space-y-1">
+                                                    <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{{ __('Tên bước') }}</label>
+                                                    <input type="text" :name="'section2_steps[' + index + '][title]'" x-model="step.title" placeholder="Ví dụ: Yêu cầu gia hạn" class="w-full h-9 bg-background border border-border rounded-lg px-3 text-xs text-foreground font-bold focus:ring-1 focus:ring-primary outline-none">
+                                                </div>
+
+                                                <!-- Visual Content Editor -->
+                                                <div class="space-y-1.5">
+                                                    <div class="flex items-center justify-between gap-1">
+                                                        <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{{ __('Nội dung bước') }}</label>
+                                                        
+                                                        <div class="flex items-center gap-1 bg-background border border-border rounded-md p-1 shadow-2xs">
+                                                            <button type="button" @click="formatSection2Text(index, 'bold')" class="w-6 h-6 hover:bg-muted text-xs font-black text-foreground rounded flex items-center justify-center transition-colors" title="Bôi đen rồi bấm [B] để tô đậm">
+                                                                <b>B</b>
+                                                            </button>
+                                                            <button type="button" @click="formatSection2Text(index, 'italic')" class="w-6 h-6 hover:bg-muted text-xs italic font-bold text-foreground rounded flex items-center justify-center transition-colors" title="Bôi đen rồi bấm [I] để in nghiêng">
+                                                                <i>I</i>
+                                                            </button>
+                                                            <div class="w-px h-3 bg-border"></div>
+                                                            <button type="button" @click="formatSection2Text(index, 'createLink')" class="px-2 h-6 hover:bg-primary/10 text-primary text-[10px] font-bold rounded flex items-center gap-1 transition-colors" title="Chèn Link">
+                                                                <i class="fas fa-link text-[9px]"></i>
+                                                                <span>{{ __('Chèn Link') }}</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <input type="hidden" :name="'section2_steps[' + index + '][content]'" :value="step.content">
+
+                                                    <div :id="'visual_editor_sec2_' + '{{ $node->node_code }}' + '_' + index" 
+                                                         contenteditable="true" 
+                                                         @input="syncSection2Content(index, $event)" 
+                                                         x-html="step.content || ''" 
+                                                         placeholder="Nhập nội dung bước phần 2..." 
+                                                         class="w-full min-h-[70px] bg-background border border-border rounded-lg p-3 text-xs text-foreground leading-relaxed focus:ring-1 focus:ring-primary outline-none font-sans prose dark:prose-invert max-w-none">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
                                 <!-- 3. Video Settings Section -->
                                 <div class="space-y-3 pt-3 border-t border-border">
                                     <div class="space-y-1.5">
@@ -293,6 +393,26 @@
 
                                     <div class="space-y-2">
                                         <template x-for="(st, idx) in stepsList" :key="idx">
+                                            <div x-show="st.title || st.content" class="flex gap-3 p-3 bg-card border border-border rounded-md shadow-2xs">
+                                                <div class="w-6 h-6 bg-vttu-red/10 text-vttu-red rounded flex items-center justify-center font-bold text-xs flex-shrink-0" x-text="idx + 1"></div>
+                                                <div class="space-y-0.5 flex-1 min-w-0">
+                                                    <h5 class="font-bold text-foreground text-xs" x-text="st.title || 'Bước ' + (idx + 1)"></h5>
+                                                    <div class="text-xs text-muted-foreground leading-relaxed break-words prose dark:prose-invert max-w-none" x-html="st.content || ''"></div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Section 2 Preview -->
+                                <div class="space-y-3 pt-3 border-t border-border" x-show="section2StepsList.length > 0">
+                                    <h4 class="font-bold text-foreground text-xs flex items-center gap-2 border-b border-border pb-2">
+                                        <i class="fas fa-info-circle text-vttu-red"></i>
+                                        <span x-text="section2Title || '2. Gia hạn tài liệu trực tuyến:'"></span>
+                                    </h4>
+
+                                    <div class="space-y-2">
+                                        <template x-for="(st, idx) in section2StepsList" :key="idx">
                                             <div x-show="st.title || st.content" class="flex gap-3 p-3 bg-card border border-border rounded-md shadow-2xs">
                                                 <div class="w-6 h-6 bg-vttu-red/10 text-vttu-red rounded flex items-center justify-center font-bold text-xs flex-shrink-0" x-text="idx + 1"></div>
                                                 <div class="space-y-0.5 flex-1 min-w-0">

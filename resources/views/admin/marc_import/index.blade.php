@@ -6,7 +6,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
             <h2 class="text-lg font-bold text-foreground tracking-tight">{{ __('MARC Records Import') }}</h2>
-            <p class="text-xs text-muted-foreground mt-0.5">{{ __('Import từ file Excel hoặc file MARC (.mrc, .txt)') }}</p>
+            <p class="text-xs text-muted-foreground mt-0.5">{{ __('Import biên mục từ file chuẩn MARC21 (.mrc, .txt)') }}</p>
         </div>
         <a href="{{ route('admin.marc.book') }}" class="btn-compact-secondary">
             <i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i>
@@ -14,208 +14,17 @@
         </a>
     </div>
 
-    <!-- Tab Navigation -->
-    <div class="bg-card text-foreground rounded-md border border-border shadow-sm overflow-hidden">
-        <div class="flex border-b border-border">
-            <button type="button" id="tabExcel" onclick="switchTab('excel')"
-                class="flex-1 py-2 px-3 text-xs font-semibold border-b-2 border-primary text-primary bg-primary/5 transition duration-200 flex items-center justify-center gap-1.5">
-                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-                <span>{{ __('Import từ Excel') }}</span>
-            </button>
-            <button type="button" id="tabMarc" onclick="switchTab('marc')"
-                class="flex-1 py-2 px-3 text-xs font-semibold border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 transition duration-200 flex items-center justify-center gap-1.5">
-                <i data-lucide="database" class="w-4 h-4"></i>
-                <span>{{ __('Import từ file MARC (.mrc / .txt)') }}</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- TAB 1: EXCEL IMPORT -->
-    <!-- ============================================================ -->
-    <div id="panelExcel" class="space-y-4">
-        <!-- Import Form -->
-        <div class="bg-card text-foreground rounded-md border border-border shadow-sm overflow-hidden">
-            <div class="p-3">
-                <form id="importForm" enctype="multipart/form-data">
-                    @csrf
-
-                    <!-- Framework Selection -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <div class="space-y-1">
-                            <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
-                                {{ __('Cataloging Framework') }} <span class="text-destructive">*</span>
-                            </label>
-                            <select name="framework_id" id="framework_id" required
-                                class="w-full h-9 px-3 py-1.5 text-sm border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
-                                <option value="">{{ __('Select Framework') }}</option>
-                                @foreach($frameworks as $framework)
-                                <option value="{{ $framework->id }}">{{ $framework->name }} ({{ $framework->code }})</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
-                                {{ __('Action Type') }} <span class="text-destructive">*</span>
-                            </label>
-                            <select name="action_type" id="action_type" required
-                                class="w-full h-9 px-3 py-1.5 text-sm border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
-                                <option value="create">{{ __('Create New Records') }}</option>
-                                <option value="update">{{ __('Update Existing Records') }}</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- File Upload -->
-                    <div class="mb-3">
-                        <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">
-                            {{ __('Excel File') }} <span class="text-destructive">*</span>
-                        </label>
-                        <div id="dropZone" class="border-2 border-dashed border-border rounded-md p-6 text-center hover:border-primary transition-all duration-200 bg-muted/20">
-                            <input type="file" name="excel_file" id="excel_file" accept=".xlsx,.xls,.csv" required class="hidden">
-                            <label for="excel_file" class="cursor-pointer block">
-                                <div id="uploadPlaceholder" class="flex flex-col items-center">
-                                    <div class="w-12 h-12 bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center justify-center mb-2">
-                                        <i data-lucide="upload-cloud" class="w-6 h-6"></i>
-                                    </div>
-                                    <span class="text-xs font-semibold text-foreground">{{ __('Click to upload or drag and drop') }}</span>
-                                    <span class="text-[10px] text-muted-foreground mt-0.5">{{ __('XLSX, XLS, CSV (Max 10MB)') }}</span>
-                                </div>
-
-                                <div id="fileSelectedState" class="hidden flex flex-col items-center">
-                                    <div class="w-12 h-12 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full flex items-center justify-center mb-2 animate-bounce">
-                                        <i data-lucide="check-circle" class="w-6 h-6"></i>
-                                    </div>
-                                    <span id="selectedFileName" class="text-xs font-bold text-emerald-600 dark:text-emerald-400"></span>
-                                    <span id="selectedFileSize" class="text-[10px] text-muted-foreground mt-0.5"></span>
-                                    <button type="button" onclick="document.getElementById('resetBtn').click()" class="mt-2 text-[10px] text-destructive hover:underline">{{ __('Remove file') }}</button>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Template Download -->
-                    <div class="bg-primary/5 border border-primary/15 rounded-sm p-3 mb-3 flex items-start gap-3">
-                        <i data-lucide="info" class="w-4 h-4 text-primary shrink-0 mt-0.5"></i>
-                        <div>
-                            <h4 class="text-xs font-bold text-primary">{{ __('Download Template') }}</h4>
-                            <p class="text-[10px] text-muted-foreground mt-0.5">{{ __('Download the Excel template to ensure proper data format') }}</p>
-                            <button type="button" id="downloadTemplate" disabled class="mt-2 btn-compact-primary text-[10px] py-1 px-3">
-                                <i data-lucide="download" class="w-3.5 h-3.5 mr-1"></i>
-                                {{ __('Download Template') }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="flex gap-2">
-                        <button type="submit" id="uploadBtn" disabled class="flex-grow btn-compact-primary py-2.5 h-10 flex items-center justify-center gap-1.5">
-                            <i data-lucide="upload-cloud" class="w-4 h-4"></i>
-                            <span class="uppercase font-bold tracking-wider text-xs">{{ __('Upload & Validate') }}</span>
-                        </button>
-                        <button type="button" id="resetBtn" class="btn-compact-secondary py-2.5 h-10 px-6 flex items-center justify-center">
-                            {{ __('Reset') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Validation Results -->
-        <div id="validationResults" class="hidden bg-card text-foreground rounded-md border border-border shadow-sm overflow-hidden">
-            <div class="p-3">
-                <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-3">{{ __('Validation Results') }}</h3>
-
-                <!-- Summary -->
-                <div class="grid grid-cols-3 gap-3 mb-3">
-                    <div class="bg-muted/50 rounded-sm border border-border p-3 text-center">
-                        <div class="text-lg font-bold text-foreground" id="totalRows">0</div>
-                        <div class="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-0.5">{{ __('Total Rows') }}</div>
-                    </div>
-                    <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-sm p-3 text-center">
-                        <div class="text-lg font-bold text-emerald-600 dark:text-emerald-400" id="validRows">0</div>
-                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold tracking-wider mt-0.5">{{ __('Valid Rows') }}</div>
-                    </div>
-                    <div class="bg-destructive/10 border border-destructive/20 rounded-sm p-3 text-center">
-                        <div class="text-lg font-bold text-destructive" id="invalidRows">0</div>
-                        <div class="text-[10px] text-destructive uppercase font-bold tracking-wider mt-0.5">{{ __('Invalid Rows') }}</div>
-                    </div>
-                </div>
-
-                <!-- Preview -->
-                <div class="mb-3">
-                    <h4 class="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-2">{{ __('Preview (First 5 valid records)') }}</h4>
-                    <div id="previewContainer" class="grid grid-cols-1 gap-3"></div>
-                </div>
-
-                <!-- Errors -->
-                <div id="errorsSection" class="hidden mb-3">
-                    <h4 class="text-[10px] text-destructive uppercase font-bold tracking-wider mb-1.5">{{ __('Validation Errors') }}</h4>
-                    <div class="bg-destructive/5 border border-destructive/15 rounded-sm p-3 max-h-60 overflow-y-auto">
-                        <div id="errorsList" class="space-y-1.5 text-xs"></div>
-                    </div>
-
-                    <!-- Suggested Action: Create Framework -->
-                    <div id="createFrameworkSection" class="hidden mt-3 p-3 bg-primary/5 border border-primary/15 rounded-sm">
-                        <div class="flex items-start gap-3">
-                            <i data-lucide="plus-circle" class="w-4 h-4 text-primary shrink-0 mt-0.5"></i>
-                            <div>
-                                <h5 class="text-xs font-bold text-primary">{{ __('Dữ liệu không khớp với khung đã chọn?') }}</h5>
-                                <p class="text-[10px] text-muted-foreground mt-0.5">
-                                    {{ __('Có vẻ như file của bạn có cấu trúc cột khác với Khung biên mục hiện tại. Bạn có muốn hệ thống tự động tạo một Khung biên mục mới dựa trên các tiêu đề cột trong file này không?') }}
-                                </p>
-                                <button type="button" id="createFrameworkBtn" class="mt-2 btn-compact-primary py-1 px-3 text-[10px]">
-                                    {{ __('Tạo Khung biên mục mới từ file này') }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex gap-2">
-                    <button type="button" id="processBtn" disabled class="flex-grow btn-compact-primary py-2.5 h-10 flex items-center justify-center gap-1.5">
-                        <i data-lucide="check" class="w-4 h-4"></i>
-                        <span class="uppercase font-bold tracking-wider text-xs">{{ __('Process Import') }}</span>
-                    </button>
-                    <button type="button" id="cancelBtn" class="btn-compact-secondary py-2.5 h-10 px-6 flex items-center justify-center">
-                        {{ __('Cancel') }}
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Processing Results -->
-        <div id="processingResults" class="hidden bg-card text-foreground rounded-md border border-border shadow-sm overflow-hidden">
-            <div class="p-3">
-                <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-3">{{ __('Import Results') }}</h3>
-                <div id="processingResultsContent"></div>
-            </div>
-        </div>
-    </div><!-- /panelExcel -->
-
-    <!-- ============================================================ -->
-    <!-- TAB 2: MARC FILE IMPORT (.mrc / .txt) -->
-    <!-- ============================================================ -->
-    <div id="panelMarc" class="hidden space-y-4">
+    <!-- MARC FILE IMPORT (.mrc / .txt) -->
+    <div id="panelMarc" class="space-y-4">
         <!-- MARC Upload Form -->
         <div class="bg-card text-foreground rounded-md border border-border shadow-sm overflow-hidden">
             <div class="p-3">
                 <form id="marcImportForm" enctype="multipart/form-data">
                     @csrf
+                    <input type="hidden" name="action_type" value="create">
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <div class="space-y-1">
-                            <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
-                                {{ __('Loại thao tác') }} <span class="text-destructive">*</span>
-                            </label>
-                            <select name="action_type" id="marc_action_type" required
-                                class="w-full h-9 px-3 py-1.5 text-sm border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
-                                <option value="create">{{ __('Tạo bản ghi mới') }}</option>
-                                <option value="update">{{ __('Cập nhật bản ghi đã có') }}</option>
-                            </select>
-                        </div>
+                    <!-- Options -->
+                    <div class="grid grid-cols-1 gap-3 mb-3">
                         <div class="space-y-1">
                             <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
                                 {{ __('Khung biên mục (tuỳ chọn)') }}
@@ -320,13 +129,13 @@
                 </div>
             </div>
 
-            <!-- Extracted Framework -->
+            <!-- Extracted Framework & Tag Selection -->
             <div class="bg-card text-foreground rounded-md border border-border shadow-sm overflow-hidden">
                 <div class="p-3">
                     <div class="flex justify-between items-center mb-3">
                         <div>
-                            <h3 class="text-xs font-bold text-foreground uppercase tracking-wider">{{ __('Khung biên mục trích xuất') }}</h3>
-                            <p class="text-[10px] text-muted-foreground mt-0.5">{{ __('Các trường MARC được phát hiện trong file. Bạn có muốn lưu khung này không?') }}</p>
+                            <h3 class="text-xs font-bold text-foreground uppercase tracking-wider">{{ __('Khung biên mục trích xuất & Lọc Tag Import') }}</h3>
+                            <p class="text-[10px] text-muted-foreground mt-0.5">{{ __('Tick chọn các Tag MARC bạn muốn import vào hệ thống (Bỏ chọn nếu muốn loại bỏ Tag nội bộ như 930, 941...)') }}</p>
                         </div>
                         <button type="button" id="saveFrameworkBtn" class="btn-compact-primary py-2 px-3 text-xs flex items-center gap-1">
                             <i data-lucide="save" class="w-3.5 h-3.5"></i>
@@ -338,6 +147,9 @@
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-muted/50 border-b border-border text-muted-foreground uppercase font-bold text-[10px] tracking-wider">
                                 <tr>
+                                    <th class="py-2 px-3 w-10 text-center">
+                                        <input type="checkbox" id="selectAllTagsCheckbox" checked class="w-3.5 h-3.5 rounded border-border text-primary focus:ring-primary/20 cursor-pointer">
+                                    </th>
                                     <th class="py-2 px-3 w-20">{{ __('Tag') }}</th>
                                     <th class="py-2 px-3">{{ __('Tên trường') }}</th>
                                     <th class="py-2 px-3 w-40">{{ __('Trường con') }}</th>
@@ -354,17 +166,7 @@
             <div class="bg-card text-foreground rounded-md border border-border shadow-sm overflow-hidden">
                 <div class="p-3">
                     <h3 class="text-xs font-bold text-foreground uppercase tracking-wider mb-3">{{ __('Xác nhận Import') }}</h3>
-
-                    <div id="marcFrameworkSelection" class="mb-3">
-                        <label class="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">
-                            {{ __('Chọn khung biên mục để import') }} <span class="text-destructive">*</span>
-                        </label>
-                        <select id="marcProcessFramework"
-                            class="w-full h-9 px-3 py-1.5 text-sm border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
-                            <option value="">{{ __('-- Upload file để xem khung phù hợp --') }}</option>
-                        </select>
-                        <p class="text-[9px] text-muted-foreground mt-0.5">{{ __('Dropdown sẽ tự cập nhật sau khi upload file, hiển thị khung phù hợp với dấu ✅') }}</p>
-                    </div>
+                    <input type="hidden" id="marcProcessFramework" value="__create_new__">
 
                     <div class="flex space-x-3">
                         <button type="button" id="marcProcessBtn" disabled class="flex-grow btn-compact-primary py-2.5 h-10 flex items-center justify-center gap-1.5">
@@ -392,6 +194,40 @@
 
 @push('scripts')
 <script>
+    // Translations object - extracted from Blade to avoid IDE parser issues with curly braces inside template literals
+    const __ = {
+        row: "{{ __('Row') }}",
+        title: "{{ __('Title') }}",
+        status: "{{ __('Status') }}",
+        details: "{{ __('Details') }}",
+        totalProcessed: "{{ __('Total Processed') }}",
+        successful: "{{ __('Successful') }}",
+        success: "{{ __('Success') }}",
+        failed: "{{ __('Failed') }}",
+        done: "{{ __('Done') }}",
+        processImport: "{{ __('Process Import') }}",
+        uploadValidate: "{{ __('Upload & Validate') }}",
+        validating: "{{ __('Validating...') }}",
+        analyzing: "{{ __('Đang phân tích...') }}",
+        uploadAnalyze: "{{ __('Upload & Phân tích') }}",
+        year: "{{ __('Năm') }}",
+        record: "{{ __('Bản ghi') }}",
+        frameworkIncludes: "{{ __('Khung sẽ bao gồm') }}",
+        marcFields: "{{ __('trường MARC') }}",
+        creatingFramework: "{{ __('Đang tạo khung...') }}",
+        proceedImport: "{{ __('Tiến hành Import') }}",
+        importing: "{{ __('Đang import...') }}",
+        totalProcess: "{{ __('Tổng xử lý') }}",
+        successLabel: "{{ __('Thành công') }}",
+        failLabel: "{{ __('Thất bại') }}",
+        titleField: "{{ __('Nhan đề') }}",
+        statusField: "{{ __('Trạng thái') }}",
+        detailField: "{{ __('Chi tiết') }}",
+        ok: "{{ __('OK') }}",
+        errorLabel: "{{ __('Lỗi') }}",
+        complete: "{{ __('Hoàn tất') }}",
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
         let validImportData = [];
         const form = document.getElementById('importForm');
@@ -478,7 +314,7 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                {{ __('Validating...') }}
+                ${__.validating}
             `;
 
             try {
@@ -535,7 +371,7 @@
                 uploadBtn.disabled = false;
                 uploadBtn.innerHTML = `
                     <i data-lucide="upload-cloud" class="w-4 h-4"></i>
-                    <span class="uppercase font-bold tracking-wider text-xs">${actionTypeSelect.value === 'update' ? '{{ __('Upload & Validate') }}' : '{{ __('Upload & Validate') }}'}</span>
+                    <span class="uppercase font-bold tracking-wider text-xs">${__.uploadValidate}</span>
                 `;
                 lucide.createIcons();
             }
@@ -570,7 +406,7 @@
                 data.errors.forEach(error => {
                     const errorDiv = document.createElement('div');
                     errorDiv.className = 'flex items-start gap-1.5';
-                    errorDiv.innerHTML = `<span class="text-destructive font-medium">{{ __('Row') }} ${error.row_index}:</span> <span class="text-muted-foreground">${error.errors.join(', ')}</span>`;
+                    errorDiv.innerHTML = `<span class="text-destructive font-medium">${__.row} ${error.row_index}:</span> <span class="text-muted-foreground">${error.errors.join(', ')}</span>`;
                     errorsList.appendChild(errorDiv);
                 });
             } else {
@@ -595,25 +431,25 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                     <div class="p-3 bg-muted/50 rounded-sm border border-border text-center">
                         <div class="text-lg font-bold text-foreground">${total}</div>
-                        <div class="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-0.5">{{ __('Total Processed') }}</div>
+                        <div class="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-0.5">${__.totalProcessed}</div>
                     </div>
                     <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-sm text-center">
                         <div class="text-lg font-bold text-emerald-600 dark:text-emerald-400">${successCount}</div>
-                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold tracking-wider mt-0.5">{{ __('Successful') }}</div>
+                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold tracking-wider mt-0.5">${__.successful}</div>
                     </div>
                     <div class="p-3 bg-destructive/10 border border-destructive/20 rounded-sm text-center">
                         <div class="text-lg font-bold text-destructive">${failCount}</div>
-                        <div class="text-[10px] text-destructive uppercase font-bold tracking-wider mt-0.5">{{ __('Failed') }}</div>
+                        <div class="text-[10px] text-destructive uppercase font-bold tracking-wider mt-0.5">${__.failed}</div>
                     </div>
                 </div>
                 <div class="overflow-x-auto rounded-sm border border-border mb-3">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-muted/50 border-b border-border text-muted-foreground uppercase font-bold text-[10px] tracking-wider">
                             <tr>
-                                <th class="py-2 px-3 w-16">{{ __('Row') }}</th>
-                                <th class="py-2 px-3">{{ __('Title') }}</th>
-                                <th class="py-2 px-3 w-28">{{ __('Status') }}</th>
-                                <th class="py-2 px-3">{{ __('Details') }}</th>
+                                <th class="py-2 px-3 w-16">${__.row}</th>
+                                <th class="py-2 px-3">${__.title}</th>
+                                <th class="py-2 px-3 w-28">${__.status}</th>
+                                <th class="py-2 px-3">${__.details}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border text-xs">
@@ -623,7 +459,7 @@
                                     <td class="py-2 px-3 font-semibold">${result.title || '-'}</td>
                                     <td class="py-2 px-3">
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider border ${result.success ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'}">
-                                            ${result.success ? '{{ __("Success") }}' : '{{ __("Failed") }}'}
+                                            ${result.success ? __.success : __.failed}
                                         </span>
                                     </td>
                                     <td class="py-2 px-3 text-xs ${result.success ? 'text-muted-foreground' : 'text-destructive'}">
@@ -636,7 +472,7 @@
                 </div>
                 <div class="flex justify-end">
                     <button type="button" onclick="location.reload()" class="btn-compact-primary py-2 px-6">
-                        {{ __('Done') }}
+                        ${__.done}
                     </button>
                 </div>
             `;
@@ -770,7 +606,7 @@
                 });
             } finally {
                 this.disabled = false;
-                this.innerHTML = `{{ __('Process Import') }}`;
+                this.innerHTML = `${__.processImport}`;
             }
         });
 
@@ -798,6 +634,11 @@
         const activeClass = 'border-primary text-primary bg-primary/5';
         const inactiveClass = 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50';
 
+        // Update URL param
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tab);
+        window.history.replaceState({}, '', url);
+
         if (tab === 'excel') {
             panelExcel.classList.remove('hidden');
             panelMarc.classList.add('hidden');
@@ -810,6 +651,14 @@
             tabExcel.className = `flex-1 py-2 px-3 text-xs font-semibold border-b-2 ${inactiveClass} transition duration-200 flex items-center justify-center gap-1.5`;
         }
     }
+
+    // Auto-open tab from URL param on page load
+    (function() {
+        const urlTab = new URLSearchParams(window.location.search).get('tab');
+        if (urlTab === 'marc' || urlTab === 'excel') {
+            switchTab(urlTab);
+        }
+    })();
 
     // ========================================================================
     // MARC FILE IMPORT TAB LOGIC
@@ -881,7 +730,7 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                {{ __('Đang phân tích...') }}
+                ${__.analyzing}
             `;
 
             try {
@@ -925,45 +774,22 @@
                 marcUploadBtn.disabled = false;
                 marcUploadBtn.innerHTML = `
                     <i data-lucide="upload-cloud" class="w-4 h-4"></i>
-                    <span>{{ __('Upload & Phân tích') }}</span>
+                    <span>${__.uploadAnalyze}</span>
                 `;
                 lucide.createIcons();
             }
         });
 
+        let currentParsedRecords = [];
+
         function showMarcResults(data) {
             document.getElementById('marcTotalRecords').textContent = data.total_records;
             document.getElementById('marcValidRecords').textContent = data.valid_records;
             document.getElementById('marcInvalidRecords').textContent = data.invalid_records;
+            currentParsedRecords = data.parsed_records || [];
 
-            // Preview records
-            const previewContainer = document.getElementById('marcPreviewContainer');
-            previewContainer.innerHTML = '';
-            data.preview.forEach(rec => {
-                const card = document.createElement('div');
-                card.className = 'bg-muted/30 border border-border rounded-sm p-3';
-                let fieldsHtml = '';
-                if (rec.fields_summary) {
-                    fieldsHtml = '<div class="mt-2 space-y-0.5 border-t border-border pt-2">' +
-                        rec.fields_summary.map(f =>
-                            `<div class="flex text-xs items-baseline"><span class="w-12 font-mono font-bold text-primary shrink-0">${f.tag}</span><span class="text-muted-foreground w-40 truncate shrink-0">${f.label}</span><span class="text-foreground flex-grow truncate font-mono text-[11px]">${f.value}</span></div>`
-                        ).join('') +
-                    '</div>';
-                }
-                card.innerHTML = `
-                    <div class="flex justify-between items-center mb-1.5 pb-1.5 border-b border-border">
-                        <span class="text-xs font-bold text-primary">#${rec.row_index}</span>
-                        <div class="flex items-center space-x-3 text-[10px] text-muted-foreground font-mono">
-                            <span><strong>ISBN:</strong> ${rec.isbn || 'N/A'}</span>
-                            <span><strong>{{ __('Năm') }}:</strong> ${rec.year || 'N/A'}</span>
-                        </div>
-                    </div>
-                    <div class="text-xs font-bold text-foreground leading-tight">${rec.title || 'N/A'}</div>
-                    <div class="text-[10px] text-muted-foreground mt-0.5">${rec.author || 'N/A'} ${rec.publisher ? '— ' + rec.publisher : ''}</div>
-                    ${fieldsHtml}
-                `;
-                previewContainer.appendChild(card);
-            });
+            // Preview & Interactive Editor Records
+            renderInteractiveRecordsEditor(currentParsedRecords);
 
             // Errors
             const errorsSection = document.getElementById('marcErrorsSection');
@@ -974,7 +800,7 @@
                 data.errors.forEach(err => {
                     const div = document.createElement('div');
                     div.className = 'text-destructive';
-                    div.textContent = `{{ __('Bản ghi') }} #${err.row_index}: ${err.errors.join(', ')}`;
+                    div.textContent = `${__.record} #${err.row_index}: ${err.errors.join(', ')}`;
                     errorsList.appendChild(div);
                 });
             } else {
@@ -990,6 +816,9 @@
                 const tr = document.createElement('tr');
                 tr.className = 'table-row-hover';
                 tr.innerHTML = `
+                    <td class="py-2 px-3 text-center">
+                        <input type="checkbox" class="tag-select-checkbox w-3.5 h-3.5 rounded border-border text-primary focus:ring-primary/20 cursor-pointer" value="${tag.tag}" checked>
+                    </td>
                     <td class="py-2 px-3 font-mono font-bold text-primary">${tag.tag}</td>
                     <td class="py-2 px-3 text-foreground">${tag.label}</td>
                     <td class="py-2 px-3 font-mono text-muted-foreground">${sfCodes || '-'}</td>
@@ -997,60 +826,304 @@
                 fwBody.appendChild(tr);
             });
 
-            // Rebuild framework dropdown with matching info
+            // Select all checkbox handler
+            document.getElementById('selectAllTagsCheckbox').checked = true;
+            document.getElementById('selectAllTagsCheckbox').onchange = function() {
+                const isChecked = this.checked;
+                document.querySelectorAll('.tag-select-checkbox').forEach(cb => cb.checked = isChecked);
+            };
+
+            // Default: always create new framework, auto-enable process button
             const marcProcessFramework = document.getElementById('marcProcessFramework');
             const marcProcessBtn = document.getElementById('marcProcessBtn');
-            marcProcessFramework.innerHTML = '';
-
-            // Option: create new from file
-            const createOpt = document.createElement('option');
-            createOpt.value = '__create_new__';
-            createOpt.textContent = '➕ {{ __("Tạo khung mới từ file MARC") }}';
-            createOpt.style.fontWeight = 'bold';
-            marcProcessFramework.appendChild(createOpt);
-
-            // Separator
-            const sepOpt = document.createElement('option');
-            sepOpt.disabled = true;
-            sepOpt.textContent = '─────────────────────────';
-            marcProcessFramework.appendChild(sepOpt);
-
-            // Matching frameworks from server
-            const matchingFws = data.matching_frameworks || [];
-            let bestMatchId = null;
-
-            matchingFws.forEach(fw => {
-                const opt = document.createElement('option');
-                opt.value = fw.id;
-                let label = `${fw.name} (${fw.code})`;
-                if (fw.is_compatible) {
-                    label += ` [Phù hợp ${fw.match_ratio}% (${fw.matched_tags}/${fw.total_file_tags} tags)]`;
-                    if (!bestMatchId) bestMatchId = fw.id;
-                } else {
-                    label += ` — ${fw.match_ratio}% (${fw.matched_tags}/${fw.total_file_tags} tags)`;
-                }
-                opt.textContent = label;
-                marcProcessFramework.appendChild(opt);
-            });
-
-            marcProcessFramework.addEventListener('change', function() {
-                marcProcessBtn.disabled = !this.value;
-            });
-
-            // Auto-select best match or create-new
-            const preSelectedFw = document.getElementById('marc_framework_id').value;
-            if (preSelectedFw) {
-                marcProcessFramework.value = preSelectedFw;
-            } else if (bestMatchId) {
-                marcProcessFramework.value = bestMatchId;
-            } else {
-                marcProcessFramework.value = '__create_new__';
-            }
+            marcProcessFramework.value = '__create_new__';
             marcProcessBtn.disabled = false;
 
             document.getElementById('marcValidationResults').classList.remove('hidden');
             document.getElementById('marcValidationResults').scrollIntoView({ behavior: 'smooth' });
         }
+
+        function renderInteractiveRecordsEditor(records) {
+            const previewContainer = document.getElementById('marcPreviewContainer');
+            previewContainer.innerHTML = '';
+
+            records.forEach((rec, recIdx) => {
+                const card = document.createElement('div');
+                card.className = 'bg-card border border-border rounded-md shadow-sm p-4 space-y-3';
+                
+                let fieldsRowsHtml = '';
+                const lockedTags = ['001', '005', '008'];
+
+                if (rec.fields) {
+                    Object.keys(rec.fields).forEach(tag => {
+                        const instances = rec.fields[tag];
+                        const isLocked = lockedTags.includes(tag);
+
+                        instances.forEach((inst, instIdx) => {
+                            const ind1 = inst.indicators ? inst.indicators[0] : '#';
+                            const ind2 = inst.indicators ? inst.indicators[1] : '#';
+
+                            let subfieldsHtml = '';
+                            if (inst.subfields) {
+                                inst.subfields.forEach((sf, sfIdx) => {
+                                    if (isLocked) {
+                                        subfieldsHtml += `
+                                            <div class="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded border border-border">
+                                                <span class="font-mono text-[11px] font-bold text-amber-600 dark:text-amber-400">$${sf.code}</span>
+                                                <span class="text-xs font-mono text-muted-foreground truncate select-all">${sf.value}</span>
+                                            </div>
+                                        `;
+                                    } else {
+                                        subfieldsHtml += `
+                                            <div class="flex items-center gap-1 bg-muted/20 p-1.5 rounded border border-border group/sf">
+                                                <span class="font-mono text-[11px] font-bold text-primary px-1">$${sf.code}</span>
+                                                <input type="text" 
+                                                       value="${sf.value.replace(/"/g, '&quot;')}" 
+                                                       data-rec="${recIdx}" data-tag="${tag}" data-inst="${instIdx}" data-sf="${sfIdx}"
+                                                       onchange="updateSubfieldValue(${recIdx}, '${tag}', ${instIdx}, ${sfIdx}, this.value)"
+                                                       class="w-full bg-background text-xs font-mono px-2 py-1 border border-input rounded text-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                                                <button type="button" 
+                                                        onclick="removeSubfield(${recIdx}, '${tag}', ${instIdx}, ${sfIdx})"
+                                                        class="p-1 text-muted-foreground hover:text-destructive transition-colors opacity-70 group-hover/sf:opacity-100" 
+                                                        title="Xoá subfield này">
+                                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </div>
+                                        `;
+                                    }
+                                });
+                            }
+
+                            fieldsRowsHtml += `
+                                <div class="p-2 rounded border border-border/80 ${isLocked ? 'bg-muted/40' : 'bg-muted/10'} space-y-2">
+                                    <div class="flex items-center justify-between gap-2 border-b border-border/50 pb-1.5">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-mono text-xs font-black ${isLocked ? 'text-amber-600 dark:text-amber-400' : 'text-primary'} bg-primary/10 px-2 py-0.5 rounded border border-primary/20">${tag}</span>
+                                            ${isLocked ? '<span class="text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Read-Only</span>' : ''}
+                                            ${!isLocked ? `
+                                                <div class="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
+                                                    <span>Ind1:</span>
+                                                    <input type="text" maxlength="1" value="${ind1}" 
+                                                           onchange="updateIndicator(${recIdx}, '${tag}', ${instIdx}, 0, this.value)"
+                                                           class="w-6 h-5 text-center bg-background border border-input rounded text-xs focus:ring-1 focus:ring-primary outline-none">
+                                                    <span>Ind2:</span>
+                                                    <input type="text" maxlength="1" value="${ind2}" 
+                                                           onchange="updateIndicator(${recIdx}, '${tag}', ${instIdx}, 1, this.value)"
+                                                           class="w-6 h-5 text-center bg-background border border-input rounded text-xs focus:ring-1 focus:ring-primary outline-none">
+                                                </div>
+                                            ` : ''}
+                                        </div>
+
+                                        ${!isLocked ? `
+                                            <div class="flex items-center gap-1">
+                                                <button type="button" onclick="promptAddSubfield(${recIdx}, '${tag}', ${instIdx})" 
+                                                        class="btn-compact-secondary text-[10px] py-0.5 px-2 flex items-center gap-1">
+                                                    <i data-lucide="plus" class="w-3 h-3"></i>
+                                                    <span>+ Subfield</span>
+                                                </button>
+                                                <button type="button" onclick="removeTag(${recIdx}, '${tag}', ${instIdx})" 
+                                                        class="p-1 text-muted-foreground hover:text-destructive transition-colors" title="Xoá Tag này">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+
+                                    <div class="space-y-1.5">
+                                        ${subfieldsHtml}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    });
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between pb-2 border-b border-border cursor-pointer select-none" 
+                         onclick="toggleRecordCollapse(${recIdx})">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 bg-primary/10 text-primary font-mono font-bold text-xs rounded border border-primary/20">Bản ghi #${rec.row_index}</span>
+                            <h4 class="text-xs font-bold text-foreground line-clamp-1">${rec.title || 'Untitled'}</h4>
+                        </div>
+                        <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+                            <button type="button" onclick="promptAddTag(${recIdx})" class="btn-compact-primary text-[10px] py-1 px-2.5 flex items-center gap-1">
+                                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                <span>+ Thêm Tag mới</span>
+                            </button>
+                            <button type="button" onclick="toggleRecordCollapse(${recIdx})" class="p-1 rounded text-muted-foreground hover:bg-muted transition-all">
+                                <i id="recordChevron_${recIdx}" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="recordBody_${recIdx}" class="space-y-2 pt-2 transition-all">
+                        ${fieldsRowsHtml}
+                    </div>
+                `;
+
+                previewContainer.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        window.toggleRecordCollapse = function(recIdx) {
+            const body = document.getElementById(`recordBody_${recIdx}`);
+            const chevron = document.getElementById(`recordChevron_${recIdx}`);
+            if (!body) return;
+
+            if (body.classList.contains('hidden')) {
+                body.classList.remove('hidden');
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            } else {
+                body.classList.add('hidden');
+                if (chevron) chevron.style.transform = 'rotate(-90deg)';
+            }
+        };
+
+        // Editor helper functions
+        window.updateSubfieldValue = function(recIdx, tag, instIdx, sfIdx, val) {
+            if (currentParsedRecords[recIdx]?.fields?.[tag]?.[instIdx]?.subfields?.[sfIdx]) {
+                currentParsedRecords[recIdx].fields[tag][instIdx].subfields[sfIdx].value = val;
+            }
+        };
+
+        window.updateIndicator = function(recIdx, tag, instIdx, indPos, val) {
+            if (currentParsedRecords[recIdx]?.fields?.[tag]?.[instIdx]) {
+                if (!currentParsedRecords[recIdx].fields[tag][instIdx].indicators) {
+                    currentParsedRecords[recIdx].fields[tag][instIdx].indicators = ['#', '#'];
+                }
+                currentParsedRecords[recIdx].fields[tag][instIdx].indicators[indPos] = val || '#';
+            }
+        };
+
+        window.removeSubfield = function(recIdx, tag, instIdx, sfIdx) {
+            if (currentParsedRecords[recIdx]?.fields?.[tag]?.[instIdx]?.subfields) {
+                currentParsedRecords[recIdx].fields[tag][instIdx].subfields.splice(sfIdx, 1);
+                renderInteractiveRecordsEditor(currentParsedRecords);
+            }
+        };
+
+        window.removeTag = function(recIdx, tag, instIdx) {
+            if (currentParsedRecords[recIdx]?.fields?.[tag]) {
+                currentParsedRecords[recIdx].fields[tag].splice(instIdx, 1);
+                if (currentParsedRecords[recIdx].fields[tag].length === 0) {
+                    delete currentParsedRecords[recIdx].fields[tag];
+                }
+                renderInteractiveRecordsEditor(currentParsedRecords);
+            }
+        };
+
+        window.promptAddSubfield = async function(recIdx, tag, instIdx) {
+            const { value: formValues } = await Swal.fire({
+                ...swalConfig,
+                title: `Thêm Subfield cho Tag ${tag}`,
+                html: `
+                    <div class="text-left space-y-3 pt-2">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-muted-foreground uppercase">Mã Subfield (VD: a, b, c, d...)</label>
+                            <input id="sfCode" class="w-full h-8 px-2 py-1 border border-input rounded text-xs font-mono uppercase bg-background text-foreground" placeholder="a">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-muted-foreground uppercase">Giá trị</label>
+                            <input id="sfVal" class="w-full h-8 px-2 py-1 border border-input rounded text-xs bg-background text-foreground" placeholder="Nhập giá trị...">
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Thêm',
+                cancelButtonText: 'Huỷ',
+                preConfirm: () => {
+                    const code = document.getElementById('sfCode').value.trim().toLowerCase();
+                    const value = document.getElementById('sfVal').value.trim();
+                    if (!code || !value) {
+                        Swal.showValidationMessage('Vui lòng nhập cả mã subfield và giá trị');
+                        return false;
+                    }
+                    return { code, value };
+                }
+            });
+
+            if (formValues) {
+                if (!currentParsedRecords[recIdx].fields[tag][instIdx].subfields) {
+                    currentParsedRecords[recIdx].fields[tag][instIdx].subfields = [];
+                }
+                currentParsedRecords[recIdx].fields[tag][instIdx].subfields.push(formValues);
+                renderInteractiveRecordsEditor(currentParsedRecords);
+            }
+        };
+
+        const availableTagDefs = @json($tagDefinitions ?? []);
+
+        window.promptAddTag = async function(recIdx) {
+            let optionsHtml = availableTagDefs.map(t => `<option value="${t.tag}">${t.tag} - ${t.label}</option>`).join('');
+            if (!optionsHtml) {
+                optionsHtml = '<option value="245">245 - Nhan đề chính</option><option value="100">100 - Tác giả chính</option><option value="260">260 - Xuất bản</option><option value="300">300 - Mô tả vật lý</option><option value="500">500 - Ghi chú chung</option>';
+            }
+
+            const { value: formValues } = await Swal.fire({
+                ...swalConfig,
+                title: 'Thêm Tag MARC mới',
+                html: `
+                    <div class="text-left space-y-3 pt-2">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-muted-foreground uppercase">Chọn Tag MARC có sẵn</label>
+                            <select id="selectTagCode" onchange="document.getElementById('newTagCode').value = this.value" class="w-full h-9 px-2 py-1 border border-input rounded text-xs bg-background text-foreground focus:ring-1 focus:ring-primary outline-none">
+                                <option value="">-- Chọn trường Tag MARC --</option>
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-muted-foreground uppercase">Hoặc nhập mã Tag thủ công (3 chữ số)</label>
+                            <input id="newTagCode" class="w-full h-8 px-2 py-1 border border-input rounded text-xs font-mono bg-background text-foreground" placeholder="245">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-muted-foreground uppercase">Mã Subfield đầu tiên (VD: a)</label>
+                            <input id="newSfCode" class="w-full h-8 px-2 py-1 border border-input rounded text-xs font-mono uppercase bg-background text-foreground" value="a">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-muted-foreground uppercase">Giá trị Subfield</label>
+                            <input id="newSfVal" class="w-full h-8 px-2 py-1 border border-input rounded text-xs bg-background text-foreground" placeholder="Nhập giá trị...">
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Thêm Tag',
+                cancelButtonText: 'Huỷ',
+                preConfirm: () => {
+                    const tag = document.getElementById('newTagCode').value.trim();
+                    const code = document.getElementById('newSfCode').value.trim().toLowerCase();
+                    const value = document.getElementById('newSfVal').value.trim();
+
+                    if (!/^\d{3}$/.test(tag)) {
+                        Swal.showValidationMessage('Mã Tag phải gồm đúng 3 chữ số (VD: 245, 100)');
+                        return false;
+                    }
+                    if (['001', '005', '008'].includes(tag)) {
+                        Swal.showValidationMessage('Không thể thêm thủ công các trường Control System (001, 005, 008)');
+                        return false;
+                    }
+                    if (!code || !value) {
+                        Swal.showValidationMessage('Vui lòng nhập đầy đủ mã subfield và giá trị');
+                        return false;
+                    }
+                    return { tag, code, value };
+                }
+            });
+
+            if (formValues) {
+                if (!currentParsedRecords[recIdx].fields[formValues.tag]) {
+                    currentParsedRecords[recIdx].fields[formValues.tag] = [];
+                }
+                currentParsedRecords[recIdx].fields[formValues.tag].push({
+                    indicators: ['#', '#'],
+                    subfields: [{ code: formValues.code, value: formValues.value }]
+                });
+                renderInteractiveRecordsEditor(currentParsedRecords);
+            }
+        };
 
         // Save framework button
         document.getElementById('saveFrameworkBtn').addEventListener('click', async function() {
@@ -1077,7 +1150,7 @@
                     '<label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">{{ __("Mã khung (viết tắt, không dấu)") }}</label>' +
                     '<input id="swal-fw-code" class="w-full h-9 px-3 py-1.5 bg-background border border-input rounded-sm text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none text-foreground font-mono" value="GIAOTRINH_' + ts + '" placeholder="{{ __("VD: SGTYKHOA") }}" style="text-transform:uppercase">' +
                     '</div>' +
-                    `<div class="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">{{ __("Khung sẽ bao gồm") }} <span class="text-primary">${extractedFrameworkData.length}</span> {{ __("trường MARC") }}</div>` +
+                    `<div class="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">${__.frameworkIncludes} <span class="text-primary">${extractedFrameworkData.length}</span> ${__.marcFields}</div>` +
                     '</div>',
                 focusConfirm: false,
                 showCancelButton: true,
@@ -1229,7 +1302,7 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {{ __('Đang tạo khung...') }}
+                    ${__.creatingFramework}
                 `;
 
                 try {
@@ -1286,7 +1359,7 @@
                     this.disabled = false;
                     this.innerHTML = `
                         <i data-lucide="check" class="w-4 h-4"></i>
-                        <span>{{ __('Tiến hành Import') }}</span>
+                        <span>${__.proceedImport}</span>
                     `;
                     lucide.createIcons();
                 }
@@ -1311,10 +1384,13 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                {{ __('Đang import...') }}
+                ${__.importing}
             `;
 
             try {
+                // Collect selected tags
+                const selectedTags = Array.from(document.querySelectorAll('.tag-select-checkbox:checked')).map(cb => cb.value);
+
                 const response = await fetch('{{ route("admin.marc.import.process-marc") }}', {
                     method: 'POST',
                     headers: {
@@ -1324,7 +1400,9 @@
                     },
                     body: JSON.stringify({
                         framework_id: frameworkId,
-                        action_type: actionType
+                        action_type: actionType,
+                        records: currentParsedRecords,
+                        selected_tags: selectedTags
                     })
                 });
 
@@ -1358,7 +1436,7 @@
                 this.disabled = false;
                 this.innerHTML = `
                     <i data-lucide="check" class="w-4 h-4"></i>
-                    <span>{{ __('Tiến hành Import') }}</span>
+                    <span>${__.proceedImport}</span>
                 `;
                 lucide.createIcons();
             }
@@ -1374,15 +1452,15 @@
                 <div class="grid grid-cols-3 gap-3 mb-3">
                     <div class="p-3 bg-muted/50 rounded-sm border border-border text-center">
                         <div class="text-lg font-bold text-foreground">${total}</div>
-                        <div class="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-0.5">{{ __('Tổng xử lý') }}</div>
+                        <div class="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-0.5">${__.totalProcess}</div>
                     </div>
                     <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-sm text-center">
                         <div class="text-lg font-bold text-emerald-600 dark:text-emerald-400">${successCount}</div>
-                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold tracking-wider mt-0.5">{{ __('Thành công') }}</div>
+                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold tracking-wider mt-0.5">${__.successLabel}</div>
                     </div>
                     <div class="p-3 bg-destructive/10 border border-destructive/20 rounded-sm text-center">
                         <div class="text-lg font-bold text-destructive">${failCount}</div>
-                        <div class="text-[10px] text-destructive uppercase font-bold tracking-wider mt-0.5">{{ __('Thất bại') }}</div>
+                        <div class="text-[10px] text-destructive uppercase font-bold tracking-wider mt-0.5">${__.failLabel}</div>
                     </div>
                 </div>
                 <div class="overflow-x-auto rounded-sm border border-border mb-3">
@@ -1390,9 +1468,9 @@
                         <thead class="bg-muted/50 border-b border-border text-muted-foreground uppercase font-bold text-[10px] tracking-wider">
                             <tr>
                                 <th class="py-2 px-3 w-16">#</th>
-                                <th class="py-2 px-3">{{ __('Nhan đề') }}</th>
-                                <th class="py-2 px-3 w-28">{{ __('Trạng thái') }}</th>
-                                <th class="py-2 px-3">{{ __('Chi tiết') }}</th>
+                                <th class="py-2 px-3">${__.titleField}</th>
+                                <th class="py-2 px-3 w-28">${__.statusField}</th>
+                                <th class="py-2 px-3">${__.detailField}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border text-xs">
@@ -1402,7 +1480,7 @@
                                     <td class="py-2 px-3 font-semibold">${r.title || '-'}</td>
                                     <td class="py-2 px-3">
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider border ${r.success ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'}">
-                                            ${r.success ? '{{ __("OK") }}' : '{{ __("Lỗi") }}'}
+                                            ${r.success ? __.ok : __.errorLabel}
                                         </span>
                                     </td>
                                     <td class="py-2 px-3 text-xs ${r.success ? 'text-muted-foreground' : 'text-destructive'}">
@@ -1415,7 +1493,7 @@
                 </div>
                 <div class="flex justify-end">
                     <button type="button" onclick="location.reload()" class="btn-compact-primary py-2 px-6">
-                        {{ __('Hoàn tất') }}
+                        ${__.complete}
                     </button>
                 </div>
             `;

@@ -228,6 +228,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
             'steps' => 'nullable|array',
             'steps.*.title' => 'nullable|string|max:255',
             'steps.*.content' => 'nullable|string|max:5000',
+            'section2_title' => 'nullable|string|max:255',
+            'section2_steps' => 'nullable|array',
+            'section2_steps.*.title' => 'nullable|string|max:255',
+            'section2_steps.*.content' => 'nullable|string|max:5000',
             'video_title' => 'nullable|string|max:255',
             'video_source' => 'required|in:file,url',
             'embed_video_url' => 'nullable|string|max:1000',
@@ -260,12 +264,28 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
             }
         }
 
+        // Clean section 2 steps array
+        $section2StepsList = [];
+        if (!empty($validated['section2_steps']) && is_array($validated['section2_steps'])) {
+            foreach ($validated['section2_steps'] as $idx => $step) {
+                if (!empty($step['title']) || !empty($step['content'])) {
+                    $section2StepsList[] = [
+                        'step_number' => count($section2StepsList) + 1,
+                        'title' => $step['title'] ?? '',
+                        'content' => $step['content'] ?? '',
+                    ];
+                }
+            }
+        }
+
         $contentData = [
             'title' => $validated['title'],
             'condition_title' => $validated['condition_title'] ?? '',
             'condition_desc' => $validated['condition_desc'] ?? '',
             'steps_title' => $validated['steps_title'] ?? 'Các bước thực hiện:',
             'steps' => $stepsList,
+            'section2_title' => $validated['section2_title'] ?? '',
+            'section2_steps' => $section2StepsList,
             'video_title' => $validated['video_title'] ?? '',
             'video_source' => $videoSource,
             'uploaded_video_url' => $uploadedVideoUrl,

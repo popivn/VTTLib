@@ -71,7 +71,7 @@ class MarcFrameworkService
                 $tagDef = MarcTagDefinition::firstOrCreate(
                     ['tag' => $tag],
                     [
-                        'name' => $this->labelService->getTagLabel($tag),
+                        'label' => $this->labelService->getTagLabel($tag),
                         'repeatable' => true,
                         'mandatory' => false
                     ]
@@ -116,15 +116,14 @@ class MarcFrameworkService
                 'name' => $name,
                 'code' => strtoupper($code),
                 'description' => $description ?? __('Tự động trích xuất từ file MARC'),
-                'is_active' => true,
-                'is_default' => false
+                'is_active' => true
             ]);
 
             foreach ($allTags as $tagData) {
                 $tagDef = MarcTagDefinition::firstOrCreate(
                     ['tag' => $tagData['tag']],
                     [
-                        'name' => $tagData['label'] ?? $this->labelService->getTagLabel($tagData['tag']),
+                        'label' => $tagData['label'] ?? $this->labelService->getTagLabel($tagData['tag']),
                         'repeatable' => true,
                         'mandatory' => false
                     ]

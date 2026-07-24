@@ -23,7 +23,7 @@ class MarcLabelService
     public static function preload(): void
     {
         if (self::$tagCache === null) {
-            self::$tagCache = MarcTagDefinition::pluck('name', 'tag')->toArray();
+            self::$tagCache = MarcTagDefinition::pluck('label', 'tag')->toArray();
         }
 
         if (self::$subfieldCache === null) {

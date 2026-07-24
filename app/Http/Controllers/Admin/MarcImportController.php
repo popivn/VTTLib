@@ -35,8 +35,12 @@ class MarcImportController extends Controller
      */
     public function index()
     {
-        $frameworks = MarcFramework::where('is_active', true)->orderBy('is_default', 'desc')->get();
-        return view('admin.marc-import.index', compact('frameworks'));
+        $frameworks = MarcFramework::where('is_active', true)->orderBy('id', 'asc')->get();
+        $tagDefinitions = \App\Models\MarcTagDefinition::orderBy('tag', 'asc')
+            ->get()
+            ->unique('tag')
+            ->values();
+        return view('admin.marc_import.index', compact('frameworks', 'tagDefinitions'));
     }
 
     /**
@@ -61,7 +65,11 @@ class MarcImportController extends Controller
             }
 
             $rawContent = file_get_contents($file->getRealPath());
+            Log::info('MARC Raw Content Length: ' . strlen($rawContent));
+            Log::info('MARC Raw Content Sample (Hex): ' . bin2hex(substr($rawContent, 0, 100)));
+
             $rawRecords = $this->parserService->splitRecords($rawContent);
+            Log::info('MARC Split Records Count: ' . count($rawRecords));
 
             if (empty($rawRecords)) {
                 return response()->json([
@@ -75,7 +83,12 @@ class MarcImportController extends Controller
             $allTags = [];
 
             foreach ($rawRecords as $index => $rawRecord) {
+                Log::info("MARC Raw Record #{$index} Len: " . strlen($rawRecord));
+                Log::info("MARC Raw Record #{$index} Content: " . $rawRecord);
+                
                 $parsed = $this->parserService->parseRecord($rawRecord);
+                Log::info("MARC Parsed Record #{$index}: " . json_encode($parsed, JSON_UNESCAPED_UNICODE));
+
                 if ($parsed) {
                     $parsed['row_index'] = $index + 1;
                     $parsedRecords[] = $parsed;
@@ -138,6 +151,7 @@ class MarcImportController extends Controller
                     'invalid_records' => count($errors),
                     'errors' => $errors,
                     'preview' => $preview,
+                    'parsed_records' => $parsedRecords, // Full records for editor
                     'extracted_framework' => array_values($allTags),
                     'matching_frameworks' => $matchingFrameworks
                 ]
@@ -152,16 +166,18 @@ class MarcImportController extends Controller
     }
 
     /**
-     * Process and import parsed MARC records into database
+     * Process and import parsed MARC records into database (supports user edits)
      */
     public function processMarcFile(Request $request)
     {
         $request->validate([
             'framework_id' => 'required|exists:marc_frameworks,id',
-            'action_type' => 'required|in:create,update'
+            'action_type' => 'required|in:create,update',
+            'records' => 'nullable|array',
+            'selected_tags' => 'nullable|array'
         ]);
 
-        $parsedRecords = session('marc_import_data', []);
+        $parsedRecords = $request->input('records', session('marc_import_data', []));
 
         if (empty($parsedRecords)) {
             return response()->json([
@@ -169,6 +185,56 @@ class MarcImportController extends Controller
                 'message' => __('Không tìm thấy dữ liệu đã phân tích. Vui lòng upload file lại.')
             ], 422);
         }
+
+        $selectedTags = $request->input('selected_tags');
+
+        // Filter and re-calculate title, author, isbn, year, publisher from updated fields if edited
+        foreach ($parsedRecords as &$record) {
+            if (isset($record['fields'])) {
+                // If user selected specific tags to import
+                if (!empty($selectedTags)) {
+                    $filteredFields = [];
+                    foreach ($record['fields'] as $tag => $instances) {
+                        if (in_array((string)$tag, $selectedTags, true)) {
+                            $filteredFields[$tag] = $instances;
+                        }
+                    }
+                    $record['fields'] = $filteredFields;
+                }
+
+                // Update extracted metadata fields from 245, 100, 020, 260/264
+                if (isset($record['fields']['245'])) {
+                    $subfields = $record['fields']['245'][0]['subfields'] ?? [];
+                    $t = '';
+                    foreach ($subfields as $sf) {
+                        if ($sf['code'] === 'a') $t .= $sf['value'] . ' ';
+                        if ($sf['code'] === 'b') $t .= ': ' . $sf['value'];
+                    }
+                    if ($t) $record['title'] = trim($t);
+                }
+
+                if (isset($record['fields']['100'])) {
+                    $subfields = $record['fields']['100'][0]['subfields'] ?? [];
+                    foreach ($subfields as $sf) {
+                        if ($sf['code'] === 'a') {
+                            $record['author'] = $sf['value'];
+                            break;
+                        }
+                    }
+                }
+
+                if (isset($record['fields']['020'])) {
+                    $subfields = $record['fields']['020'][0]['subfields'] ?? [];
+                    foreach ($subfields as $sf) {
+                        if ($sf['code'] === 'a') {
+                            $record['isbn'] = $sf['value'];
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        unset($record);
 
         try {
             $results = $this->importService->importParsedRecords(

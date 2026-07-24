@@ -12,6 +12,8 @@ class Iso2709ParserService
      */
     public function splitRecords(string $content): array
     {
+        // Strip UTF-8 BOM if present
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
         $records = [];
 
         // ISO 2709 records are terminated by 0x1D (Record Terminator)
@@ -55,7 +57,7 @@ class Iso2709ParserService
     public function parseRecord(string $raw): ?array
     {
         try {
-            $raw = trim($raw);
+            $raw = preg_replace('/^\xEF\xBB\xBF/', '', trim($raw));
             if (strlen($raw) < 24) {
                 return null;
             }
@@ -72,11 +74,11 @@ class Iso2709ParserService
 
             // Locate directory string (up to field terminator 0x1E or base address offset)
             $dirEndPos = strpos($raw, $ft, 24);
-            if ($dirEndPos !== false && $dirEndPos < $baseAddress) {
+            if ($dirEndPos !== false && ($dirEndPos <= $baseAddress)) {
                 $directoryStr = substr($raw, 24, $dirEndPos - 24);
                 $dataSection = substr($raw, $dirEndPos + 1);
             } else {
-                $directoryStr = substr($raw, 24, max(0, $baseAddress - 25));
+                $directoryStr = substr($raw, 24, max(0, $baseAddress - 24));
                 $dataSection = substr($raw, $baseAddress);
             }
 

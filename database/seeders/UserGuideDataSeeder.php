@@ -78,6 +78,88 @@ class UserGuideDataSeeder extends Seeder
                 'embed_video_url' => '',
                 'video_url' => '',
             ],
+            'tra-cuu-tai-lieu-so' => [
+                'title' => 'HƯỚNG DẪN TRA CỨU TÀI LIỆU SỐ & HỌC LIỆU TRỰC TUYẾN',
+                'condition_title' => 'Học liệu và tài liệu số hóa trực tuyến:',
+                'condition_desc' => 'Bạn đọc có thể dễ dàng truy cập và đọc trực tuyến hàng nghìn đầu sách số, giáo trình điện tử, tài nguyên y khoa và báo cáo khoa học mọi lúc, mọi nơi.',
+                'steps_title' => 'Các bước tra cứu và sử dụng tài liệu số:',
+                'steps' => [
+                    [
+                        'step_number' => 1,
+                        'title' => 'Truy cập kho Tài nguyên số',
+                        'content' => 'Vào mục <a href="/tai-lieu-so">Tài nguyên số</a> trên thanh trình đơn chính để mở kho tài nguyên số hóa của trường.'
+                    ],
+                    [
+                        'step_number' => 2,
+                        'title' => 'Tìm kiếm và Lọc tài liệu',
+                        'content' => 'Sử dụng thanh công cụ tìm kiếm, phân loại theo chuyên mục (như Y khoa, Sản khoa...) hoặc sắp xếp theo danh mục (Mới nhất, Xem nhiều nhất, Tải nhiều nhất).'
+                    ],
+                    [
+                        'step_number' => 3,
+                        'title' => 'Mở giao diện Đọc trực tuyến',
+                        'content' => 'Bấm vào tài liệu mong muốn, hệ thống sẽ mở trình đọc tài liệu số tích hợp, hỗ trợ chế độ lật trang, phóng to thu nhỏ và ghi chú trực tuyến.'
+                    ],
+                    [
+                        'step_number' => 4,
+                        'title' => 'Tải tài liệu (nếu được phép)',
+                        'content' => 'Với những tài liệu cho phép tải về, bạn đọc có thể nhấn nút "Tải xuống" để lưu tài liệu định dạng PDF về thiết bị của mình.'
+                    ]
+                ],
+                'video_title' => 'Video hướng dẫn khai thác tài liệu số:',
+                'video_source' => 'url',
+                'embed_video_url' => '',
+                'video_url' => '',
+            ],
+            'muon-truoc-gia-han' => [
+                'title' => 'HƯỚNG DẪN MƯỢN TRƯỚC VÀ GIA HẠN TÀI LIỆU',
+                'condition_title' => 'Thông tin dịch vụ mượn trước & gia hạn:',
+                'condition_desc' => 'Trong quá trình học tập và nghiên cứu tại trường, bạn đọc có thể đặt mượn tài liệu, theo dõi thông tin quá hạn sách, gia hạn sách trực tuyến... thông qua tài khoản thư viện cá nhân.',
+                'steps_title' => '1. Đăng ký mượn trước tài liệu:',
+                'steps' => [
+                    [
+                        'step_number' => 1,
+                        'title' => 'Tra cứu tài liệu',
+                        'content' => 'Bạn đọc đăng nhập tài khoản thư viện và thực hiện tra cứu tài liệu cần đăng ký mượn trước tại trang <a href="/opac">Tra cứu OPAC</a>.'
+                    ],
+                    [
+                        'step_number' => 2,
+                        'title' => 'Chọn đăng ký mượn',
+                        'content' => 'Tại màn hình chi tiết của cuốn sách mong muốn, nhấp vào nút <strong>Đăng ký mượn ngay</strong>.'
+                    ],
+                    [
+                        'step_number' => 3,
+                        'title' => 'Xác nhận đăng ký',
+                        'content' => 'Màn hình hiển thị kết quả đăng ký mượn trước tài liệu của bạn đọc, nhấn nút <strong>OK</strong> để xác nhận đăng ký.'
+                    ],
+                    [
+                        'step_number' => 4,
+                        'title' => 'Kiểm tra trạng thái xử lý',
+                        'content' => 'Bạn đọc truy cập vào <a href="/my-profile?tab=history">Hồ sơ cá nhân</a> để xem danh sách sách đã đăng ký mượn và tình trạng xử lý (Đang chờ duyệt, Từ chối, Sẵn sàng nhận sách).'
+                    ]
+                ],
+                'section2_title' => '2. Gia hạn tài liệu trực tuyến:',
+                'section2_steps' => [
+                    [
+                        'step_number' => 1,
+                        'title' => 'Đăng nhập & Vào hồ sơ cá nhân',
+                        'content' => 'Bạn đọc đăng nhập tài khoản thư viện, nhấp chọn <a href="/my-profile?tab=info">Hồ sơ cá nhân</a> (Thông tin độc giả).'
+                    ],
+                    [
+                        'step_number' => 2,
+                        'title' => 'Chọn tab Sách đang mượn',
+                        'content' => 'Chọn tab <a href="/my-profile?tab=history">Lịch sử mượn sách</a>, hệ thống hiển thị tất cả các tài liệu bạn đọc đang mượn, ngày mượn, hạn trả và số lần đã gia hạn.'
+                    ],
+                    [
+                        'step_number' => 3,
+                        'title' => 'Yêu cầu gia hạn',
+                        'content' => 'Chọn nút <strong>Gia hạn</strong> bên cạnh tài liệu tương ứng để thực hiện gia hạn thời gian mượn trực tuyến.'
+                    ]
+                ],
+                'video_title' => 'Video hướng dẫn thao tác mượn trước & gia hạn:',
+                'video_source' => 'url',
+                'embed_video_url' => '',
+                'video_url' => '',
+            ],
             'doi-mat-khau' => [
                 'title' => 'HƯỚNG DẪN ĐỔI MẬT KHẨU TÀI KHOẢN',
                 'condition_title' => 'Lưu ý bảo mật:',
