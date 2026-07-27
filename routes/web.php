@@ -4,6 +4,7 @@ use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\MetadataController;
+use App\Http\Controllers\Admin\TinyMceController;
 use App\Http\Controllers\SecretLoginController;
 use App\Http\Controllers\ClientLoginController;
 use App\Http\Controllers\WebhookController;
@@ -848,6 +849,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
     Route::post('/curriculum', [\App\Http\Controllers\Admin\CurriculumController::class, 'store'])->name('admin.curriculum.store');
     Route::put('/curriculum/{id}', [\App\Http\Controllers\Admin\CurriculumController::class, 'update'])->name('admin.curriculum.update');
     Route::delete('/curriculum/{id}', [\App\Http\Controllers\Admin\CurriculumController::class, 'destroy'])->name('admin.curriculum.destroy');
+
+    // TinyMCE Token Management
+    Route::get('/tinymce', [\App\Http\Controllers\Admin\TinyMceController::class, 'index'])->name('admin.tinymce.index');
+    Route::post('/tinymce/update-token', [\App\Http\Controllers\Admin\TinyMceController::class, 'updateToken'])->name('admin.tinymce.update');
 });
 
 // Visitor Routes

@@ -561,7 +561,7 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                     <span class="text-[10px] font-black uppercase tracking-wider">{{ __('Video bài giảng') }}</span>
                                 </a>
 
-                                <a href="{{ route('site.page', 'de-nghi-bo-sung') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-emerald-700 to-emerald-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                <a href="https://docs.google.com/forms/d/1BrAixTzBMMxlQ-fxHQ2_jFJiD3gQ5CT0aa-AC5miEZg/edit" target="_blank" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-emerald-700 to-emerald-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                                     <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
                                         <i class="fas fa-plus-circle text-[10px]"></i>
                                     </div>

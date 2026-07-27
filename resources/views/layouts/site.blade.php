@@ -156,13 +156,18 @@
                 <!-- Logo -->
                 <div class="flex-shrink-0">
                     <a href="/" class="flex items-center space-x-2">
-                        @php $siteLogo = \App\Models\SystemSetting::get('site_logo'); @endphp
+                        @php 
+                            $siteLogo = \App\Models\SystemSetting::get('site_logo'); 
+                            $siteName = \App\Models\SystemSetting::get('site_name', '');
+                        @endphp
                         @if($siteLogo)
-                            <img src="{{ asset('storage/' . $siteLogo) }}" alt="Logo" class="h-10 w-10 object-contain transition-all duration-500" id="headerLogo">
+                            <img src="{{ asset('storage/' . $siteLogo) }}" alt="Logo" class="h-full w-auto max-h-16 object-contain transition-all duration-500" id="headerLogo">
                         @else
-                            <i class="fas fa-book-open text-vttu-yellow text-2xl transition-all duration-500" id="headerLogoIcon"></i>
+                            <i class="fas fa-book-open text-vttu-yellow text-4xl transition-all duration-500" id="headerLogoIcon"></i>
                         @endif
-                        <span class="font-black text-xl text-white tracking-tighter transition-all duration-500 whitespace-nowrap" id="headerTitle">{{ \App\Models\SystemSetting::get('site_name', 'VTTLib') }}</span>
+                        @if($siteName)
+                            <span class="font-black text-xl text-white tracking-tighter transition-all duration-500 whitespace-nowrap" id="headerTitle">{{ $siteName }}</span>
+                        @endif
                     </a>
                 </div>
 

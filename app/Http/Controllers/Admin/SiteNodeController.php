@@ -659,12 +659,12 @@ class SiteNodeController extends Controller
     public function updateLayoutSettings(Request $request)
     {
         $request->validate([
-            'site_name' => 'required|string|max:255',
+            'site_name' => 'nullable|string|max:255',
             'site_logo' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp,ico,gif,apng|max:20480',
             'book_intro_image' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp,gif,apng|max:20480',
         ]);
 
-        \App\Models\SystemSetting::set('site_name', $request->input('site_name'), 'site');
+        \App\Models\SystemSetting::set('site_name', $request->input('site_name', ''), 'site');
 
         // Handle Logo
         if ($request->hasFile('site_logo')) {

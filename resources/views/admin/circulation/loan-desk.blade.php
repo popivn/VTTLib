@@ -1045,7 +1045,6 @@ function loadCurrentLoans(patronId, activeLoans = null) {
         const dueDateObj = loan.due_date ? new Date(loan.due_date) : null;
         const dueDateStr = dueDateObj ? dueDateObj.toLocaleDateString('vi-VN') : 'N/A';
         const now = new Date();
-        const isOverdue = dueDateObj && dueDateObj < now;
         
         // Remaining days calculation
         const diffTime = dueDateObj ? (dueDateObj - now) : 0;
@@ -1060,7 +1059,7 @@ function loadCurrentLoans(patronId, activeLoans = null) {
         const materialType = loan.book_item?.storage_type || 'Giáo trình';
         const renewalCount = loan.renewal_count || 0;
         const maxRenewals = loan.max_renewals !== undefined ? loan.max_renewals : (loan.policy?.max_renewals ?? 2);
-        const isOverdue = loan.is_overdue || (dueDate < new Date());
+        const isOverdue = loan.is_overdue || (dueDateObj && dueDateObj < now);
         const canRenew = (!loan.status || loan.status === 'borrowed') && !isOverdue && renewalCount < maxRenewals;
         const loanedBy = loan.loaned_by_user?.name || loan.loaned_by_user?.username || 'staff';
         const notes = loan.notes || 'Sách đang mượn';

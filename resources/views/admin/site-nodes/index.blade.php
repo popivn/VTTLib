@@ -50,17 +50,22 @@
                         <!-- Preview -->
                         <div class="p-2.5 bg-muted/20 border border-border rounded">
                             <p class="text-[9px] text-muted-foreground font-bold uppercase tracking-wide mb-2">Xem trước</p>
-                            <div class="flex items-center gap-2 p-2.5 bg-card border border-border rounded">
+                            <div class="flex items-center gap-2 p-2.5 bg-card border border-border rounded min-h-[3rem]">
                                 @php $currentLogo = \App\Models\SystemSetting::get('site_logo'); @endphp
                                 @if($currentLogo)
-                                    <img src="{{ asset('storage/' . $currentLogo) }}" alt="Logo" class="h-10 w-10 object-contain rounded border border-border bg-background">
+                                    <img src="{{ asset('storage/' . $currentLogo) }}" alt="Logo" class="h-full w-auto max-h-10 object-contain rounded border border-border bg-background">
                                 @else
-                                    <div class="h-10 w-10 rounded bg-muted flex items-center justify-center flex-shrink-0">
-                                        <i data-lucide="library" class="w-5 h-5 text-muted-foreground"></i>
+                                    <div class="h-8 w-8 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                                        <i data-lucide="library" class="w-4 h-4 text-muted-foreground"></i>
                                     </div>
                                 @endif
                                 <div class="flex-1 min-w-0">
-                                    <h5 class="text-xs font-bold text-foreground truncate">{{ \App\Models\SystemSetting::get('site_name', 'Thư viện số') }}</h5>
+                                    @php $siteName = \App\Models\SystemSetting::get('site_name', ''); @endphp
+                                    @if($siteName)
+                                        <h5 class="text-xs font-bold text-foreground truncate">{{ $siteName }}</h5>
+                                    @else
+                                        <h5 class="text-xs font-bold text-muted-foreground truncate italic">Chỉ logo</h5>
+                                    @endif
                                     <p class="text-[9px] text-muted-foreground">Header</p>
                                 </div>
                             </div>
@@ -71,7 +76,8 @@
                             <div class="space-y-1.5">
                                 <label class="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{{ __('Tên') }}</label>
                                 <input type="text" name="site_name"
-                                       value="{{ \App\Models\SystemSetting::get('site_name', 'Thư viện số') }}"
+                                       value="{{ \App\Models\SystemSetting::get('site_name', '') }}"
+                                       placeholder="Để trống nếu chỉ muốn hiển thị logo"
                                        class="w-full h-9 bg-background border border-border rounded-sm px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all">
                             </div>
 
