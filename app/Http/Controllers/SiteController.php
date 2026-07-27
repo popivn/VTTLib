@@ -469,33 +469,16 @@ class SiteController extends Controller
                 ], 400);
             }
 
-            // Check if any copy is available
-            $bookItem = \App\Models\BookItem::where('bibliographic_record_id', $record->id)
-                ->where('status', 'available')
-                ->first();
-
+            // Always initialize reservation as pending. A librarian must manually approve it.
             $reservationStatus = 'pending';
-            $assignedBookItemId = null;
-
-            if ($bookItem) {
-                $reservationStatus = 'ready';
-                $assignedBookItemId = $bookItem->id;
-                
-                // Update book item status
-                $bookItem->update(['status' => 'reserved']);
-            } else {
-                // Get any copy for queue display
-                $anyItem = \App\Models\BookItem::where('bibliographic_record_id', $record->id)->first();
-                $assignedBookItemId = $anyItem ? $anyItem->id : null;
-            }
 
             // Create reservation
             $reservation = \App\Models\Reservation::create([
                 'patron_detail_id' => $patron->id,
                 'bibliographic_record_id' => $record->id,
-                'book_item_id' => $assignedBookItemId,
+                'book_item_id' => null,
                 'reservation_date' => \Carbon\Carbon::now(),
-                'expiry_date' => $policy->getHoldExpiryDate(),
+                'expiry_date' => null, // Will be set when approved by librarian
                 'pickup_branch_id' => $patron->branch_id,
                 'status' => $reservationStatus,
                 'notified' => false,
@@ -513,7 +496,7 @@ class SiteController extends Controller
                     'reservation_id' => $reservation->id,
                     'status' => $reservationStatus,
                     'status_display' => $statusText,
-                    'expiry_date' => $reservation->expiry_date->format('d/m/Y')
+                    'expiry_date' => $reservation->expiry_date ? $reservation->expiry_date->format('d/m/Y') : null
                 ]
             ]);
 
@@ -633,7 +616,7 @@ class SiteController extends Controller
         if ($patron) {
             $activeLoans = \App\Models\LoanTransaction::where('patron_detail_id', $patron->id)
                 ->where('status', 'borrowed')
-                ->with(['bookItem.bibliographicRecord.fields.subfields'])
+                ->with(['bookItem.bibliographicRecord.fields.subfields', 'policy'])
                 ->latest('loan_date')
                 ->get();
 
@@ -645,7 +628,7 @@ class SiteController extends Controller
                 ->get();
 
             $reservations = \App\Models\Reservation::where('patron_detail_id', $patron->id)
-                ->with(['bibliographicRecord.fields.subfields'])
+                ->with(['bibliographicRecord.fields.subfields', 'bookItem'])
                 ->latest('reservation_date')
                 ->take(10)
                 ->get();
@@ -707,6 +690,54 @@ class SiteController extends Controller
         $user->save();
 
         return back()->with('success', 'Đổi mật khẩu thành công.');
+    }
+
+    /**
+     * Renew a loan by the student/user.
+     */
+    public function renewLoan($loanId)
+    {
+        $user = auth()->user();
+        $patron = \App\Models\PatronDetail::where('user_id', $user->id)->first();
+        if (!$patron) {
+            return response()->json(['success' => false, 'message' => __('Không tìm thấy thông tin độc giả.')], 403);
+        }
+
+        $loan = \App\Models\LoanTransaction::where('id', $loanId)
+            ->where('patron_detail_id', $patron->id)
+            ->first();
+
+        if (!$loan) {
+            return response()->json(['success' => false, 'message' => __('Không tìm thấy giao dịch mượn sách.')], 404);
+        }
+
+        if (!$loan->canRenew()) {
+            return response()->json(['success' => false, 'message' => __('Không thể gia hạn cuốn sách này. Vui lòng kiểm tra lại giới hạn lượt gia hạn hoặc liên hệ thủ thư.')], 400);
+        }
+
+        try {
+            \DB::beginTransaction();
+
+            $renewalDays = $loan->policy?->renewal_days ?? 7;
+            $loan->update([
+                'due_date' => \Carbon\Carbon::parse($loan->due_date)->addDays($renewalDays),
+                'renewal_count' => $loan->renewal_count + 1,
+                'last_renewal_date' => \Carbon\Carbon::now(),
+                'notes' => trim(($loan->notes ?? '') . "\n" . __('Độc giả tự gia hạn lúc :time', ['time' => \Carbon\Carbon::now()->format('H:i d/m/Y')]))
+            ]);
+
+            \DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => __('Gia hạn sách thành công!'),
+                'due_date' => $loan->due_date->format('d/m/Y'),
+                'renewal_count' => $loan->renewal_count,
+                'max_renewals' => $loan->policy?->max_renewals ?? 0
+            ]);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     /**

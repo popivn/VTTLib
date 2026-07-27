@@ -59,7 +59,7 @@
                     <td class="px-6 py-4 text-xs font-black text-rose-600 dark:text-rose-500">
                         @php
                             $overdueDays = \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($loan->due_date), false);
-                            $overdueDays = abs($overdueDays);
+                            $overdueDays = (int) ceil(abs($overdueDays));
                         @endphp
                         {{ $overdueDays }} {{ __('days') }}
                     </td>

@@ -495,7 +495,7 @@ async function loadPatronActiveLoans() {
                     const barcode = loan.book_item?.barcode || '';
                     const renewalCount = loan.renewal_count || 0;
                     const maxRenewals = loan.max_renewals !== undefined ? loan.max_renewals : (loan.policy?.max_renewals ?? 2);
-                    const canRenew = (!loan.status || loan.status === 'borrowed') && renewalCount < maxRenewals;
+                    const canRenew = (!loan.status || loan.status === 'borrowed') && !isOverdue && renewalCount < maxRenewals;
                     
                     loansHtml += `
                         <div class="p-3 bg-muted/20 border border-border rounded-md flex justify-between items-center hover:bg-muted/40 transition-all">
@@ -1060,7 +1060,8 @@ function loadCurrentLoans(patronId, activeLoans = null) {
         const materialType = loan.book_item?.storage_type || 'Giáo trình';
         const renewalCount = loan.renewal_count || 0;
         const maxRenewals = loan.max_renewals !== undefined ? loan.max_renewals : (loan.policy?.max_renewals ?? 2);
-        const canRenew = (!loan.status || loan.status === 'borrowed') && renewalCount < maxRenewals;
+        const isOverdue = loan.is_overdue || (dueDate < new Date());
+        const canRenew = (!loan.status || loan.status === 'borrowed') && !isOverdue && renewalCount < maxRenewals;
         const loanedBy = loan.loaned_by_user?.name || loan.loaned_by_user?.username || 'staff';
         const notes = loan.notes || 'Sách đang mượn';
 

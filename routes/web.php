@@ -149,6 +149,7 @@ Route::post('/khao-sat-y-kien', [\App\Http\Controllers\SiteController::class, 's
 Route::middleware(['auth'])->group(function () {
     Route::get('/my-profile', [\App\Http\Controllers\SiteController::class, 'profile'])->name('profile');
     Route::post('/my-profile/change-password', [\App\Http\Controllers\SiteController::class, 'changePassword'])->name('profile.change-password');
+    Route::post('/my-profile/renew/{loan}', [\App\Http\Controllers\SiteController::class, 'renewLoan'])->name('profile.renew-loan');
 });
 
 // Admin Panel Redirect

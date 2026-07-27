@@ -284,9 +284,13 @@ $summary = $marcData['520']['a'] ?? 'Nội dung đang được cập nhật...';
                                     <td class="py-3 text-xs font-bold text-slate-600">{{ $item->shelf ?? 'Đang cập nhật' }}</td>
                                     <td class="py-3 text-center">
                                         @if($item->status == 'available')
-                                        <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-md">Có thể mượn</span>
+                                            <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-md">Có thể mượn</span>
+                                        @elseif($item->status == 'reserved')
+                                            <span class="px-2.5 py-0.5 bg-amber-50 text-amber-600 text-[10px] font-bold uppercase rounded-md">Đang giữ lại</span>
+                                        @elseif($item->status == 'on_loan')
+                                            <span class="px-2.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded-md">Đã cho mượn</span>
                                         @else
-                                        <span class="px-2.5 py-0.5 bg-rose-50 text-rose-500 text-[10px] font-bold uppercase rounded-md">Đang bận</span>
+                                            <span class="px-2.5 py-0.5 bg-rose-50 text-rose-500 text-[10px] font-bold uppercase rounded-md">Đang giữ lại</span>
                                         @endif
                                     </td>
                                 </tr>

@@ -871,7 +871,7 @@ class CirculationController extends Controller
                     'patron_code' => $bookItem->currentLoan->patron->patron_code,
                     'due_date' => $bookItem->currentLoan->due_date->format('d/m/Y'),
                     'is_overdue' => $bookItem->currentLoan->due_date->isPast(),
-                    'overdue_days' => $bookItem->currentLoan->due_date->isPast() ? $bookItem->currentLoan->due_date->diffInDays(now()) : 0
+                    'overdue_days' => $bookItem->currentLoan->due_date->isPast() ? (int) ceil($bookItem->currentLoan->due_date->diffInDays(now())) : 0
                 ];
             }
 
@@ -981,12 +981,24 @@ class CirculationController extends Controller
      */
     public function rejectRequest(Request $request, Reservation $reservation)
     {
-        $reservation->update([
-            'status' => 'cancelled',
-            'notes' => $request->get('reason', 'Yêu cầu bị từ chối bởi thủ thư.')
-        ]);
+        try {
+            DB::beginTransaction();
 
-        return back()->with('success', __('Đã từ chối yêu cầu mượn sách.'));
+            if ($reservation->bookItem) {
+                $reservation->bookItem->update(['status' => 'available']);
+            }
+
+            $reservation->update([
+                'status' => 'cancelled',
+                'notes' => $request->get('reason', 'Yêu cầu bị từ chối bởi thủ thư.')
+            ]);
+
+            DB::commit();
+            return back()->with('success', __('Đã từ chối yêu cầu mượn sách.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     /**

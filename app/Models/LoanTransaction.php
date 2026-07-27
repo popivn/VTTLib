@@ -90,7 +90,7 @@ class LoanTransaction extends Model
         if (!$this->isOverdue()) {
             return 0;
         }
-        return Carbon::now()->diffInDays($this->due_date);
+        return (int) ceil(Carbon::now()->diffInDays($this->due_date));
     }
 
     /**
@@ -99,6 +99,10 @@ class LoanTransaction extends Model
     public function canRenew(): bool
     {
         if ($this->status !== 'borrowed') {
+            return false;
+        }
+
+        if ($this->isOverdue()) {
             return false;
         }
 

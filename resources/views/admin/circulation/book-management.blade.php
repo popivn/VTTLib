@@ -225,10 +225,10 @@
                                     </td>
                                     <td class="p-2.5 text-center">
                                         @if($req->status == 'pending')
-                                            <span class="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-bold uppercase rounded-sm border border-amber-500/20">Chờ duyệt</span>
+                                            <span class="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-bold uppercase rounded-sm border border-amber-500/20">Yêu cầu mượn</span>
                                         @elseif($req->status == 'ready')
                                             <div class="flex flex-col items-center">
-                                                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold uppercase rounded-sm border border-emerald-500/20 font-semibold">Sẵn sàng lấy</span>
+                                                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold uppercase rounded-sm border border-emerald-500/20 font-semibold">Cho phép mượn</span>
                                                 @if($req->expiry_date)
                                                     @php
                                                         $daysLeft = now()->diffInDays($req->expiry_date, false);

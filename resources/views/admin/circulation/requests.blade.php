@@ -11,11 +11,11 @@
             <div class="flex gap-2">
                 <a href="{{ route('admin.circulation.requests', ['status' => 'pending']) }}" 
                    class="px-4 py-2 rounded-lg text-sm font-bold {{ $status == 'pending' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' }}">
-                    Đang chờ duyệt
+                    Yêu cầu mượn
                 </a>
                 <a href="{{ route('admin.circulation.requests', ['status' => 'ready']) }}" 
                    class="px-4 py-2 rounded-lg text-sm font-bold {{ $status == 'ready' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' }}">
-                    Sẵn sàng lấy
+                    Cho phép mượn
                 </a>
                 <a href="{{ route('admin.circulation.requests', ['status' => 'all']) }}" 
                    class="px-4 py-2 rounded-lg text-sm font-bold {{ $status == 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' }}">
@@ -76,11 +76,13 @@
                     </td>
                     <td class="px-6 py-4 text-center">
                         @if($req->status == 'pending')
-                            <span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase rounded-lg border border-amber-100">Chờ duyệt</span>
+                            <span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase rounded-lg border border-amber-100">Yêu cầu mượn</span>
                         @elseif($req->status == 'ready')
-                            <span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-lg border border-emerald-100">Đã duyệt - Chờ lấy</span>
+                            <span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-lg border border-emerald-100">Cho phép mượn</span>
                         @elseif($req->status == 'cancelled')
-                            <span class="px-2 py-1 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-lg border border-rose-100">Đã hủy/Từ chối</span>
+                            <span class="px-2 py-1 bg-rose-50 text-rose-500 text-[10px] font-black uppercase rounded-lg border border-rose-100">Đã hủy</span>
+                        @elseif($req->status == 'fulfilled')
+                            <span class="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-lg border border-blue-100">Đã nhận sách</span>
                         @else
                             <span class="px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-black uppercase rounded-lg">{{ $req->status }}</span>
                         @endif

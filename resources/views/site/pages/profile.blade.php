@@ -271,23 +271,31 @@
                                         </div>
                                         <div>
                                             <h4 class="text-xs font-bold text-foreground line-clamp-1">{{ $resTitle }}</h4>
-                                            <p class="text-[9px] text-muted-foreground font-bold mt-1 uppercase tracking-widest">Đăng ký: {{ $res->reservation_date->format('d/m/Y') }}</p>
+                                            <p class="text-[9px] text-muted-foreground font-bold mt-1 uppercase tracking-widest flex flex-wrap gap-x-2">
+                                                <span>Đăng ký: {{ $res->reservation_date->format('d/m/Y') }}</span>
+                                                @if($res->bookItem)
+                                                    <span class="text-slate-400">|</span>
+                                                    <span class="text-primary font-mono normal-case tracking-normal">Mã vạch: {{ $res->bookItem->barcode }}</span>
+                                                @endif
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="flex flex-col items-end gap-1">
                                         @if($res->status == 'pending')
-                                            <span class="px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[9px] font-bold uppercase rounded border border-amber-500/20">Đang chờ duyệt</span>
+                                            <span class="px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[9px] font-bold uppercase rounded border border-amber-500/20">Yêu cầu mượn</span>
                                         @elseif($res->status == 'ready')
                                             <div class="text-right">
-                                                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-[9px] font-bold uppercase rounded border border-emerald-500/20">Sẵn sàng nhận sách</span>
+                                                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-[9px] font-bold uppercase rounded border border-emerald-500/20">Cho phép mượn</span>
                                                 @if($res->expiry_date)
                                                 <p class="text-[8px] text-emerald-500 font-bold mt-0.5 uppercase tracking-widest">
-                                                    Còn {{ now()->diffInDays($res->expiry_date, false) }} ngày
+                                                    Còn {{ (int) ceil(now()->diffInDays($res->expiry_date, false)) }} ngày
                                                 </p>
                                                 @endif
                                             </div>
                                         @elseif($res->status == 'cancelled' || $res->status == 'rejected')
-                                            <span class="px-2 py-0.5 bg-rose-500/10 text-rose-500 text-[9px] font-bold uppercase rounded border border-rose-500/20">Đã hủy / Từ chối</span>
+                                            <span class="px-2 py-0.5 bg-rose-500/10 text-rose-500 text-[9px] font-bold uppercase rounded border border-rose-500/20">Đã hủy</span>
+                                        @elseif($res->status == 'fulfilled')
+                                            <span class="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[9px] font-bold uppercase rounded border border-blue-500/20">Đã nhận sách</span>
                                         @elseif($res->status == 'completed')
                                             <span class="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[9px] font-bold uppercase rounded border border-blue-500/20">Đã hoàn tất</span>
                                         @endif
@@ -333,10 +341,21 @@
                                                     Hạn trả: {{ $loan->due_date->format('d/m/Y') }} 
                                                     @if($isOverdue) ({{ $loan->getOverdueDays() }} ngày) @endif
                                                 </p>
+                                                @if($loan->bookItem)
+                                                    <p class="text-[9px] text-primary font-bold font-mono normal-case tracking-normal">Mã vạch: {{ $loan->bookItem->barcode }}</p>
+                                                @endif
+                                                <p class="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Gia hạn: {{ $loan->renewal_count }}/{{ $loan->policy?->max_renewals ?? 0 }}</p>
                                             </div>
                                         </div>
                                     </div>
-                                    <div>
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        @if($loan->canRenew())
+                                            <button onclick="renewLoan({{ $loan->id }}, '{{ addslashes($loanTitle) }}')" 
+                                                    class="px-2 py-1 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white border border-emerald-500/20 rounded text-[9px] font-bold transition-all uppercase flex items-center gap-1 active:scale-[0.98]">
+                                                <i data-lucide="refresh-cw" class="w-2.5 h-2.5"></i>
+                                                Gia hạn
+                                            </button>
+                                        @endif
                                         <span class="px-2 py-0.5 {{ $isOverdue ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20' }} text-[9px] font-bold uppercase rounded border">
                                             {{ $isOverdue ? 'Quá hạn' : 'Đang mượn' }}
                                         </span>
@@ -502,4 +521,79 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function renewLoan(loanId, title) {
+        Swal.fire({
+            title: 'Xác nhận gia hạn?',
+            html: `Bạn muốn tự gia hạn cuốn:<br><b class="text-vttu-red">${title}</b>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#680102',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Gia hạn ngay',
+            cancelButtonText: 'Hủy bỏ',
+            borderRadius: '2rem'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Hiển thị loading
+                Swal.fire({
+                    title: 'Đang xử lý...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Gửi AJAX
+                fetch(`/my-profile/renew/${loanId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(async response => {
+                    const isJson = response.headers.get('content-type')?.includes('application/json');
+                    const data = isJson ? await response.json() : null;
+
+                    if (!response.ok) {
+                        throw new Error(data?.message || 'Gia hạn không thành công.');
+                    }
+                    return data;
+                })
+                .then(data => {
+                    if (data && data.success) {
+                        Swal.fire({
+                            title: 'Thành công!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#680102',
+                            borderRadius: '2rem'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        throw new Error(data?.message || 'Có lỗi xảy ra.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Renewal error:', error);
+                    Swal.fire({
+                        title: 'Thất bại!',
+                        text: error.message || 'Không thể kết nối tới hệ thống.',
+                        icon: 'error',
+                        confirmButtonColor: '#680102',
+                        borderRadius: '2rem'
+                    });
+                });
+            }
+        });
+    }
+</script>
 @endsection

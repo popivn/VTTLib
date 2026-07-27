@@ -40,7 +40,7 @@ class OverdueSheet implements FromCollection, WithHeadings, WithTitle, WithMappi
     public function map($loan): array
     {
         $overdueDays = Carbon::now()->diffInDays(Carbon::parse($loan->due_date), false);
-        $overdueDays = abs($overdueDays);
+        $overdueDays = (int) ceil(abs($overdueDays));
         $fine = $loan->policy ? $loan->policy->fine_per_day * $overdueDays : 0;
 
         return [
