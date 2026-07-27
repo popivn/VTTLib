@@ -105,21 +105,21 @@
             @endphp
 
             @if($sidebarNews->count() > 0)
-                <div class="bg-card border border-border rounded-none p-3 shadow-xs space-y-3">
-                    <h3 class="text-xs font-black text-foreground uppercase tracking-wider flex items-center">
-                        <span class="w-1 h-3.5 bg-vttu-red rounded-none mr-2"></span>
-                        {{ $sidebarHeader }}
+                <div class="bg-card border border-border rounded-none p-3 shadow-xs">
+                    <h3 class="text-xs font-black text-foreground uppercase tracking-normal flex items-center mb-3 pb-2 border-b border-border/60 !mt-0 !mb-3 !text-xs !leading-none" style="margin-top: 0 !important; margin-bottom: 0.75rem !important; font-size: 0.75rem !important; line-height: 1 !important;">
+                        <span class="w-1 h-3.5 bg-vttu-red rounded-none mr-2 flex-shrink-0"></span>
+                        <span class="truncate">{{ $sidebarHeader }}</span>
                     </h3>
                     <div class="space-y-3">
                         @foreach($sidebarNews as $item)
-                            <a href="{{ $item->url }}" class="flex gap-2.5 group text-foreground hover:text-vttu-red transition-colors items-center">
-                                <div class="w-20 h-14 rounded-sm overflow-hidden flex-shrink-0">
+                            <a href="{{ $item->url }}" class="flex gap-2.5 group text-foreground hover:text-vttu-red transition-colors items-start">
+                                <div class="w-16 h-12 rounded-sm overflow-hidden flex-shrink-0">
                                     <img src="{{ $item->featured_image ? (str_starts_with($item->featured_image, 'http') ? $item->featured_image : asset($item->featured_image)) : 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=160&q=80' }}" 
                                          alt="{{ $item->title }}"
                                          class="w-full h-full object-cover rounded-sm group-hover:scale-105 transition-transform duration-300">
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <h4 class="text-xs font-bold text-[#A80D0D] hover:text-[#8f0b0b] transition-colors line-clamp-2 !leading-snug">{{ $item->title }}</h4>
+                                    <h4 class="text-xs font-bold text-[#A80D0D] hover:text-[#8f0b0b] transition-colors line-clamp-2 !leading-snug break-words">{{ $item->title }}</h4>
                                     <span class="text-[9px] text-muted-foreground font-bold mt-0.5 block uppercase tracking-wider">
                                         {{ $item->published_at ? $item->published_at->format('d/m/Y') : $item->created_at->format('d/m/Y') }}
                                     </span>

@@ -1,166 +1,152 @@
-<div class="space-y-3 animate-fade-in">
+@php
+    $guideJson = json_decode($node->content_json ?? '{}', true) ?: [];
+    $guideTitle = $guideJson['title'] ?? 'ĐỀ NGHỊ BỔ SUNG TÀI LIỆU';
+    $guideCondTitle = $guideJson['condition_title'] ?? 'Quy trình & Đề xuất mua sắm tài liệu:';
+    $guideCondDesc = $guideJson['condition_desc'] ?? 'Nhằm phục vụ tốt nhất cho nhu cầu nghiên cứu, giảng dạy và học tập, bạn đọc có thể gửi đề xuất bổ sung các tài liệu, sách hoặc giáo trình chưa có trong thư viện. Thư viện sẽ tiếp nhận và tiến hành xét duyệt mua sắm.';
+    
+    // Dynamic Sections Parsing (with fallback to legacy steps / section2_steps)
+    $sections = $guideJson['sections'] ?? [];
+    if (empty($sections)) {
+        $legacySteps = $guideJson['steps'] ?? [];
+        $legacySec2Steps = $guideJson['section2_steps'] ?? [];
+        if (!empty($legacySteps)) {
+            $sections[] = [
+                'title' => $guideJson['steps_title'] ?? 'Các bước thực hiện:',
+                'steps' => $legacySteps
+            ];
+        }
+        if (!empty($legacySec2Steps)) {
+            $sections[] = [
+                'title' => $guideJson['section2_title'] ?? 'Các bước thực hiện Phần 2:',
+                'steps' => $legacySec2Steps
+            ];
+        }
+    }
+
+    $guideVideoTitle = $guideJson['video_title'] ?? 'Video hướng dẫn gửi đề nghị:';
+    $uploadedVideoUrl = $guideJson['uploaded_video_url'] ?? '';
+    $embedVideoUrl = $guideJson['embed_video_url'] ?? ($guideJson['video_url'] ?? '');
+    $videoSource = $guideJson['video_source'] ?? (!empty($uploadedVideoUrl) ? 'file' : 'url');
+
+    $guideVideoUrl = ($videoSource === 'file' && !empty($uploadedVideoUrl)) ? $uploadedVideoUrl : $embedVideoUrl;
+
+    if ($videoSource === 'url' && !empty($guideVideoUrl)) {
+        if (str_contains($guideVideoUrl, 'youtube.com/watch?v=')) {
+            $guideVideoUrl = str_replace('youtube.com/watch?v=', 'youtube.com/embed/', $guideVideoUrl);
+        } elseif (str_contains($guideVideoUrl, 'youtu.be/')) {
+            $guideVideoUrl = str_replace('youtu.be/', 'youtube.com/embed/', $guideVideoUrl);
+        }
+    }
+
+    // Dynamic PDF Check
+    $isPdf = str_contains(strtolower($guideVideoUrl), '.pdf');
+    $isLocalFile = ($videoSource === 'file') || str_contains($guideVideoUrl, '/storage/') || str_ends_with($guideVideoUrl, '.mp4') || str_ends_with($guideVideoUrl, '.webm') || str_ends_with($guideVideoUrl, '.mov');
+@endphp
+
+<style>
+    .guide-step-content a {
+        color: #b91c1c;
+        font-weight: 700;
+        text-decoration: underline;
+    }
+    .guide-step-content img {
+        max-w-full: 100%;
+        height: auto;
+        border-radius: 0.375rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="space-y-4 animate-fade-in">
     <!-- Section Header -->
-    <div class="border-b border-border pb-2">
-        <h2 class="text-lg md:text-xl font-black text-foreground tracking-tight leading-tight uppercase flex items-center gap-2">
-            <i data-lucide="plus-circle" class="w-5 h-5 text-vttu-red"></i>
-            Đề đề nghị bổ sung tài liệu
+    <div class="border-b border-border pb-3">
+        <h2 class="text-xl md:text-2xl font-black text-foreground tracking-tight leading-tight uppercase">
+            {{ $guideTitle }}
         </h2>
-        <div class="w-16 h-1 bg-vttu-red mt-1 rounded"></div>
+        <div class="w-16 h-1 bg-vttu-red mt-2 rounded"></div>
     </div>
 
-    <!-- Intro Card -->
-    <div class="bg-card border border-border rounded p-3 shadow-sm">
-        <p class="text-xs text-muted-foreground leading-relaxed">
-            Nhằm phục vụ tốt nhất cho nhu cầu nghiên cứu, giảng dạy và học tập, bạn đọc có thể gửi đề xuất bổ sung các tài liệu, sách hoặc giáo trình chưa có trong thư viện. Thư viện sẽ tiếp nhận và tiến hành xét duyệt mua sắm.
-        </p>
-    </div>
-
-    <!-- Feedback Alerts -->
-    @if(session('success'))
-        <div class="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 rounded text-xs">
-            <i data-lucide="check-circle-2" class="w-4 h-4 flex-shrink-0"></i>
-            <span>{{ session('success') }}</span>
+    <!-- Info Card -->
+    @if(!empty($guideCondDesc))
+        <div class="bg-card border border-border rounded-md p-4 shadow-sm">
+            <div class="flex items-start gap-3">
+                <div class="w-8 h-8 bg-vttu-red/10 rounded flex items-center justify-center text-vttu-red flex-shrink-0">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                </div>
+                <div class="space-y-1">
+                    <h4 class="font-bold text-foreground text-sm">{{ $guideCondTitle }}</h4>
+                    <p class="text-xs text-muted-foreground leading-relaxed">
+                        {{ $guideCondDesc }}
+                    </p>
+                </div>
+            </div>
         </div>
     @endif
 
-    @if($errors->any())
-        <div class="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded text-xs space-y-1">
-            <div class="flex items-center gap-2 font-bold">
-                <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
-                <span>Đã xảy ra lỗi vui lòng kiểm tra lại:</span>
+    <!-- Dynamic Sections Rendering -->
+    @foreach($sections as $sIdx => $sec)
+        @if(!empty($sec['steps']))
+            <div class="space-y-3 pt-3 border-t border-border">
+                @if(!empty($sec['title']))
+                    <h4 class="font-bold text-foreground text-sm flex items-center gap-2">
+                        <i data-lucide="info" class="w-4 h-4 text-vttu-red"></i> {{ $sec['title'] }}
+                    </h4>
+                @endif
+                
+                <div class="grid gap-2 text-xs">
+                    @foreach($sec['steps'] as $idx => $step)
+                        <div class="flex gap-3 p-3 bg-card border border-border rounded-md shadow-sm">
+                            <div class="w-6 h-6 bg-vttu-red/10 text-vttu-red rounded flex items-center justify-center font-bold flex-shrink-0">
+                                {{ $step['step_number'] ?? ($idx + 1) }}
+                            </div>
+                            <div class="space-y-0.5 flex-1 min-w-0">
+                                @if(!empty($step['title']))
+                                    <h5 class="font-bold text-foreground">{{ $step['title'] }}</h5>
+                                @endif
+                                <div class="guide-step-content text-muted-foreground leading-relaxed prose dark:prose-invert max-w-none">
+                                    {!! $step['content'] ?? '' !!}
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
-            <ul class="list-disc list-inside pl-2 text-[11px] space-y-0.5 text-destructive/90">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+        @endif
+    @endforeach
+
+    <!-- Video / PDF Section -->
+    @if(!empty($guideVideoUrl))
+        <div class="space-y-3 pt-3 border-t border-border">
+            <h3 class="font-bold text-foreground text-sm flex items-center gap-2">
+                <span class="w-2.5 h-2.5 bg-vttu-red rounded-sm"></span>
+                {{ $guideVideoTitle }}
+            </h3>
+            
+            @if($isPdf)
+                <div class="relative w-full h-[650px] rounded-md overflow-hidden border border-border shadow-sm bg-muted/30">
+                    <iframe src="{{ str_contains($guideVideoUrl, 'http') ? $guideVideoUrl : asset($guideVideoUrl) }}#toolbar=0" class="w-full h-full border-0"></iframe>
+                </div>
+            @else
+                <div class="relative w-full rounded-lg overflow-hidden border border-border shadow-md bg-black aspect-video">
+                    @if($isLocalFile)
+                        <video class="w-full h-full object-contain" controls preload="metadata">
+                            <source src="{{ str_contains($guideVideoUrl, 'http') ? $guideVideoUrl : asset($guideVideoUrl) }}" type="video/mp4">
+                            {{ __('Trình duyệt của bạn không hỗ trợ thẻ video.') }}
+                        </video>
+                    @else
+                        <iframe 
+                            class="absolute top-0 left-0 w-full h-full"
+                            src="{{ $guideVideoUrl }}" 
+                            title="{{ $guideTitle }}"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowfullscreen>
+                        </iframe>
+                    @endif
+                </div>
+            @endif
         </div>
     @endif
-
-    <!-- Proposal Form -->
-    <form action="{{ route('site.proposal.store') }}" method="POST" class="bg-card border border-border rounded p-3 shadow-sm space-y-3">
-        @csrf
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <!-- Fullname -->
-            <div>
-                <label for="fullname" class="block text-xs font-bold text-foreground mb-1 uppercase tracking-wider">
-                    Họ và tên <span class="text-vttu-red">*</span>
-                </label>
-                <div class="relative">
-                    <input type="text" 
-                           id="fullname" 
-                           name="fullname" 
-                           required 
-                           class="w-full px-3 py-2 text-xs border border-border bg-background text-foreground rounded-sm focus:ring-1 focus:ring-vttu-red/50 focus:border-vttu-red/50 outline-none transition-all" 
-                           placeholder="Nhập họ và tên của bạn"
-                           value="{{ auth()->check() ? auth()->user()->name : old('fullname') }}">
-                </div>
-            </div>
-
-            <!-- Email/Phone -->
-            <div>
-                <label for="email_phone" class="block text-xs font-bold text-foreground mb-1 uppercase tracking-wider">
-                    Email / Số điện thoại <span class="text-vttu-red">*</span>
-                </label>
-                <div class="relative">
-                    <input type="text" 
-                           id="email_phone" 
-                           name="email_phone" 
-                           required 
-                           class="w-full px-3 py-2 text-xs border border-border bg-background text-foreground rounded-sm focus:ring-1 focus:ring-vttu-red/50 focus:border-vttu-red/50 outline-none transition-all" 
-                           placeholder="Nhập email hoặc số điện thoại liên hệ"
-                           value="{{ auth()->check() ? (auth()->user()->email ?? auth()->user()->username) : old('email_phone') }}">
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <!-- Book Title -->
-            <div class="md:col-span-2">
-                <label for="book_title" class="block text-xs font-bold text-foreground mb-1 uppercase tracking-wider">
-                    Tên sách / Tài liệu <span class="text-vttu-red">*</span>
-                </label>
-                <div class="relative">
-                    <input type="text" 
-                           id="book_title" 
-                           name="book_title" 
-                           required 
-                           class="w-full px-3 py-2 text-xs border border-border bg-background text-foreground rounded-sm focus:ring-1 focus:ring-vttu-red/50 focus:border-vttu-red/50 outline-none transition-all" 
-                           placeholder="Tên sách, giáo trình hoặc tài liệu cần đề xuất"
-                           value="{{ old('book_title') }}">
-                </div>
-            </div>
-
-            <!-- Quantity -->
-            <div>
-                <label for="quantity" class="block text-xs font-bold text-foreground mb-1 uppercase tracking-wider">
-                    Số lượng đề xuất <span class="text-vttu-red">*</span>
-                </label>
-                <div class="relative">
-                    <input type="number" 
-                           id="quantity" 
-                           name="quantity" 
-                           required 
-                           min="1" 
-                           class="w-full px-3 py-2 text-xs border border-border bg-background text-foreground rounded-sm focus:ring-1 focus:ring-vttu-red/50 focus:border-vttu-red/50 outline-none transition-all" 
-                           value="{{ old('quantity', 1) }}">
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <!-- Author -->
-            <div>
-                <label for="author" class="block text-xs font-bold text-foreground mb-1 uppercase tracking-wider">
-                    Tác giả
-                </label>
-                <div class="relative">
-                    <input type="text" 
-                           id="author" 
-                           name="author" 
-                           class="w-full px-3 py-2 text-xs border border-border bg-background text-foreground rounded-sm focus:ring-1 focus:ring-vttu-red/50 focus:border-vttu-red/50 outline-none transition-all" 
-                           placeholder="Nhập tên tác giả (nếu biết)"
-                           value="{{ old('author') }}">
-                </div>
-            </div>
-
-            <!-- Publisher / Year -->
-            <div>
-                <label for="publisher_year" class="block text-xs font-bold text-foreground mb-1 uppercase tracking-wider">
-                    Nhà xuất bản / Năm xuất bản
-                </label>
-                <div class="relative">
-                    <input type="text" 
-                           id="publisher_year" 
-                           name="publisher_year" 
-                           class="w-full px-3 py-2 text-xs border border-border bg-background text-foreground rounded-sm focus:ring-1 focus:ring-vttu-red/50 focus:border-vttu-red/50 outline-none transition-all" 
-                           placeholder="Nhập nhà xuất bản, năm xuất bản"
-                           value="{{ old('publisher_year') }}">
-                </div>
-            </div>
-        </div>
-
-        <!-- Reason -->
-        <div>
-            <label for="reason" class="block text-xs font-bold text-foreground mb-1 uppercase tracking-wider">
-                Lý do đề xuất / Thông tin thêm
-            </label>
-            <div class="relative">
-                <textarea id="reason" 
-                          name="reason" 
-                          rows="3" 
-                          class="w-full px-3 py-2 text-xs border border-border bg-background text-foreground rounded-sm focus:ring-1 focus:ring-vttu-red/50 focus:border-vttu-red/50 outline-none transition-all resize-none" 
-                          placeholder="Mô tả lý do đề xuất, mục đích sử dụng (học tập, nghiên cứu...) hoặc thông tin liên kết ngoài...">{{ old('reason') }}</textarea>
-            </div>
-        </div>
-
-        <!-- Submit Button -->
-        <div class="flex justify-end pt-1">
-            <button type="submit" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-vttu-red text-white text-xs font-bold uppercase tracking-wider rounded-sm hover:bg-vttu-red/90 active:scale-[0.98] transition-all cursor-pointer">
-                <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                Gửi đề nghị bổ sung
-            </button>
-        </div>
-    </form>
 </div>

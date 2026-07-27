@@ -18,6 +18,10 @@ Route::post('/webhook', [WebhookController::class, 'handleWebhook'])->withoutMid
 // Language Switcher
 Route::get('lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
 
+// Backward-compatible route: phục vụ ảnh tin tức từ hệ thống cũ (ASP.NET)
+// URL dạng: /News/ViewImageMedia?imageId=XXX&ext=png
+Route::get('/News/ViewImageMedia', [\App\Http\Controllers\SiteController::class, 'viewImageMedia'])->name('news.media.image');
+
 // Client Routes
 // Route::get('/', [ClientController::class, 'index'])->name('client.home');
 
@@ -224,18 +228,23 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
             'title' => 'required|string|max:255',
             'condition_title' => 'nullable|string|max:255',
             'condition_desc' => 'nullable|string|max:1000',
+            'sections' => 'nullable|array',
+            'sections.*.title' => 'nullable|string|max:255',
+            'sections.*.steps' => 'nullable|array',
+            'sections.*.steps.*.title' => 'nullable|string|max:255',
+            'sections.*.steps.*.content' => 'nullable|string',
             'steps_title' => 'nullable|string|max:255',
             'steps' => 'nullable|array',
             'steps.*.title' => 'nullable|string|max:255',
-            'steps.*.content' => 'nullable|string|max:5000',
+            'steps.*.content' => 'nullable|string',
             'section2_title' => 'nullable|string|max:255',
             'section2_steps' => 'nullable|array',
             'section2_steps.*.title' => 'nullable|string|max:255',
-            'section2_steps.*.content' => 'nullable|string|max:5000',
+            'section2_steps.*.content' => 'nullable|string',
             'video_title' => 'nullable|string|max:255',
             'video_source' => 'required|in:file,url',
             'embed_video_url' => 'nullable|string|max:1000',
-            'video_file' => 'nullable|file|mimes:mp4,webm,ogg,mov,avi,mkv|max:102400',
+            'video_file' => 'nullable|file|mimes:mp4,webm,ogg,mov,avi,mkv,pdf|max:102400',
         ]);
 
         $existingJson = json_decode($siteNode->content_json ?? '{}', true) ?: [];
@@ -250,7 +259,34 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
         $videoSource = $validated['video_source'];
         $activeVideoUrl = ($videoSource === 'file' && !empty($uploadedVideoUrl)) ? $uploadedVideoUrl : $embedVideoUrl;
 
-        // Clean steps array
+        // Process dynamic sections array
+        $sectionsList = [];
+        if (!empty($validated['sections']) && is_array($validated['sections'])) {
+            foreach ($validated['sections'] as $secIndex => $sec) {
+                $cleanSteps = [];
+                if (!empty($sec['steps']) && is_array($sec['steps'])) {
+                    foreach ($sec['steps'] as $stepIndex => $step) {
+                        if (!empty($step['title']) || !empty($step['content'])) {
+                            $cleanSteps[] = [
+                                'step_number' => count($cleanSteps) + 1,
+                                'title' => $step['title'] ?? '',
+                                'content' => $step['content'] ?? '',
+                            ];
+                        }
+                    }
+                }
+
+                if (!empty($sec['title']) || count($cleanSteps) > 0) {
+                    $sectionsList[] = [
+                        'section_number' => count($sectionsList) + 1,
+                        'title' => $sec['title'] ?? '',
+                        'steps' => $cleanSteps,
+                    ];
+                }
+            }
+        }
+
+        // Clean legacy steps array
         $stepsList = [];
         if (!empty($validated['steps']) && is_array($validated['steps'])) {
             foreach ($validated['steps'] as $idx => $step) {
@@ -264,7 +300,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
             }
         }
 
-        // Clean section 2 steps array
+        // Clean legacy section 2 steps array
         $section2StepsList = [];
         if (!empty($validated['section2_steps']) && is_array($validated['section2_steps'])) {
             foreach ($validated['section2_steps'] as $idx => $step) {
@@ -278,13 +314,32 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
             }
         }
 
+        // If legacy steps exist and sectionsList is empty, construct sectionsList automatically
+        if (empty($sectionsList)) {
+            if (!empty($stepsList)) {
+                $sectionsList[] = [
+                    'section_number' => 1,
+                    'title' => $validated['steps_title'] ?? 'Các bước thực hiện:',
+                    'steps' => $stepsList
+                ];
+            }
+            if (!empty($section2StepsList)) {
+                $sectionsList[] = [
+                    'section_number' => 2,
+                    'title' => $validated['section2_title'] ?? 'Các bước thực hiện Phần 2:',
+                    'steps' => $section2StepsList
+                ];
+            }
+        }
+
         $contentData = [
             'title' => $validated['title'],
             'condition_title' => $validated['condition_title'] ?? '',
             'condition_desc' => $validated['condition_desc'] ?? '',
-            'steps_title' => $validated['steps_title'] ?? 'Các bước thực hiện:',
+            'sections' => $sectionsList,
+            'steps_title' => $validated['steps_title'] ?? ($sectionsList[0]['title'] ?? 'Các bước thực hiện:'),
             'steps' => $stepsList,
-            'section2_title' => $validated['section2_title'] ?? '',
+            'section2_title' => $validated['section2_title'] ?? ($sectionsList[1]['title'] ?? ''),
             'section2_steps' => $section2StepsList,
             'video_title' => $validated['video_title'] ?? '',
             'video_source' => $videoSource,
@@ -299,6 +354,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
         ]);
 
         $tab = $request->input('tab', $siteNode->node_code);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('Đã cập nhật thông tin hướng dẫn thành công!'),
+                'uploaded_video_url' => $uploadedVideoUrl,
+                'video_url' => $activeVideoUrl
+            ]);
+        }
+
         return redirect()->to(route('admin.user-guides.index', ['tab' => $tab]))->with('success', __('Đã cập nhật thông tin hướng dẫn thành công!'));
     })->name('admin.user-guides.update');
 

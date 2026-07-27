@@ -9,9 +9,6 @@
         <h2 class="text-lg font-black text-foreground uppercase tracking-wider">
             {{ __('Tra cứu tài liệu giấy') }}
         </h2>
-        <p class="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            {{ __('Kho tài liệu in của Thư viện bao gồm giáo trình, tài liệu tham khảo, luận văn tốt nghiệp và báo, tạp chí chuyên ngành. Độc giả có thể tìm kiếm thông tin chi tiết và kiểm tra tình trạng sách còn hay đã mượn thông qua hệ thống Tra cứu trực tuyến OPAC.') }}
-        </p>
 
         <!-- Redirect Button using Route Name -->
         <div class="pt-4">

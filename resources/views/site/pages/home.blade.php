@@ -547,14 +547,14 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                     <span class="text-[10px] font-black uppercase tracking-wider">{{ __('Cơ sở dữ liệu') }}</span>
                                 </a>
 
-                                <a href="http://hoclieu.vttu.edu.vn/" target="_blank" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                <a href="https://study.vttu.edu.vn/" target="_blank" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                                     <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
                                         <i class="fas fa-graduation-cap text-[10px]"></i>
                                     </div>
                                     <span class="text-[10px] font-black uppercase tracking-wider">{{ __('Học liệu VTTU') }}</span>
                                 </a>
 
-                                <a href="http://bgtt.vttu.edu.vn/BaiGiangTrucTuyen/Pages/FrmDangNhap.jsp" target="_blank" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-lime-800 to-lime-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                <a href="{{ route('site.page', 'bgtt-vttu') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-lime-800 to-lime-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                                     <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
                                         <i class="fas fa-video text-[10px]"></i>
                                     </div>
@@ -568,7 +568,7 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                     <span class="text-[10px] font-black uppercase tracking-wider">{{ __('Đề nghị bổ sung tài liệu') }}</span>
                                 </a>
 
-                                <a href="{{ route('site.page', 'khao-sat-y-kien') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-emerald-800 to-emerald-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfA1HzeY02CeQbYO_Gr4oVT91lNBtiu6XnYwDHdFo98B4QO2w/viewform?fbzx=-4713703804503636107&pli=1" target="_blank" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-emerald-800 to-emerald-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                                     <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
                                         <i class="fas fa-poll text-[10px]"></i>
                                     </div>

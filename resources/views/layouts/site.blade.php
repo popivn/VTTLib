@@ -95,13 +95,13 @@
             transform: translateY(-10px) rotateX(5deg) rotateY(2deg);
         }
 
-        .prose h1, .prose h2, .prose h3 {
-            color: #1f2937;
+        .prose:not(.not-prose) h1, .prose:not(.not-prose) h2, .prose:not(.not-prose) h3 {
+            color: inherit;
             font-weight: bold;
         }
-        .prose h1 { font-size: 2.5rem; margin-top: 2rem; margin-bottom: 1rem; }
-        .prose h2 { font-size: 2rem; margin-top: 1.5rem; margin-bottom: 0.75rem; }
-        .prose h3 { font-size: 1.5rem; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+        .prose:not(.not-prose) h1 { font-size: 2.5rem; margin-top: 2rem; margin-bottom: 1rem; }
+        .prose:not(.not-prose) h2 { font-size: 2rem; margin-top: 1.5rem; margin-bottom: 0.75rem; }
+        .prose:not(.not-prose) h3 { font-size: 1.5rem; margin-top: 1.25rem; margin-bottom: 0.5rem; }
         .prose p {
             margin-bottom: 1rem;
             line-height: 1.7;
