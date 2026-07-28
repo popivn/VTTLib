@@ -10,12 +10,28 @@
                 <p class="text-xs text-slate-400 dark:text-slate-500">Hệ thống tự động phát hiện các độc giả có giao dịch mượn tài liệu quá hạn chưa trả.</p>
             </div>
 
-            <!-- Mail Type Selector -->
-            <div class="w-full md:w-72">
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Loại email nhắc nhở</label>
-                <select id="sendMailTypeSelect" class="w-full px-2.5 py-1.5 text-xs border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#680102] font-semibold">
-                    <option value="overdue" selected>Sinh Viên Quá Hạn Mượn Sách</option>
-                </select>
+            <!-- Mail Type Selector & Channel Selector -->
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <div class="w-full sm:w-56">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Loại email nhắc nhở</label>
+                    <select id="sendMailTypeSelect" class="w-full px-2.5 py-1.5 text-xs border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#680102] font-semibold">
+                        <option value="overdue" selected>Sinh Viên Quá Hạn Mượn Sách</option>
+                    </select>
+                </div>
+                <div class="w-full sm:w-60">
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Kênh gửi email</label>
+                    <div class="flex bg-slate-200 dark:bg-slate-800 p-0.5 rounded gap-0.5 border border-slate-300 dark:border-slate-700">
+                        <button type="button" id="btnChannelSystem" onclick="setSenderChannel('system')" 
+                            class="flex-1 py-1 rounded text-[11px] font-bold text-center transition-all bg-[#680102] text-white shadow-sm">
+                            Mail Hệ Thống
+                        </button>
+                        <button type="button" id="btnChannelLibrary" onclick="setSenderChannel('library')" 
+                            class="flex-1 py-1 rounded text-[11px] font-bold text-center transition-all text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
+                            Mail Thư Viện
+                        </button>
+                    </div>
+                    <input type="hidden" id="senderChannelInput" value="system">
+                </div>
             </div>
         </div>
     </div>
@@ -97,6 +113,21 @@
 </div>
 
 <script>
+    // Toggle Sender Channel
+    function setSenderChannel(channel) {
+        document.getElementById('senderChannelInput').value = channel;
+        const btnSystem = document.getElementById('btnChannelSystem');
+        const btnLibrary = document.getElementById('btnChannelLibrary');
+
+        if (channel === 'system') {
+            btnSystem.className = "flex-1 py-1 rounded text-[11px] font-bold text-center transition-all bg-[#680102] text-white shadow-sm";
+            btnLibrary.className = "flex-1 py-1 rounded text-[11px] font-bold text-center transition-all text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200";
+        } else {
+            btnLibrary.className = "flex-1 py-1 rounded text-[11px] font-bold text-center transition-all bg-[#680102] text-white shadow-sm";
+            btnSystem.className = "flex-1 py-1 rounded text-[11px] font-bold text-center transition-all text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200";
+        }
+    }
+
     // Toggle check/uncheck all checkboxes
     function toggleSelectAllPatrons(source) {
         const checkboxes = document.querySelectorAll('.patron-checkbox');
@@ -117,7 +148,9 @@
 
     // Send single email via AJAX
     function sendSingleMail(patronId) {
-        if (!confirm('Bạn chắc chắn muốn gửi email nhắc nhở quá hạn cho sinh viên này?')) {
+        const channel = document.getElementById('senderChannelInput').value;
+        const channelText = channel === 'library' ? 'Mail Thư Viện (mailthuvien@vttu.edu.vn)' : 'Mail Hệ Thống';
+        if (!confirm(`Bạn chắc chắn muốn gửi email nhắc nhở quá hạn cho sinh viên này qua [${channelText}]?`)) {
             return;
         }
 
@@ -133,7 +166,9 @@
 
         if (selected.length === 0) return;
 
-        if (!confirm(`Bạn chắc chắn muốn gửi thư nhắc nhở cho ${selected.length} sinh viên đã chọn?`)) {
+        const channel = document.getElementById('senderChannelInput').value;
+        const channelText = channel === 'library' ? 'Mail Thư Viện (mailthuvien@vttu.edu.vn)' : 'Mail Hệ Thống';
+        if (!confirm(`Bạn chắc chắn muốn gửi thư nhắc nhở cho ${selected.length} sinh viên đã chọn qua [${channelText}]?`)) {
             return;
         }
 
@@ -144,6 +179,7 @@
     function executeSendMail(patronIds) {
         const btnBulk = document.getElementById('btnBulkSend');
         const originalText = btnBulk ? btnBulk.innerHTML : '';
+        const channel = document.getElementById('senderChannelInput').value;
         
         if (btnBulk) {
             btnBulk.disabled = true;
@@ -157,7 +193,8 @@
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
             body: JSON.stringify({
-                patron_ids: patronIds
+                patron_ids: patronIds,
+                sender_channel: channel
             })
         })
         .then(response => response.json())

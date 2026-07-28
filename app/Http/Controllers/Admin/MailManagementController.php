@@ -505,7 +505,10 @@ class MailManagementController extends Controller
         $validated = $request->validate([
             'patron_ids' => 'required|array',
             'patron_ids.*' => 'integer',
+            'sender_channel' => 'nullable|string|in:system,library',
         ]);
+
+        $senderChannel = $validated['sender_channel'] ?? 'system';
 
         $template = DB::table('system_settings')
             ->where('key', 'mail_template_overdue')
@@ -522,7 +525,11 @@ class MailManagementController extends Controller
         $address = $tpl['address'] ?? 'Khu đô thị ĐH Võ Trường Toản, QL 1A, Châu Thành A, Hậu Giang';
         $footerNote = $tpl['footer_note'] ?? 'Email tự động, vui lòng không phản hồi thư này.';
 
-        $mailQueueService = resolve(MailQueueService::class);
+        if ($senderChannel === 'library') {
+            $mailService = resolve(\App\Services\MailLibraryService::class);
+        } else {
+            $mailService = resolve(MailQueueService::class);
+        }
         $successCount = 0;
         $failCount = 0;
 
@@ -635,7 +642,7 @@ class MailManagementController extends Controller
 </body>
 </html>';
 
-            $result = $mailQueueService->send(
+            $result = $mailService->send(
                 $patron->email,
                 $subtitle,
                 $htmlBody,
