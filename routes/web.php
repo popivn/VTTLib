@@ -5,6 +5,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\MetadataController;
 use App\Http\Controllers\Admin\TinyMceController;
+use App\Http\Controllers\Admin\VideoController;
 use App\Http\Controllers\SecretLoginController;
 use App\Http\Controllers\ClientLoginController;
 use App\Http\Controllers\WebhookController;
@@ -853,6 +854,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
     // TinyMCE Token Management
     Route::get('/tinymce', [\App\Http\Controllers\Admin\TinyMceController::class, 'index'])->name('admin.tinymce.index');
     Route::post('/tinymce/update-token', [\App\Http\Controllers\Admin\TinyMceController::class, 'updateToken'])->name('admin.tinymce.update');
+
+    // Video Management
+    Route::resource('videos', \App\Http\Controllers\Admin\VideoController::class)->names('admin.videos');
+    Route::post('/videos/{video}/toggle-status', [\App\Http\Controllers\Admin\VideoController::class, 'toggleStatus'])->name('admin.videos.toggle-status');
+    Route::post('/videos/upload-video', [\App\Http\Controllers\Admin\VideoController::class, 'uploadVideo'])->name('admin.videos.upload-video');
+    Route::post('/videos/upload-thumbnail', [\App\Http\Controllers\Admin\VideoController::class, 'uploadThumbnail'])->name('admin.videos.upload-thumbnail');
 });
 
 // Visitor Routes
