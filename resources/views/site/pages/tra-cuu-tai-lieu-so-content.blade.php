@@ -26,9 +26,9 @@
     
     $uploadedVideoUrl = $guideJson['uploaded_video_url'] ?? '';
     $embedVideoUrl = $guideJson['embed_video_url'] ?? ($guideJson['video_url'] ?? '');
-    $videoSource = $guideJson['video_source'] ?? (!empty($uploadedVideoUrl) ? 'file' : 'url');
+    $videoSource = $guideJson['video_source'] ?? (!empty($uploadedVideoUrl) ? 'file' : (!empty($embedVideoUrl) ? 'url' : 'none'));
 
-    $guideVideoUrl = ($videoSource === 'file' && !empty($uploadedVideoUrl)) ? $uploadedVideoUrl : $embedVideoUrl;
+    $guideVideoUrl = ($videoSource === 'none') ? '' : (($videoSource === 'file' && !empty($uploadedVideoUrl)) ? $uploadedVideoUrl : $embedVideoUrl);
 
     if ($videoSource === 'url' && !empty($guideVideoUrl)) {
         if (str_contains($guideVideoUrl, 'youtube.com/watch?v=')) {

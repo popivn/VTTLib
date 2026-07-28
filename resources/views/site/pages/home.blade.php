@@ -511,12 +511,20 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
 
                         <!-- Khám phá VTTU / Liên kết nhanh -->
                         <div class="bg-white p-4 rounded-md shadow-sm border border-slate-100" data-aos="fade-left">
-                            <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
-                                <div class="w-8 h-8 bg-vttu-red/5 rounded-sm flex items-center justify-center text-vttu-red animate-pulse">
-                                    <i class="fas fa-compass text-sm"></i>
+                            <a href="https://vttu.edu.vn/360vttu/" target="_blank" class="block mb-4 overflow-hidden rounded-md group hover:shadow-md transition-all duration-300">
+                                <div class="relative w-full aspect-[4/1.2] bg-[#680102] overflow-hidden">
+                                    <img src="{{ asset('assets/imgs/vttu_360_banner.png') }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Khám phá VTTU 360">
+                                    <!-- Overlay with text for high contrast -->
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 bg-[#680102] rounded-full flex items-center justify-center text-white text-[10px] animate-pulse">
+                                                <i class="fas fa-compass"></i>
+                                            </div>
+                                            <span class="text-[10px] font-black text-white uppercase tracking-wider">{{ __('KHÁM PHÁ VTTU 360') }}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <h3 class="text-xs font-black text-vttu-dark uppercase tracking-wider">{{ __('KHÁM PHÁ VTTU 360') }}</h3>
-                            </div>
+                            </a>
                             
                             <div class="flex flex-col gap-2">
                                 <a href="{{ route('site.page', 'tai-lieu-so') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-red-800 to-red-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">

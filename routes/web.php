@@ -245,7 +245,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
             'section2_steps.*.title' => 'nullable|string|max:255',
             'section2_steps.*.content' => 'nullable|string',
             'video_title' => 'nullable|string|max:255',
-            'video_source' => 'required|in:file,url',
+            'video_source' => 'required|in:file,url,none',
             'embed_video_url' => 'nullable|string|max:1000',
             'video_file' => 'nullable|file|mimes:mp4,webm,ogg,mov,avi,mkv,pdf|max:102400',
         ]);
@@ -260,7 +260,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
         }
 
         $videoSource = $validated['video_source'];
-        $activeVideoUrl = ($videoSource === 'file' && !empty($uploadedVideoUrl)) ? $uploadedVideoUrl : $embedVideoUrl;
+        if ($videoSource === 'none') {
+            $activeVideoUrl = null;
+        } else {
+            $activeVideoUrl = ($videoSource === 'file' && !empty($uploadedVideoUrl)) ? $uploadedVideoUrl : $embedVideoUrl;
+        }
 
         // Process dynamic sections array
         $sectionsList = [];
@@ -860,6 +864,22 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
     Route::post('/videos/{video}/toggle-status', [\App\Http\Controllers\Admin\VideoController::class, 'toggleStatus'])->name('admin.videos.toggle-status');
     Route::post('/videos/upload-video', [\App\Http\Controllers\Admin\VideoController::class, 'uploadVideo'])->name('admin.videos.upload-video');
     Route::post('/videos/upload-thumbnail', [\App\Http\Controllers\Admin\VideoController::class, 'uploadThumbnail'])->name('admin.videos.upload-thumbnail');
+
+    // Mail Management
+    Route::prefix('mails')->name('admin.mails.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\MailManagementController::class, 'index'])->name('index');
+        Route::post('/send', [\App\Http\Controllers\Admin\MailManagementController::class, 'send'])->name('send');
+        Route::post('/send-mass', [\App\Http\Controllers\Admin\MailManagementController::class, 'sendMass'])->name('send-mass');
+        Route::post('/preview', [\App\Http\Controllers\Admin\MailManagementController::class, 'preview'])->name('preview');
+        Route::get('/{mail}', [\App\Http\Controllers\Admin\MailManagementController::class, 'show'])->name('show');
+        Route::post('/{mail}/resend', [\App\Http\Controllers\Admin\MailManagementController::class, 'resend'])->name('resend');
+        Route::delete('/{mail}', [\App\Http\Controllers\Admin\MailManagementController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk-action', [\App\Http\Controllers\Admin\MailManagementController::class, 'bulkAction'])->name('bulk-action');
+        Route::get('/statistics', [\App\Http\Controllers\Admin\MailManagementController::class, 'statistics'])->name('statistics');
+        Route::get('/export', [\App\Http\Controllers\Admin\MailManagementController::class, 'export'])->name('export');
+        Route::post('/save-template', [\App\Http\Controllers\Admin\MailManagementController::class, 'saveTemplate'])->name('save-template');
+        Route::post('/send-overdue', [\App\Http\Controllers\Admin\MailManagementController::class, 'sendOverdueMails'])->name('send-overdue');
+    });
 });
 
 // Visitor Routes

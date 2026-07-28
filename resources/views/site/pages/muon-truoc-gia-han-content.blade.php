@@ -26,8 +26,8 @@
     $guideVideoTitle = $guideJson['video_title'] ?? 'Video hướng dẫn thao tác:';
     $uploadedVideoUrl = $guideJson['uploaded_video_url'] ?? '';
     $embedVideoUrl = $guideJson['embed_video_url'] ?? ($guideJson['video_url'] ?? '');
-    $videoSource = $guideJson['video_source'] ?? (!empty($uploadedVideoUrl) ? 'file' : 'url');
-    $guideVideoUrl = ($videoSource === 'file') ? $uploadedVideoUrl : $embedVideoUrl;
+    $videoSource = $guideJson['video_source'] ?? (!empty($uploadedVideoUrl) ? 'file' : (!empty($embedVideoUrl) ? 'url' : 'none'));
+    $guideVideoUrl = ($videoSource === 'none') ? '' : (($videoSource === 'file') ? $uploadedVideoUrl : $embedVideoUrl);
 
     if (str_contains($guideVideoUrl, 'youtube.com/watch?v=')) {
         $guideVideoUrl = str_replace('youtube.com/watch?v=', 'youtube.com/embed/', $guideVideoUrl);

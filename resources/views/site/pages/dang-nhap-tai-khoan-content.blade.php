@@ -24,7 +24,11 @@
     }
 
     $guideVideoTitle = $guideJson['video_title'] ?? 'Bạn đọc vui lòng xem video hướng dẫn dưới đây:';
-    $guideVideoUrl = $guideJson['video_url'] ?? 'https://www.canva.com/design/DAGAyk7W3b8/OtC9Ngs-WllWWEM06hRnwA/watch?embed';
+    $uploadedVideoUrl = $guideJson['uploaded_video_url'] ?? '';
+    $embedVideoUrl = $guideJson['embed_video_url'] ?? ($guideJson['video_url'] ?? '');
+    $videoSource = $guideJson['video_source'] ?? (!empty($uploadedVideoUrl) ? 'file' : (!empty($embedVideoUrl) ? 'url' : 'none'));
+
+    $guideVideoUrl = ($videoSource === 'none') ? '' : (($videoSource === 'file') ? $uploadedVideoUrl : ($embedVideoUrl ?: 'https://www.canva.com/design/DAGAyk7W3b8/OtC9Ngs-WllWWEM06hRnwA/watch?embed'));
 
     if (str_contains($guideVideoUrl, 'youtube.com/watch?v=')) {
         $guideVideoUrl = str_replace('youtube.com/watch?v=', 'youtube.com/embed/', $guideVideoUrl);

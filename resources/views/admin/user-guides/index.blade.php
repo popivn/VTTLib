@@ -89,7 +89,7 @@
                 $videoTitle = $json['video_title'] ?? 'Bạn đọc vui lòng xem video hướng dẫn dưới đây:';
                 $uploadedVideoUrl = $json['uploaded_video_url'] ?? '';
                 $embedVideoUrl = $json['embed_video_url'] ?? ($json['video_url'] ?? '');
-                $videoSource = $json['video_source'] ?? (!empty($uploadedVideoUrl) ? 'file' : 'url');
+                $videoSource = $json['video_source'] ?? (!empty($uploadedVideoUrl) ? 'file' : (!empty($embedVideoUrl) ? 'url' : 'none'));
             @endphp
             <div x-show="activeTab === '{{ $node->node_code }}'" x-cloak class="space-y-4">
                 <form action="{{ route('admin.user-guides.update', ['siteNode' => $node->id, 'tab' => $node->node_code]) }}" method="POST" enctype="multipart/form-data" class="space-y-4" 
@@ -246,7 +246,11 @@
                                             {{ __('Tùy chọn Nguồn Video / PDF Trình chiếu sử dụng') }}
                                         </label>
 
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                            <label class="p-2.5 rounded-lg border transition-all flex items-center gap-2 cursor-pointer" :class="videoSource === 'none' ? 'border-primary bg-primary/5' : 'border-border bg-background'">
+                                                <input type="radio" name="video_source" value="none" x-model="videoSource" class="w-3.5 h-3.5 text-primary">
+                                                <span class="text-xs font-bold text-foreground">{{ __('Không hiển thị Video/PDF') }}</span>
+                                            </label>
                                             <label class="p-2.5 rounded-lg border transition-all flex items-center gap-2 cursor-pointer" :class="videoSource === 'file' ? 'border-primary bg-primary/5' : 'border-border bg-background'">
                                                 <input type="radio" name="video_source" value="file" x-model="videoSource" class="w-3.5 h-3.5 text-primary">
                                                 <span class="text-xs font-bold text-foreground">{{ __('File Video / PDF tải lên') }}</span>
@@ -564,6 +568,9 @@
                 }
             },
             get activePreviewUrl() {
+                if (this.videoSource === 'none') {
+                    return '';
+                }
                 if (this.videoSource === 'file') {
                     return this.newFilePreviewUrl || this.uploadedUrl;
                 }

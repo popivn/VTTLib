@@ -4,7 +4,11 @@
     $guideCondTitle = $guideJson['condition_title'] ?? 'Yêu cầu thiết bị:';
     $guideCondDesc = $guideJson['condition_desc'] ?? 'Thiết bị di động chạy hệ điều hành iOS (App Store) hoặc Android (Google Play Store).';
     $guideVideoTitle = $guideJson['video_title'] ?? 'Video hướng dẫn cài đặt app:';
-    $guideVideoUrl = $guideJson['video_url'] ?? '';
+    $uploadedVideoUrl = $guideJson['uploaded_video_url'] ?? '';
+    $embedVideoUrl = $guideJson['embed_video_url'] ?? ($guideJson['video_url'] ?? '');
+    $videoSource = $guideJson['video_source'] ?? (!empty($uploadedVideoUrl) ? 'file' : (!empty($embedVideoUrl) ? 'url' : 'none'));
+
+    $guideVideoUrl = ($videoSource === 'none') ? '' : (($videoSource === 'file') ? $uploadedVideoUrl : $embedVideoUrl);
 
     if (str_contains($guideVideoUrl, 'youtube.com/watch?v=')) {
         $guideVideoUrl = str_replace('youtube.com/watch?v=', 'youtube.com/embed/', $guideVideoUrl);
