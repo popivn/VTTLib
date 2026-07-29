@@ -90,7 +90,7 @@ class MarcFrameworkService
 
                             MarcSubfieldDefinition::firstOrCreate(
                                 [
-                                    'marc_tag_definition_id' => $tagDef->id,
+                                    'tag_id' => $tagDef->id,
                                     'code' => $code
                                 ],
                                 [
@@ -137,7 +137,7 @@ class MarcFrameworkService
 
                         MarcSubfieldDefinition::firstOrCreate(
                             [
-                                'marc_tag_definition_id' => $tagDef->id,
+                                'tag_id' => $tagDef->id,
                                 'code' => $code
                             ],
                             [

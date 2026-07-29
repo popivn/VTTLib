@@ -100,11 +100,10 @@ class MarcImportService
 
             foreach ($fieldInstances as $instanceIndex => $instance) {
                 $fieldRecord = $record->fields()->create([
-                    'marc_tag_definition_id' => $tagDef->id,
                     'tag' => $tag,
-                    'ind1' => $instance['indicators'][0] ?? '#',
-                    'ind2' => $instance['indicators'][1] ?? '#',
-                    'sort_order' => $instanceIndex
+                    'indicator1' => $instance['indicators'][0] ?? '#',
+                    'indicator2' => $instance['indicators'][1] ?? '#',
+                    'sequence' => $instanceIndex
                 ]);
 
                 if (isset($instance['subfields'])) {
@@ -112,25 +111,21 @@ class MarcImportService
                         $code = $sf['code'];
                         $value = $sf['value'];
 
-                        $subfieldDef = MarcSubfieldDefinition::where('marc_tag_definition_id', $tagDef->id)
+                        $subfieldDef = MarcSubfieldDefinition::where('tag_id', $tagDef->id)
                             ->where('code', $code)
                             ->first();
 
                         if (!$subfieldDef) {
                             $subfieldDef = MarcSubfieldDefinition::create([
-                                'marc_tag_definition_id' => $tagDef->id,
+                                'tag_id' => $tagDef->id,
                                 'code' => $code,
                                 'label' => 'Subfield ' . $code,
-                                'repeatable' => true,
-                                'mandatory' => false
                             ]);
                         }
 
                         $fieldRecord->subfields()->create([
-                            'marc_subfield_definition_id' => $subfieldDef->id,
                             'code' => $code,
                             'value' => $value,
-                            'sort_order' => $sfIndex
                         ]);
                     }
                 }

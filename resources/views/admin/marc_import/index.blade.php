@@ -21,7 +21,7 @@
             <div class="p-3">
                 <form id="marcImportForm" enctype="multipart/form-data">
                     @csrf
-                    <input type="hidden" name="action_type" value="create">
+                    <input type="hidden" name="action_type" id="marc_action_type" value="create">
 
                     <!-- Options -->
                     <div class="grid grid-cols-1 gap-3 mb-3">
@@ -283,29 +283,29 @@
             }
         }
 
-        fileInput.addEventListener('change', updateButtonStates);
-        frameworkSelect.addEventListener('change', updateButtonStates);
+        fileInput?.addEventListener('change', updateButtonStates);
+        frameworkSelect?.addEventListener('change', updateButtonStates);
 
-        downloadTemplateBtn.addEventListener('click', function() {
-            const frameworkId = frameworkSelect.value;
+        downloadTemplateBtn?.addEventListener('click', function() {
+            const frameworkId = frameworkSelect?.value;
             if (frameworkId) {
                 window.location.href = `{{ route('admin.marc.import.template') }}?framework_id=${frameworkId}`;
             }
         });
 
         // Drag & drop Excel
-        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-primary', 'bg-primary/5'); });
-        dropZone.addEventListener('dragleave', e => { e.preventDefault(); dropZone.classList.remove('border-primary', 'bg-primary/5'); });
-        dropZone.addEventListener('drop', e => {
+        dropZone?.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-primary', 'bg-primary/5'); });
+        dropZone?.addEventListener('dragleave', e => { e.preventDefault(); dropZone.classList.remove('border-primary', 'bg-primary/5'); });
+        dropZone?.addEventListener('drop', e => {
             e.preventDefault();
             dropZone.classList.remove('border-primary', 'bg-primary/5');
-            if (e.dataTransfer.files.length > 0) {
+            if (e.dataTransfer.files.length > 0 && fileInput) {
                 fileInput.files = e.dataTransfer.files;
                 updateButtonStates();
             }
         });
 
-        form.addEventListener('submit', async function(e) {
+        form?.addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = new FormData(form);
             uploadBtn.disabled = true;
@@ -484,7 +484,7 @@
             });
         }
 
-        document.getElementById('createFrameworkBtn').addEventListener('click', async function() {
+        document.getElementById('createFrameworkBtn')?.addEventListener('click', async function() {
             const ts = Date.now().toString().slice(-6);
             const {
                 value: formValues
@@ -569,7 +569,7 @@
             }
         });
 
-        document.getElementById('processBtn').addEventListener('click', async function() {
+        document.getElementById('processBtn')?.addEventListener('click', async function() {
             this.disabled = true;
             this.innerHTML = `...`;
             try {
@@ -581,8 +581,8 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
                     body: JSON.stringify({
-                        framework_id: frameworkSelect.value,
-                        action_type: actionTypeSelect.value,
+                        framework_id: frameworkSelect?.value,
+                        action_type: actionTypeSelect?.value,
                         validated_data: validImportData
                     })
                 });
@@ -610,15 +610,15 @@
             }
         });
 
-        resetBtn.addEventListener('click', function() {
-            form.reset();
+        resetBtn?.addEventListener('click', function() {
+            form?.reset();
             updateButtonStates();
-            validationResults.classList.add('hidden');
-            processingResults.classList.add('hidden');
+            validationResults?.classList.add('hidden');
+            processingResults?.classList.add('hidden');
         });
 
-        document.getElementById('cancelBtn').addEventListener('click', function() {
-            validationResults.classList.add('hidden');
+        document.getElementById('cancelBtn')?.addEventListener('click', function() {
+            validationResults?.classList.add('hidden');
         });
     });
 
@@ -1126,7 +1126,7 @@
         };
 
         // Save framework button
-        document.getElementById('saveFrameworkBtn').addEventListener('click', async function() {
+        document.getElementById('saveFrameworkBtn')?.addEventListener('click', async function() {
             if (extractedFrameworkData.length === 0) {
                 Swal.fire({
                     ...swalConfig,
@@ -1234,9 +1234,9 @@
         });
 
         // Process MARC import
-        document.getElementById('marcProcessBtn').addEventListener('click', async function() {
-            let frameworkId = document.getElementById('marcProcessFramework').value;
-            const actionType = document.getElementById('marc_action_type').value;
+        document.getElementById('marcProcessBtn')?.addEventListener('click', async function() {
+            let frameworkId = document.getElementById('marcProcessFramework')?.value;
+            const actionType = document.getElementById('marc_action_type')?.value || document.querySelector('input[name="action_type"]')?.value || 'create';
 
             if (!frameworkId) {
                 Swal.fire({
@@ -1261,39 +1261,10 @@
                 }
 
                 const ts = Date.now().toString().slice(-6);
-                const { value: formValues } = await Swal.fire({
-                    ...swalConfig,
-                    title: '{{ __("Tạo khung biên mục từ file") }}',
-                    html: '<div class="text-left space-y-3 pt-3">' +
-                        '<div class="space-y-1">' +
-                        '<label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">{{ __("Tên khung biên mục") }}</label>' +
-                        '<input id="swalFwName" class="w-full h-9 px-3 py-1.5 bg-background border border-input rounded-sm text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none text-foreground" value="{{ __("Khung sách giáo trình") }} ' + ts + '" placeholder="{{ __("Ví dụ: Khung sách giáo trình") }}">' +
-                        '</div>' +
-                        '<div class="space-y-1">' +
-                        '<label class="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">{{ __("Mã khung (viết hoa)") }}</label>' +
-                        '<input id="swalFwCode" class="w-full h-9 px-3 py-1.5 bg-background border border-input rounded-sm text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none text-foreground font-mono" value="GIAOTRINH_' + ts + '" placeholder="{{ __("Ví dụ: GIAOTRINH") }}">' +
-                        '</div>' +
-                        '</div>',
-                    focusConfirm: false,
-                    showCancelButton: true,
-                    confirmButtonText: '{{ __("Tạo & Import") }}',
-                    cancelButtonText: '{{ __("Huỷ") }}',
-                    preConfirm: () => {
-                        const name = document.getElementById('swalFwName').value.trim();
-                        const code = document.getElementById('swalFwCode').value.trim().toUpperCase();
-                        if (!name || !code) {
-                            Swal.showValidationMessage('{{ __("Vui lòng nhập đầy đủ tên và mã khung") }}');
-                            return false;
-                        }
-                        if (code.length > 20) {
-                            Swal.showValidationMessage('{{ __("Mã khung tối đa 20 ký tự") }}');
-                            return false;
-                        }
-                        return { name, code };
-                    }
-                });
-
-                if (!formValues) return;
+                const formValues = {
+                    name: `Khung sách giáo trình ${ts}`,
+                    code: `GIAOTRINH_${ts}`
+                };
 
                 // Create framework first
                 this.disabled = true;
@@ -1503,16 +1474,16 @@
         }
 
         // Cancel
-        document.getElementById('marcCancelBtn').addEventListener('click', function() {
-            document.getElementById('marcValidationResults').classList.add('hidden');
+        document.getElementById('marcCancelBtn')?.addEventListener('click', function() {
+            document.getElementById('marcValidationResults')?.classList.add('hidden');
         });
 
         // Reset
-        document.getElementById('marcResetBtn').addEventListener('click', function() {
-            marcForm.reset();
+        document.getElementById('marcResetBtn')?.addEventListener('click', function() {
+            marcForm?.reset();
             updateMarcFileState();
-            document.getElementById('marcValidationResults').classList.add('hidden');
-            document.getElementById('marcProcessingResults').classList.add('hidden');
+            document.getElementById('marcValidationResults')?.classList.add('hidden');
+            document.getElementById('marcProcessingResults')?.classList.add('hidden');
         });
     });
 
