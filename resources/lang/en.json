@@ -315,5 +315,8 @@
     "Views": "Views",
     "Comments": "Comments",
     "Last Updated": "Last Updated",
-    "Update Article": "Update Article"
+    "Update Article": "Update Article",
+    "News_Management": "News Management",
+    "Manage_News_Instruction": "Create, edit, and manage news articles and categories.",
+    "Card renewed successfully until :date": "Card renewed successfully until :date"
 }

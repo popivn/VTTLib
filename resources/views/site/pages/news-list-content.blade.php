@@ -1,10 +1,27 @@
-<div class="not-prose w-full">
+<div class="not-prose w-full" x-data="{ loading: false }">
+    <!-- Loading Overlay -->
+    <div x-show="loading"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         x-cloak
+         class="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 backdrop-blur-sm">
+        <div class="flex flex-col items-center gap-5">
+            <div class="news-loader-logo">
+                <img src="{{ asset('assets/imgs/logo-vttu.png') }}" alt="VTTU" class="w-16 h-16 object-contain">
+            </div>
+            <div class="text-[11px] font-bold text-vttu-dark tracking-[0.1em] uppercase">Đang tải...</div>
+        </div>
+    </div>
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
         <!-- Left: News List & Filters -->
         <div class="lg:col-span-9 space-y-3">
             <!-- Filter bar -->
             <div class="bg-card border border-border rounded-none p-3 shadow-xs">
-                <form action="{{ route('news.search') }}" method="GET" class="flex flex-col sm:flex-row gap-2">
+                <form action="{{ route('news.search') }}" method="GET" class="flex flex-col sm:flex-row gap-2" @submit="loading = true">
                     <!-- Search Input -->
                     <div class="relative flex-1">
                         <input type="text" name="q" value="{{ $searchQuery ?? '' }}" placeholder="{{ __('Tìm kiếm tin tức...') }}" class="w-full pl-8 pr-3 py-1.5 bg-background border border-border rounded-none text-xs font-medium text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-vttu-red focus:border-vttu-red outline-none h-9">
@@ -13,7 +30,7 @@
                     
                     <!-- Category Dropdown Filter -->
                     <div class="w-full sm:w-48">
-                        <select onchange="window.location.href=this.value" class="w-full px-3 py-1.5 bg-background border border-border rounded-none text-xs font-medium text-foreground focus:ring-1 focus:ring-vttu-red focus:border-vttu-red outline-none h-9">
+                        <select onchange="window.location.href=this.value" @change="loading = true" class="w-full px-3 py-1.5 bg-background border border-border rounded-none text-xs font-medium text-foreground focus:ring-1 focus:ring-vttu-red focus:border-vttu-red outline-none h-9">
                             <option value="{{ route('news.index') }}">{{ __('Tất cả chuyên mục') }}</option>
                             @foreach($categories as $cat)
                                 <option value="{{ route('news.category', $cat->slug) }}" {{ isset($category) && $category->id === $cat->id ? 'selected' : '' }}>
@@ -30,7 +47,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     @foreach($news as $item)
                         <article class="bg-card text-card-foreground border border-border rounded-none overflow-hidden group hover:bg-muted/30 transition-all duration-300 flex flex-col justify-between h-full">
-                            <a href="{{ $item->url }}" class="block flex-1 flex flex-col">
+                            <a href="{{ $item->url }}" @click="loading = true" class="block flex-1 flex flex-col">
                                 <!-- Image -->
                                 <div class="aspect-video w-full overflow-hidden relative bg-muted">
                                     <img src="{{ $item->featured_image ? (str_starts_with($item->featured_image, 'http') ? $item->featured_image : asset($item->featured_image)) : 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=400&q=80' }}" 
@@ -70,7 +87,7 @@
 
                 <!-- Pagination -->
                 @if($news->hasPages())
-                    <div class="mt-4 pt-4 border-t border-border flex justify-center">
+                    <div class="mt-4 pt-4 border-t border-border flex justify-center" id="news-pagination">
                         {{ $news->links() }}
                     </div>
                 @endif
@@ -81,7 +98,7 @@
                     </div>
                     <h3 class="text-sm font-black text-foreground mb-1">{{ __('Không tìm thấy bài viết nào') }}</h3>
                     <p class="text-xs text-muted-foreground font-medium mb-4">{{ __('Vui lòng quay lại sau hoặc thử từ khóa tìm kiếm khác.') }}</p>
-                    <a href="{{ route('news.index') }}" class="inline-flex px-4 py-2 bg-[#A80D0D] hover:bg-[#8f0b0b] !text-white text-xs font-black rounded-none uppercase tracking-wider transition-colors shadow-sm">
+                    <a href="{{ route('news.index') }}" @click="loading = true" class="inline-flex px-4 py-2 bg-[#A80D0D] hover:bg-[#8f0b0b] !text-white text-xs font-black rounded-none uppercase tracking-wider transition-colors shadow-sm">
                         {{ __('Xem tất cả tin tức') }}
                     </a>
                 </div>
@@ -112,7 +129,7 @@
                     </h3>
                     <div class="space-y-3">
                         @foreach($sidebarNews as $item)
-                            <a href="{{ $item->url }}" class="flex gap-2.5 group text-foreground hover:text-vttu-red transition-colors items-start">
+                            <a href="{{ $item->url }}" @click="loading = true" class="flex gap-2.5 group text-foreground hover:text-vttu-red transition-colors items-start">
                                 <div class="w-16 h-12 rounded-sm overflow-hidden flex-shrink-0">
                                     <img src="{{ $item->featured_image ? (str_starts_with($item->featured_image, 'http') ? $item->featured_image : asset($item->featured_image)) : 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=160&q=80' }}" 
                                          alt="{{ $item->title }}"
@@ -141,7 +158,7 @@
                     {{ __('Liên hệ với chúng tôi để được giải đáp mọi thắc mắc về tài liệu và dịch vụ thư viện.') }}
                 </p>
                 <div class="pt-1">
-                    <a href="/noi-quy-thu-vien" class="inline-flex w-full items-center justify-center gap-1.5 px-3 py-2 bg-[#A80D0D] hover:bg-[#8f0b0b] !text-white text-xs font-black rounded-none uppercase tracking-wider transition-colors shadow-sm">
+                    <a href="/noi-quy-thu-vien" @click="loading = true" class="inline-flex w-full items-center justify-center gap-1.5 px-3 py-2 bg-[#A80D0D] hover:bg-[#8f0b0b] !text-white text-xs font-black rounded-none uppercase tracking-wider transition-colors shadow-sm">
                         <i data-lucide="phone" class="w-3.5 h-3.5"></i>
                         <span>{{ __('Liên hệ ngay') }}</span>
                     </a>
@@ -158,6 +175,7 @@
                     <div class="flex flex-wrap gap-1.5">
                         @foreach($popularTags as $t)
                             <a href="{{ isset($category) ? route('news.category.tag', ['category_slug' => $category->slug, 'tag_slug' => $t->slug]) : route('news.tag', $t->slug) }}" 
+                               @click="loading = true"
                                class="px-2 py-1 bg-muted hover:bg-vttu-red/10 text-muted-foreground hover:text-vttu-red rounded-none text-[10px] font-bold border border-border transition-colors">
                                 #{{ $t->name }}
                             </a>
@@ -168,3 +186,32 @@
         </aside>
     </div>
 </div>
+
+<style>
+    .news-loader-logo { perspective: 200px; }
+    .news-loader-logo img {
+        animation: news-logo-3d 2s ease-in-out infinite;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+    }
+    @keyframes news-logo-3d {
+        0% { transform: rotateY(0deg); }
+        50% { transform: rotateY(180deg); }
+        100% { transform: rotateY(360deg); }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var pag = document.getElementById('news-pagination');
+        if (pag) {
+            pag.addEventListener('click', function(e) {
+                if (e.target.closest('a')) {
+                    var container = e.target.closest('[x-data]');
+                    if (container && container.__x) {
+                        container.__x.$data.loading = true;
+                    }
+                }
+            });
+        }
+    });
+</script>

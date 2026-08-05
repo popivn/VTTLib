@@ -13,9 +13,13 @@ class SiteController extends Controller
      */
     public function home(Request $request)
     {
-        // 1. Lấy dữ liệu cơ bản cho Menu/Footer
-        $menuItems = SiteNode::getMenuItems('menu');
-        $footerItems = SiteNode::getMenuItems('footer');
+        // 1. Lấy dữ liệu cơ bản cho Menu/Footer (cached)
+        $menuItems = \Cache::remember('site.menu_items', 600, function () {
+            return SiteNode::getMenuItems('menu');
+        });
+        $footerItems = \Cache::remember('site.footer_items', 600, function () {
+            return SiteNode::getMenuItems('footer');
+        });
 
         // 2. Xử lý AJAX nạp tab sidebar (Mới | Nổi bật)
         if ($request->ajax() && $request->has('resource_type')) {
@@ -34,12 +38,14 @@ class SiteController extends Controller
             return view('site.pages.partials.sidebar-books', compact('sidebarBooks'));
         }
 
-        // 3. Lấy dữ liệu cho các Section trang chủ
-        $newResources = \App\Models\DigitalResource::with('folder')
-            ->where('status', 'published')
-            ->latest()
-            ->take(8)
-            ->get();
+        // 3. Lấy dữ liệu cho các Section trang chủ (cached)
+        $newResources = \Cache::remember('site.new_resources', 300, function () {
+            return \App\Models\DigitalResource::with('folder')
+                ->where('status', 'published')
+                ->latest()
+                ->take(8)
+                ->get();
+        });
 
         // Xử lý lọc cho Section 1 tabs
         $type = $request->query('type', 'book');
@@ -144,69 +150,85 @@ class SiteController extends Controller
             return view('site.pages.partials.home-medical', compact('newBooks'));
         }
 
-        // 4. Lấy dữ liệu Tin tức & Thông báo
-        $homeNews = \App\Models\News::published()
-            ->whereHas('category', function($q) {
-                $q->where('slug', 'tin-tuc-su-kien');
-            })
-            ->latest('published_at')
-            ->take(5)
-            ->get();
+        // 4. Lấy dữ liệu Tin tức & Thông báo (cached)
+        $homeNews = \Cache::remember('site.home_news', 300, function () {
+            return \App\Models\News::published()
+                ->whereHas('category', function($q) {
+                    $q->where('slug', 'tin-tuc-su-kien');
+                })
+                ->latest('published_at')
+                ->take(5)
+                ->get();
+        });
 
-        $homeAnnouncements = \App\Models\News::published()
-            ->whereHas('category', function($q) {
-                $q->where('slug', 'thong-bao');
-            })
-            ->latest()
-            ->take(5)
-            ->get();
+        $homeAnnouncements = \Cache::remember('site.home_announcements', 300, function () {
+            return \App\Models\News::published()
+                ->whereHas('category', function($q) {
+                    $q->where('slug', 'thong-bao');
+                })
+                ->latest()
+                ->take(5)
+                ->get();
+        });
 
-        // Dữ liệu cho tab Tin Mới (Section 3) - Lấy tất cả tin mới không nhất thiết phải nổi bật
-        $tabNews = \App\Models\News::published()
-            ->latest()
-            ->take(12)
-            ->get();
+        // Dữ liệu cho tab Tin Mới (Section 3) (cached)
+        $tabNews = \Cache::remember('site.tab_news', 300, function () {
+            return \App\Models\News::published()
+                ->latest()
+                ->take(12)
+                ->get();
+        });
 
-        // Dữ liệu cho section Giới Thiệu Sách Hàng Tháng
-        $bookIntroductionNews = \App\Models\News::published()
-            ->whereHas('category', function($q) {
-                $q->where('slug', 'gioi-thieu-sach');
-            })
-            ->latest('published_at')
-            ->get();
+        // Dữ liệu cho section Giới Thiệu Sách Hàng Tháng (cached)
+        $bookIntroductionNews = \Cache::remember('site.book_intro_news', 300, function () {
+            return \App\Models\News::published()
+                ->whereHas('category', function($q) {
+                    $q->where('slug', 'gioi-thieu-sach');
+                })
+                ->latest('published_at')
+                ->get();
+        });
 
-        // Lấy sidebarBooks mặc định (tab Mới)
-        $sidebarBooks = \App\Models\BibliographicRecord::with(['fields.subfields'])
-            ->where('status', \App\Models\BibliographicRecord::STATUS_APPROVED)
-            ->where('record_type', 'book')
-            ->latest()
-            ->take(10)
-            ->get();
+        // Lấy sidebarBooks mặc định (tab Mới) (cached)
+        $sidebarBooks = \Cache::remember('site.sidebar_books', 300, function () {
+            return \App\Models\BibliographicRecord::with(['fields.subfields'])
+                ->where('status', \App\Models\BibliographicRecord::STATUS_APPROVED)
+                ->where('record_type', 'book')
+                ->latest()
+                ->take(10)
+                ->get();
+        });
 
-        // Lấy dữ liệu Network Logos cho slide
-        $networkLogos = \App\Models\LibraryNetworkLogo::where('is_active', 1)
-            ->orderBy('sort_order')
-            ->get();
+        // Lấy dữ liệu Network Logos cho slide (cached)
+        $networkLogos = \Cache::remember('site.network_logos', 600, function () {
+            return \App\Models\LibraryNetworkLogo::where('is_active', 1)
+                ->orderBy('sort_order')
+                ->get();
+        });
 
-        // Lấy Videos cho sidebar bên phải (tab VIDEO)
-        $sidebarVideos = \App\Models\News::published()
-            ->whereHas('category', function($q) {
-                $q->where('slug', 'video');
-            })
-            ->latest()
-            ->take(5)
-            ->get();
+        // Lấy Videos cho sidebar bên phải (tab VIDEO) (cached)
+        $sidebarVideos = \Cache::remember('site.sidebar_videos', 300, function () {
+            return \App\Models\News::published()
+                ->whereHas('category', function($q) {
+                    $q->where('slug', 'video');
+                })
+                ->latest()
+                ->take(5)
+                ->get();
+        });
 
-        // Lấy Banners cho Hero Section (lấy cả banner có position = 'home_hero' hoặc position = null)
-        $banners = \App\Models\Banner::currentlyActive()
-            ->byLanguage(session('locale', app()->getLocale()))
-            ->where(function($q) {
-                $q->where('position', 'home_hero')
-                  ->orWhereNull('position');
-            })
-            ->orderBy('sort_order')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        // Lấy Banners cho Hero Section (cached)
+        $banners = \Cache::remember('site.banners.' . session('locale', app()->getLocale()), 300, function () {
+            return \App\Models\Banner::currentlyActive()
+                ->byLanguage(session('locale', app()->getLocale()))
+                ->where(function($q) {
+                    $q->where('position', 'home_hero')
+                      ->orWhereNull('position');
+                })
+                ->orderBy('sort_order')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        });
 
         return view('site.pages.home', compact(
             'menuItems', 'footerItems', 'newResources',
@@ -316,38 +338,46 @@ class SiteController extends Controller
         }
 
         $books = $booksQuery->paginate(12)->withQueryString();
-        $totalRecords = \App\Models\BibliographicRecord::where('status', \App\Models\BibliographicRecord::STATUS_APPROVED)
-            ->where(function($q) {
-                $q->where('record_type', 'resource')
-                  ->orWhereHas('items');
-            })
-            ->count();
-
-        // Prepare Sidebar Data
-        $sidebar = [
-            'locations' => \App\Models\StorageLocation::withCount(['bookItems' => function($q) {
-                $q->whereHas('bibliographicRecord', function($rq) {
-                    $rq->where('status', \App\Models\BibliographicRecord::STATUS_APPROVED);
-                });
-            }])->get(),
-            'ddc' => $this->getDdcStats(),
-            'mostBorrowed' => \App\Models\BibliographicRecord::with(['fields.subfields'])
-                ->where('status', \App\Models\BibliographicRecord::STATUS_APPROVED)
-                ->take(5)
-                ->get(), // Temporary, should be based on actual loans
-            'hotKeywords' => \App\Models\MarcSubfield::whereHas('field', function($q) {
-                    $q->whereIn('tag', ['650', '651']);
+        $totalRecords = \Cache::remember('site.opac.total_records', 300, function () {
+            return \App\Models\BibliographicRecord::where('status', \App\Models\BibliographicRecord::STATUS_APPROVED)
+                ->where(function($q) {
+                    $q->where('record_type', 'resource')
+                      ->orWhereHas('items');
                 })
-                ->whereNotNull('value')
-                ->groupBy('value')
-                ->orderByRaw('COUNT(*) DESC')
-                ->take(10)
-                ->pluck('value')
-                ->toArray()
-        ];
+                ->count();
+        });
 
-        $menuItems = SiteNode::getMenuItems('menu');
-        $footerItems = SiteNode::getMenuItems('footer');
+        // Prepare Sidebar Data (cached)
+        $sidebar = \Cache::remember('site.opac.sidebar', 300, function () {
+            return [
+                'locations' => \App\Models\StorageLocation::withCount(['bookItems' => function($q) {
+                    $q->whereHas('bibliographicRecord', function($rq) {
+                        $rq->where('status', \App\Models\BibliographicRecord::STATUS_APPROVED);
+                    });
+                }])->get(),
+                'ddc' => $this->getDdcStats(),
+                'mostBorrowed' => \App\Models\BibliographicRecord::with(['fields.subfields'])
+                    ->where('status', \App\Models\BibliographicRecord::STATUS_APPROVED)
+                    ->take(5)
+                    ->get(),
+                'hotKeywords' => \App\Models\MarcSubfield::whereHas('field', function($q) {
+                        $q->whereIn('tag', ['650', '651']);
+                    })
+                    ->whereNotNull('value')
+                    ->groupBy('value')
+                    ->orderByRaw('COUNT(*) DESC')
+                    ->take(10)
+                    ->pluck('value')
+                    ->toArray()
+            ];
+        });
+
+        $menuItems = \Cache::remember('site.menu_items', 600, function () {
+            return SiteNode::getMenuItems('menu');
+        });
+        $footerItems = \Cache::remember('site.footer_items', 600, function () {
+            return SiteNode::getMenuItems('footer');
+        });
 
         return view('site.pages.opac', compact('books', 'totalRecords', 'menuItems', 'footerItems', 'sidebar'));
     }

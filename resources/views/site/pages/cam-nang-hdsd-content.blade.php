@@ -14,7 +14,7 @@
 
 <div class="space-y-4" x-data="flipbookPlayer('{{ $pdfUrl }}')">
     <!-- Flipbook Player Container -->
-    <div class="relative w-full h-[600px] md:h-[850px] bg-gradient-to-br from-stone-900 via-stone-950 to-neutral-900 rounded-xl overflow-hidden shadow-2xl border border-neutral-800 flex flex-col select-none"
+    <div class="relative w-full h-[600px] md:h-[850px] lg:h-[700px] xl:h-[800px] bg-gradient-to-br from-stone-900 via-stone-950 to-neutral-900 rounded-xl overflow-hidden shadow-2xl border border-neutral-800 flex flex-col select-none"
          id="flipbookPlayerContainer"
          :class="{ 'fixed inset-0 z-[99999] h-screen rounded-none': isFullscreen }"
          @keydown.left.window="prevPage"
@@ -31,7 +31,7 @@
         </div>
 
         <!-- Canvas Book Display -->
-        <div class="flex-1 w-full relative overflow-auto p-4 flex items-center justify-center" id="bookContainer">
+        <div class="flex-1 w-full relative overflow-hidden p-4 flex items-center justify-center" id="bookContainer">
             <div class="relative flex items-center justify-center transition-transform duration-300 origin-center"
                  :style="`transform: scale(${zoom});`"
                  id="bookViewport">
@@ -211,22 +211,47 @@
                     const containerWidth = container.clientWidth - 32;
                     const containerHeight = container.clientHeight - 32;
                     
-                    let targetHeight = Math.min(containerHeight, 680);
+                    // Detect screen aspect ratio
+                    const screenAspectRatio = containerWidth / containerHeight;
+                    const isSquareScreen = screenAspectRatio >= 0.8 && screenAspectRatio <= 1.2;
+                    
+                    let targetHeight, targetWidth;
+                    
                     if (this.isFullscreen) {
                         targetHeight = window.innerHeight - 120;
+                    } else {
+                        targetHeight = Math.min(containerHeight, 680);
                     }
                     
-                    let targetWidth = targetHeight * this.aspectRatio * 2; // double page layout standard
-                    
-                    // If it overflows the width, scale down
-                    if (targetWidth > containerWidth) {
-                        const scaleFactor = containerWidth / targetWidth;
+                    // For square screens, prioritize width to maximize space utilization
+                    if (isSquareScreen) {
+                        // Calculate based on available width first
                         targetWidth = containerWidth;
-                        targetHeight = targetHeight * scaleFactor;
+                        targetHeight = targetWidth / (this.aspectRatio * 2);
+                        
+                        // If height overflows, scale down
+                        if (targetHeight > (this.isFullscreen ? window.innerHeight - 120 : Math.min(containerHeight, 680))) {
+                            const maxAllowedHeight = this.isFullscreen ? window.innerHeight - 120 : Math.min(containerHeight, 680);
+                            const scaleFactor = maxAllowedHeight / targetHeight;
+                            targetHeight = maxAllowedHeight;
+                            targetWidth = targetWidth * scaleFactor;
+                        }
+                    } else {
+                        // Standard logic for non-square screens
+                        targetWidth = targetHeight * this.aspectRatio * 2;
+                        
+                        // If it overflows the width, scale down
+                        if (targetWidth > containerWidth) {
+                            const scaleFactor = containerWidth / targetWidth;
+                            targetWidth = containerWidth;
+                            targetHeight = targetHeight * scaleFactor;
+                        }
                     }
                     
-                    this.pageHeight = Math.round(targetHeight);
-                    this.pageWidth = Math.round(targetWidth / 2);
+                    // Add small buffer to prevent overflow during page flip animations
+                    const buffer = 10;
+                    this.pageHeight = Math.round(targetHeight - buffer);
+                    this.pageWidth = Math.round((targetWidth - buffer) / 2);
                     this.bookHeight = this.pageHeight;
                     
                     if (this.pageFlip) {
@@ -480,19 +505,35 @@
 </script>
 <style>
     /* Styling for the custom slider */
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { 
-      -webkit-appearance: none; 
-      margin: 0; 
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
-    
+
     /* PageFlip specific styling to prevent rendering glitches */
     #book {
         transform-origin: center center;
     }
-    
+
     .page {
         background-color: white;
         box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    /* Prevent scrollbars during page flip animations */
+    #bookContainer {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
+
+    #bookContainer::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+
+    /* Ensure book viewport doesn't overflow */
+    #bookViewport {
+        max-width: 100%;
+        max-height: 100%;
     }
 </style>

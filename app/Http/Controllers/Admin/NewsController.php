@@ -13,6 +13,20 @@ use Carbon\Carbon;
 
 class NewsController extends Controller
 {
+    private function clearNewsCache()
+    {
+        \Cache::forget('admin.news.categories');
+        \Cache::forget('admin.news.authors');
+        \Cache::forget('admin.news.stats');
+
+        // Clear site/public caches that depend on news data
+        \Cache::forget('site.home_news');
+        \Cache::forget('site.home_announcements');
+        \Cache::forget('site.tab_news');
+        \Cache::forget('site.book_intro_news');
+        \Cache::forget('site.sidebar_videos');
+    }
+
     /**
      * Display a listing of news.
      */
@@ -57,18 +71,24 @@ class NewsController extends Controller
 
         $news = $query->paginate(15);
         
-        // Get filter options
-        $categories = NewsCategory::active()->orderBy('name')->get();
-        $authors = DB::table('users')->select('id', 'name')->get();
+        // Get filter options (cached)
+        $categories = \Cache::remember('admin.news.categories', 300, function () {
+            return NewsCategory::active()->orderBy('name')->get();
+        });
+        $authors = \Cache::remember('admin.news.authors', 300, function () {
+            return DB::table('users')->select('id', 'name')->get();
+        });
         
-        // Statistics
-        $stats = [
-            'total' => News::count(),
-            'published' => News::published()->count(),
-            'draft' => News::draft()->count(),
-            'pending' => News::pending()->count(),
-            'featured' => News::featured()->count(),
-        ];
+        // Statistics (cached)
+        $stats = \Cache::remember('admin.news.stats', 60, function () {
+            return [
+                'total' => News::count(),
+                'published' => News::published()->count(),
+                'draft' => News::draft()->count(),
+                'pending' => News::pending()->count(),
+                'featured' => News::featured()->count(),
+            ];
+        });
 
         return view('admin.news.index', compact('news', 'categories', 'authors', 'stats'));
     }
@@ -167,6 +187,7 @@ class NewsController extends Controller
             ]);
 
             DB::commit();
+            $this->clearNewsCache();
 
             return redirect()
                 ->route('admin.news.index')
@@ -268,6 +289,7 @@ class NewsController extends Controller
             ]);
 
             DB::commit();
+            $this->clearNewsCache();
 
             return redirect()
                 ->route('admin.news.index')
@@ -297,6 +319,7 @@ class NewsController extends Controller
             ]);
 
             DB::commit();
+            $this->clearNewsCache();
 
             return redirect()
                 ->route('admin.news.index')
@@ -314,6 +337,7 @@ class NewsController extends Controller
     {
         try {
             $news->publish();
+            $this->clearNewsCache();
             
             return response()->json([
                 'success' => true,
@@ -335,6 +359,7 @@ class NewsController extends Controller
     {
         try {
             $news->archive();
+            $this->clearNewsCache();
             
             return response()->json([
                 'success' => true,
@@ -357,6 +382,7 @@ class NewsController extends Controller
         try {
             $news->is_featured = !$news->is_featured;
             $news->save();
+            $this->clearNewsCache();
             
             $status = $news->is_featured ? 'nổi bật' : 'thường';
             
@@ -425,6 +451,7 @@ class NewsController extends Controller
             }
 
             DB::commit();
+            $this->clearNewsCache();
 
             return response()->json([
                 'success' => true,

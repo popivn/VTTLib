@@ -403,14 +403,18 @@
                     $ytUrl = \App\Models\SystemSetting::get('youtube_url');
                     $zaloUrl = \App\Models\SystemSetting::get('zalo_url');
                     $libNameVi = \App\Models\SystemSetting::get('library_name_vi');
+                    $footerSiteLogo = \App\Models\SystemSetting::get('site_logo');
                 @endphp
                 <!-- About & Access Counter -->
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2 group cursor-default">
-                        <div class="w-8 h-8 rounded-sm bg-white/10 flex items-center justify-center text-vttu-yellow group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-all duration-300 shadow-sm border border-white/10">
-                            <i class="fas fa-book-open text-xs"></i>
-                        </div>
-                        <span class="font-black text-sm uppercase tracking-tighter text-white">{{ $libNameVi ?: __('Thư viện số') }}</span>
+                        @if($footerSiteLogo)
+                            <img src="{{ asset('storage/' . $footerSiteLogo) }}" alt="Logo" class="h-10 w-auto max-h-10 object-contain">
+                        @else
+                            <div class="w-8 h-8 rounded-sm bg-white/10 flex items-center justify-center text-vttu-yellow group-hover:bg-vttu-yellow group-hover:text-vttu-dark transition-all duration-300 shadow-sm border border-white/10">
+                                <i class="fas fa-book-open text-xs"></i>
+                            </div>
+                        @endif
                     </div>
                     @if(!empty($footerDesc))
                         <p class="text-xs leading-relaxed text-white/60 max-w-xs">
@@ -603,7 +607,7 @@
                 </p>
                 <div class="flex items-center gap-4">
                     <a href="{{ route('site.page', 'noi-quy-thu-vien') }}" class="text-[10px] font-bold text-white/40 hover:text-vttu-yellow transition-colors">{{ __('Nội quy & Điều khoản') }}</a>
-                    <a href="{{ route('site.sitemap') }}" class="text-[10px] font-bold text-white/40 hover:text-vttu-yellow transition-colors">{{ __('Sơ đồ trang') }}</a>
+                    <a href="{{ route('site.page', 'ban-do-website-thu-vien') }}" class="text-[10px] font-bold text-white/40 hover:text-vttu-yellow transition-colors">{{ __('Sơ đồ trang') }}</a>
                     <div class="w-1.5 h-1.5 rounded-full bg-vttu-yellow animate-pulse"></div>
                     <span class="text-[10px] font-black text-vttu-yellow/70 tracking-widest uppercase">{{ __('System Online') }}</span>
                 </div>

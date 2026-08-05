@@ -118,7 +118,8 @@
         }
 
         .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
+            width: 3px;
+            height: 3px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
@@ -126,12 +127,37 @@
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
+            background: #6366f1;
             border-radius: 10px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+            background: #4f46e5;
+        }
+
+        /* Global scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #6366f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f46e5;
+        }
+
+        /* Firefox scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #6366f1 transparent;
         }
 
         /* Force remove overflow-hidden from parent container */
@@ -346,7 +372,7 @@
 <body
     class="font-sans antialiased bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-slate-100 flex min-h-screen transition-colors duration-300"
     x-data="{ 
-        sidebarOpen: true, 
+        sidebarOpen: false,
         darkMode: localStorage.getItem('theme') === 'dark',
         toggleDarkMode() {
             this.darkMode = !this.darkMode;
@@ -360,12 +386,16 @@
         }
     }">
 
+    <!-- Loading Overlay -->
+    <x-admin-loading-overlay />
+
     <!-- Sidebar -->
-    <aside :class="sidebarOpen ? 'w-72' : 'w-24 px-2'"
+    <aside :class="sidebarOpen ? 'w-72' : 'w-14 px-1'"
         class="bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800 text-slate-800 dark:text-white flex flex-col flex-shrink-0 transition-all duration-300 sticky top-0 h-screen z-50">
-        <div class="h-16 flex items-center px-6 bg-slate-50/50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 overflow-hidden whitespace-nowrap">
+        <div :class="sidebarOpen ? 'px-6' : 'px-2 justify-center'"
+             class="h-16 flex items-center bg-slate-50/50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 overflow-hidden whitespace-nowrap">
             <span class="text-xl font-black tracking-tighter flex items-center">
-                <span class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xs mr-3 shadow-sm">V</span>
+                <span class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xs shadow-sm" :class="sidebarOpen ? 'mr-3' : 'mr-0'">V</span>
                 <span x-show="sidebarOpen" x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                     VTTLib <span class="text-[10px] bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded ml-1 tracking-widest uppercase">Admin</span>
@@ -373,7 +403,8 @@
             </span>
         </div>
 
-        <nav class="flex-1 px-4 py-8 space-y-2.5 overflow-y-auto custom-scrollbar overflow-x-hidden">
+        <nav :class="sidebarOpen ? 'px-4' : 'px-1'"
+             class="flex-1 py-8 space-y-2.5 overflow-y-auto custom-scrollbar overflow-x-hidden">
             @php
             $roleIds = Auth::user()->roles->pluck('id')->toArray();
             @endphp
@@ -405,21 +436,25 @@
             $firstChild = $assignedChildren->first();
             $firstChildUrl = ($firstChild && !blank($firstChild->route_name) && $firstChild->route_name !== '#' && Route::has($firstChild->route_name)) ? route($firstChild->route_name) : '#';
             @endphp
-            <div class="space-y-1.5" x-data="{ open: {{ $isParentActive ? 'true' : 'false' }} }">
+            <div class="space-y-1.5 border-t border-slate-100 dark:border-slate-800/50 pt-2.5" x-data="{ open: {{ $isParentActive ? 'true' : 'false' }} }">
                 <button @click="
-                    let willOpen = !sidebarOpen || !open;
-                    sidebarOpen = true;
-                    open = willOpen;
-                    if (willOpen && '{{ $firstChildUrl }}' !== '#') {
+                    if (!sidebarOpen) {
+                        if ('{{ $firstChildUrl }}' !== '#') {
+                            window.location.href = '{{ $firstChildUrl }}';
+                        }
+                        return;
+                    }
+                    open = !open;
+                    if (open && '{{ $firstChildUrl }}' !== '#') {
                         window.location.href = '{{ $firstChildUrl }}';
                     }
                 "
-                    :class="sidebarOpen ? 'justify-between' : 'justify-center'"
-                    class="w-full flex items-center px-4 py-3.5 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-600 dark:hover:text-white rounded-2xl transition group">
+                    :class="sidebarOpen ? 'justify-between px-4' : 'justify-center px-0'"
+                    class="w-full flex items-center py-3.5 {{ $isParentActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400' }} hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-600 dark:hover:text-white rounded-2xl transition group">
                     <div class="flex items-center">
-                        <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center text-slate-400 group-hover:text-indigo-500 transition-colors">{!! $tab->icon !!}</div>
+                        <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center {{ $isParentActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400' }} group-hover:text-indigo-500 transition-colors">{!! $tab->icon !!}</div>
                         <span x-show="sidebarOpen" x-cloak
-                            class="ml-3 font-bold text-[11px] uppercase tracking-widest whitespace-nowrap">{{ $tab->display_name }}</span>
+                            class="ml-3 font-bold text-[11px] uppercase tracking-widest whitespace-nowrap">{{ \Illuminate\Support\Str::upper($tab->display_name) }}</span>
                     </div>
                     <svg x-show="sidebarOpen" x-cloak class="w-3.5 h-3.5 transition-transform duration-300 opacity-60"
                         :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -435,7 +470,7 @@
                                 <div class="flex-shrink-0">
                                     <i class="{{ $child->icon ?? 'fas fa-circle' }} w-5 h-5 flex items-center justify-center text-[8px] opacity-40 group-hover:opacity-100 transition-all"></i>
                                 </div>
-                                <span class="ml-3 truncate font-bold text-[10px] uppercase tracking-widest">{{ $child->display_name }}</span>
+                                <span class="ml-3 truncate font-bold text-[10px] uppercase tracking-widest">{{ \Illuminate\Support\Str::upper($child->display_name) }}</span>
                             </div>
                         </a>
                     @endforeach
@@ -444,18 +479,18 @@
             @else
             <a href="{{ (!blank($tab->route_name) && $tab->route_name !== '#' && Route::has($tab->route_name)) ? route($tab->route_name) : '#' }}"
                 :class="sidebarOpen ? 'px-4' : 'justify-center px-0'"
-                class="flex items-center py-3.5 {{ $isParentActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 dark:shadow-none' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-600 dark:hover:text-white' }} rounded-2xl group transition">
+                class="flex items-center py-3.5 border-t border-slate-100 dark:border-slate-800/50 {{ $isParentActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 dark:shadow-none' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-indigo-600 dark:hover:text-white' }} rounded-2xl group transition">
                 <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center text-slate-400 group-hover:text-indigo-500 transition-colors" :class="sidebarOpen ? '' : 'w-full'">
                     {!! $tab->icon !!}
                 </div>
                 <span x-show="sidebarOpen" x-cloak
-                    class="ml-3 font-bold text-[11px] uppercase tracking-widest whitespace-nowrap">{{ $tab->display_name }}</span>
+                    class="ml-3 font-bold text-[11px] uppercase tracking-widest whitespace-nowrap">{{ \Illuminate\Support\Str::upper($tab->display_name) }}</span>
             </a>
             @endif
             @endforeach
         </nav>
 
-        <div class="p-4 border-t border-slate-800 dark:border-slate-800/50 overflow-hidden">
+        <div :class="sidebarOpen ? 'p-4' : 'p-1'" class="border-t border-slate-800 dark:border-slate-800/50 overflow-hidden">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" :class="sidebarOpen ? 'px-4' : 'justify-center px-0'"

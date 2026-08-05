@@ -3,7 +3,24 @@
 @section('title', 'OPAC - Tra cứu mục lục trực tuyến - VTTLib')
 
 @section('content')
-<div class="bg-slate-50 min-h-screen pt-24 pb-12">
+<div class="bg-slate-50 min-h-screen pt-24 pb-12" x-data="{ loading: false }" x-init="$watch('loading', v => { if (v) document.body.style.cursor = 'wait' })">
+    <!-- Loading Overlay -->
+    <div x-show="loading"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         x-cloak
+         class="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 backdrop-blur-sm">
+        <div class="flex flex-col items-center gap-5">
+            <div class="opac-loader-logo">
+                <img src="{{ asset('assets/imgs/logo-vttu.png') }}" alt="VTTU" class="w-16 h-16 object-contain">
+            </div>
+            <div class="text-[11px] font-bold text-vttu-dark tracking-[0.1em] uppercase">Đang tra cứu...</div>
+        </div>
+    </div>
     <div class="px-4 md:px-12 lg:px-24">
         
         <!-- Header OPAC -->
@@ -24,7 +41,7 @@
 
             <!-- Search Bar OPAC -->
             <div class="mt-6">
-                <form action="{{ route('site.opac') }}" method="GET" class="relative group">
+                <form action="{{ route('site.opac') }}" method="GET" class="relative group" @submit="loading = true">
                     <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                         <i class="fas fa-search text-slate-400 group-focus-within:text-vttu-red transition-colors text-sm"></i>
                     </div>
@@ -81,12 +98,14 @@
                             <div class="flex bg-slate-50 p-0.5 rounded-sm border border-slate-100">
                                 <!-- Cũ đến mới (Mặc định) -->
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'oldest']) }}" 
+                                   @click="loading = true"
                                    class="w-8 h-8 rounded-sm flex items-center justify-center transition-all {{ $currentSort === 'oldest' ? 'bg-white text-vttu-red shadow-sm' : 'text-slate-400 hover:text-vttu-red' }}"
                                    title="Cập nhật: Cũ đến Mới">
                                     <i class="fas fa-sort-amount-up text-[10px]"></i>
                                 </a>
                                 <!-- Mới đến cũ -->
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'newest']) }}" 
+                                   @click="loading = true"
                                    class="w-8 h-8 rounded-sm flex items-center justify-center transition-all {{ $currentSort === 'newest' ? 'bg-white text-vttu-red shadow-sm' : 'text-slate-400 hover:text-vttu-red' }}"
                                    title="Cập nhật: Mới đến Cũ">
                                     <i class="fas fa-sort-amount-down text-[10px]"></i>
@@ -100,12 +119,14 @@
                             <div class="flex bg-slate-50 p-0.5 rounded-sm border border-slate-100">
                                 <!-- Tăng dần -->
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'accession_asc']) }}" 
+                                   @click="loading = true"
                                    class="w-8 h-8 rounded-sm flex items-center justify-center transition-all {{ $currentSort === 'accession_asc' ? 'bg-white text-vttu-red shadow-sm' : 'text-slate-400 hover:text-vttu-red' }}"
                                    title="Số đăng ký: Tăng dần">
                                     <i class="fas fa-sort-numeric-down text-[10px]"></i>
                                 </a>
                                 <!-- Giảm dần -->
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'accession_desc']) }}" 
+                                   @click="loading = true"
                                    class="w-8 h-8 rounded-sm flex items-center justify-center transition-all {{ $currentSort === 'accession_desc' ? 'bg-white text-vttu-red shadow-sm' : 'text-slate-400 hover:text-vttu-red' }}"
                                    title="Số đăng ký: Giảm dần">
                                     <i class="fas fa-sort-numeric-up text-[10px]"></i>
@@ -119,12 +140,14 @@
                             <div class="flex bg-slate-50 p-0.5 rounded-sm border border-slate-100">
                                 <!-- A - Z -->
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'title_az']) }}" 
+                                   @click="loading = true"
                                    class="w-8 h-8 rounded-sm flex items-center justify-center transition-all {{ $currentSort === 'title_az' ? 'bg-white text-vttu-red shadow-sm' : 'text-slate-400 hover:text-vttu-red' }}"
                                    title="Tên sách: A đến Z">
                                     <i class="fas fa-sort-alpha-down text-[10px]"></i>
                                 </a>
                                 <!-- Z - A -->
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'title_za']) }}" 
+                                   @click="loading = true"
                                    class="w-8 h-8 rounded-sm flex items-center justify-center transition-all {{ $currentSort === 'title_za' ? 'bg-white text-vttu-red shadow-sm' : 'text-slate-400 hover:text-vttu-red' }}"
                                    title="Tên sách: Z đến A">
                                     <i class="fas fa-sort-alpha-up text-[10px]"></i>
@@ -265,7 +288,7 @@
                 </div>
 
                 <!-- Pagination OPAC -->
-                <div class="flex justify-center pt-8">
+                <div class="flex justify-center pt-8" id="opac-pagination">
                     {{ $books->links() }}
                 </div>
             </div>
@@ -278,7 +301,7 @@
                     <h3 class="text-xs font-bold text-vttu-dark uppercase tracking-widest border-b border-slate-50 pb-3 mb-3">SÁCH THEO KHO</h3>
                     <div class="space-y-2">
                         @forelse($sidebar['locations'] as $location)
-                        <a href="{{ route('site.opac', ['location' => $location->id]) }}" class="flex justify-between items-center group">
+                        <a href="{{ route('site.opac', ['location' => $location->id]) }}" @click="loading = true" class="flex justify-between items-center group">
                             <span class="text-xs font-medium text-slate-600 group-hover:text-vttu-red transition-colors truncate pr-2">{{ $location->name }}</span>
                             <span class="bg-slate-50 text-slate-400 px-1.5 py-0.5 rounded-sm text-[9px] font-bold group-hover:bg-vttu-red/10 group-hover:text-vttu-red transition-all">{{ $location->book_items_count }}</span>
                         </a>
@@ -293,7 +316,7 @@
                     <h3 class="text-xs font-bold text-vttu-yellow uppercase tracking-widest border-b border-white/10 pb-3 mb-3">PHÂN LOẠI DDC</h3>
                     <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1.5 custom-scrollbar">
                         @forelse($sidebar['ddc'] as $ddc)
-                        <a href="{{ route('site.opac', ['ddc' => $ddc['code']]) }}" class="flex justify-between items-start group border-b border-white/5 pb-1.5 last:border-0">
+                        <a href="{{ route('site.opac', ['ddc' => $ddc['code']]) }}" @click="loading = true" class="flex justify-between items-start group border-b border-white/5 pb-1.5 last:border-0">
                             <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-vttu-yellow tracking-widest">{{ $ddc['code'] }}</span>
                                 <span class="text-xs font-medium text-white/70 group-hover:text-white transition-colors leading-tight">{{ $ddc['name'] }}</span>
@@ -315,7 +338,7 @@
                             $mbTitle = $mb->fields->where('tag', '245')->first()?->subfields->where('code', 'a')->first()?->value ?? 'Không có nhan đề';
                             $mbPub = $mb->fields->where('tag', '260')->first()?->subfields->where('code', 'b')->first()?->value ?? 'Đang cập nhật';
                         @endphp
-                        <a href="{{ route('opac.book.show', $mb->id) }}" class="group block">
+                        <a href="{{ route('opac.book.show', $mb->id) }}" @click="loading = true" class="group block">
                             <h4 class="text-[11px] font-bold text-vttu-dark group-hover:text-vttu-red transition-colors line-clamp-2 leading-tight">{{ $mbTitle }}</h4>
                             <p class="text-[9px] font-medium text-slate-400 mt-1 uppercase tracking-widest">{{ $mbPub }}</p>
                         </a>
@@ -330,7 +353,7 @@
                     <h3 class="text-xs font-bold text-vttu-dark uppercase tracking-widest border-b border-slate-50 pb-3 mb-3">TỪ KHÓA HOT</h3>
                     <div class="flex flex-wrap gap-1.5">
                         @forelse($sidebar['hotKeywords'] as $tag)
-                        <a href="{{ route('site.opac', ['q' => $tag]) }}" class="px-2.5 py-1 bg-slate-50 hover:bg-vttu-red hover:text-white text-slate-500 text-[9px] font-bold uppercase tracking-widest rounded-sm transition-all border border-slate-100">
+                        <a href="{{ route('site.opac', ['q' => $tag]) }}" @click="loading = true" class="px-2.5 py-1 bg-slate-50 hover:bg-vttu-red hover:text-white text-slate-500 text-[9px] font-bold uppercase tracking-widest rounded-sm transition-all border border-slate-100">
                             {{ $tag }}
                         </a>
                         @empty
@@ -351,5 +374,32 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #FFD700; }
+
+    .opac-loader-logo { perspective: 200px; }
+    .opac-loader-logo img {
+        animation: opac-logo-3d 2s ease-in-out infinite;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+    }
+    @keyframes opac-logo-3d {
+        0% { transform: rotateY(0deg); }
+        50% { transform: rotateY(180deg); }
+        100% { transform: rotateY(360deg); }
+    }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var pag = document.getElementById('opac-pagination');
+        if (pag) {
+            pag.addEventListener('click', function(e) {
+                if (e.target.closest('a')) {
+                    var overlay = document.querySelector('[x-data="{ loading: false }"]');
+                    if (overlay && overlay.__x) {
+                        overlay.__x.$data.loading = true;
+                    }
+                }
+            });
+        }
+    });
+</script>
 @endsection

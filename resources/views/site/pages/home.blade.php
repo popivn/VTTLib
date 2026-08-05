@@ -642,7 +642,8 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                         <div class="flex gap-2 items-center group cursor-pointer p-2 rounded-sm hover:bg-slate-50 transition-colors video-item" 
                                              data-video-url="{{ $video->video_url }}" 
                                              data-video-title="{{ $video->title }}"
-                                             data-video-image="{{ $video->featured_image ?? 'https://img.freepik.com/free-vector/video-streaming-concept-illustration_114360-10731.jpg' }}">
+                                             data-video-image="{{ $video->featured_image ?? 'https://img.freepik.com/free-vector/video-streaming-concept-illustration_114360-10731.jpg' }}"
+                                             data-video-page="{{ $video->url }}">
                                             <div class="w-16 h-10 flex-shrink-0 bg-slate-900 rounded-sm relative overflow-hidden shadow-sm">
                                                 <img src="{{ $video->featured_image ?? 'https://img.freepik.com/free-vector/video-streaming-concept-illustration_114360-10731.jpg' }}" 
                                                      class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
@@ -653,9 +654,9 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                                 </div>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <a href="{{ $video->url }}" class="text-[10px] font-bold text-vttu-dark leading-snug line-clamp-2 group-hover:text-vttu-red transition-colors">
+                                                <span class="text-[10px] font-bold text-vttu-dark leading-snug line-clamp-2 group-hover:text-vttu-red transition-colors">
                                                     {{ $video->title }}
-                                                </a>
+                                                </span>
                                             </div>
                                         </div>
                                     @endforeach
@@ -1366,9 +1367,10 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
             initNetworkSlider();
         });
 
-        // Video List Click Handler
+        // Video List Click Handler - Single click: load video, Double click: go to news page
         const videoItems = document.querySelectorAll('.video-item');
         videoItems.forEach(item => {
+            // Single click: load video into main player
             item.addEventListener('click', function(e) {
                 e.preventDefault();
                 
@@ -1378,7 +1380,6 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                 const mainContainer = document.getElementById('main-video-container');
                 
                 if (mainContainer && videoUrl) {
-                    // Không thêm autoplay - user bấm play manually
                     mainContainer.innerHTML = `
                         <iframe src="${videoUrl}" 
                                 class="w-full h-full" 
@@ -1397,6 +1398,33 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                     // Highlight selected video item
                     videoItems.forEach(v => v.classList.remove('bg-slate-100'));
                     this.classList.add('bg-slate-100');
+                } else if (mainContainer && !videoUrl) {
+                    // No video URL - show image placeholder
+                    mainContainer.innerHTML = `
+                        <div class="absolute inset-0 flex items-center justify-center z-10">
+                            <div class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30">
+                                <i class="fas fa-play text-[10px]"></i>
+                            </div>
+                        </div>
+                        <img src="${videoImage}" class="w-full h-full object-cover opacity-60">
+                    `;
+                    
+                    const titleElement = mainContainer.nextElementSibling;
+                    if (titleElement) {
+                        titleElement.textContent = videoTitle;
+                    }
+                    
+                    videoItems.forEach(v => v.classList.remove('bg-slate-100'));
+                    this.classList.add('bg-slate-100');
+                }
+            });
+
+            // Double click: navigate to news detail page
+            item.addEventListener('dblclick', function(e) {
+                e.preventDefault();
+                const videoPage = this.dataset.videoPage;
+                if (videoPage) {
+                    window.location.href = videoPage;
                 }
             });
         });

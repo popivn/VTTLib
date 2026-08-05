@@ -48,16 +48,16 @@
     </div>
 
     <!-- Pagination Links -->
-    <div class="preview-pagination p-3 border-t border-border bg-muted/10 flex items-center justify-between">
-        <div class="text-[11px] text-muted-foreground">
+    <div class="preview-pagination p-3 border-t border-border bg-muted/10 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div class="text-[11px] text-muted-foreground text-center sm:text-left">
             {{ __('Hiển thị từ :first đến :last trong tổng số :total bản ghi', [
                 'first' => number_format($paginated->firstItem()),
                 'last' => number_format($paginated->lastItem()),
                 'total' => number_format($paginated->total())
             ]) }}
         </div>
-        <div class="flex items-center gap-1">
-            {{ $paginated->links('pagination::tailwind') }}
+        <div class="flex items-center gap-1 flex-wrap justify-center">
+            {{ $paginated->links('admin.marc_books.partials.pagination-compact') }}
         </div>
     </div>
 </div>

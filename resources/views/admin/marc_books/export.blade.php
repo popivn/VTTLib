@@ -391,18 +391,10 @@
                                     </div>
                                 </div>
 
-                                <!-- Tab 3: Giới hạn ( Created Date, Updated Date, size code, etc ) -->
+                                <!-- Tab 3: Giới hạn ( Updated Date, size code, etc ) -->
                                 <div id="tab-limit" class="tab-content hidden grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <!-- Ngày tạo & Ngày cập nhật -->
+                                    <!-- Ngày cập nhật (date created moved to quick filter bar) -->
                                     <div class="space-y-2">
-                                        <div class="space-y-1">
-                                            <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Khoảng ngày tạo</label>
-                                            <div class="flex items-center gap-1">
-                                                <input type="date" name="date_from" id="date_from" class="flex-1 h-8 px-2 text-xs border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
-                                                <span class="text-[10px] text-muted-foreground">đến</span>
-                                                <input type="date" name="date_to" id="date_to" class="flex-1 h-8 px-2 text-xs border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all">
-                                            </div>
-                                        </div>
                                         <div class="space-y-1">
                                             <label class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Khoảng ngày cập nhật</label>
                                             <div class="flex items-center gap-1">
@@ -525,9 +517,26 @@
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- Quick Date Filter Bar (always visible) -->
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 border-t border-border pt-3">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 inline-block mr-1"></i>Lọc theo ngày tạo:
+                            </span>
+                            <div class="flex items-center gap-1.5">
+                                <input type="date" name="date_from" class="h-8 px-2 text-xs border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" onchange="loadPreview(1)">
+                                <span class="text-[10px] text-muted-foreground">→</span>
+                                <input type="date" name="date_to" class="h-8 px-2 text-xs border border-input rounded-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" onchange="loadPreview(1)">
+                            </div>
+                            <button type="button" onclick="clearDateFilter()" class="text-[10px] text-muted-foreground hover:text-destructive font-bold transition-colors px-1.5 py-0.5 rounded border border-border hover:border-destructive/30">
+                                <i data-lucide="x" class="w-3 h-3 inline-block"></i> Xóa ngày
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Format Toggle and Include Items (Bottom bar) -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-border pt-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap border-t border-border pt-3">
                         <!-- Format Toggle -->
                         <div class="space-y-1">
                             <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">{{ __('Định dạng file') }}</span>
@@ -737,6 +746,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Load initial preview on page load
         loadPreview(1);
+
+        // Auto-collapse left tree column on page load
+        const treeCol = document.getElementById('left-tree-column');
+        if (treeCol) treeCol.classList.add('hidden');
+        const expandBtn = document.getElementById('expand-tree-btn');
+        if (expandBtn) expandBtn.classList.remove('hidden');
 
         // Folder toggle handler (collapse/expand)
         document.querySelectorAll('.tree-folder').forEach(function(el) {
@@ -964,6 +979,14 @@
                 lucide.createIcons();
             }
         });
+    }
+
+    // Clear date filter and reload preview
+    function clearDateFilter() {
+        document.querySelectorAll('input[type="date"]').forEach(function(el) {
+            el.value = '';
+        });
+        loadPreview(1);
     }
 
     // Reset Form function

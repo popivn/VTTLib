@@ -864,5 +864,8 @@
     "Views": "Lượt xem",
     "Comments": "Bình luận",
     "Last Updated": "Cập nhật lần cuối",
-    "Update Article": "Cập nhật bài viết"
+    "Update Article": "Cập nhật bài viết",
+    "News_Management": "Quản lý Tin tức",
+    "Manage_News_Instruction": "Tạo, chỉnh sửa và quản lý bài viết, chuyên mục tin tức.",
+    "Card renewed successfully until :date": "Gia hạn thẻ thành công đến ngày :date"
 }
