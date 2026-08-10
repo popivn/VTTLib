@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\TinyMceController;
 use App\Http\Controllers\Admin\VideoController;
 use App\Http\Controllers\SecretLoginController;
 use App\Http\Controllers\ClientLoginController;
+use App\Http\Controllers\PasswordChangeController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,12 @@ Route::get('/topsecret/login', [SecretLoginController::class, 'create'])->name('
 Route::post('/topsecret/store', [SecretLoginController::class, 'store'])->name('agent.login.store');
 
 Route::post('/logout', [SecretLoginController::class, 'destroy'])->name('logout');
+
+// Forced Password Change (First Login)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/change-password', [PasswordChangeController::class, 'showForm'])->name('password.change.form');
+    Route::post('/change-password', [PasswordChangeController::class, 'update'])->name('password.change.update');
+});
 
 
 
@@ -615,6 +622,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
     Route::get('/marc-books/{record}/distribution', [\App\Http\Controllers\Admin\BookDistributionController::class, 'index'])->name('admin.marc.book.distribution');
     Route::post('/marc-books/{record}/distribution', [\App\Http\Controllers\Admin\BookDistributionController::class, 'store'])->name('admin.marc.book.distribution.store');
     Route::get('/distribution/check-barcode', [\App\Http\Controllers\Admin\BookDistributionController::class, 'checkBarcode'])->name('admin.marc.book.distribution.check');
+    Route::get('/distribution/check-accession', [\App\Http\Controllers\Admin\BookDistributionController::class, 'checkBarcode'])->name('admin.marc.book.distribution.check-accession');
 
     // Patron Management (Library Users)
     Route::get('/patrons', [\App\Http\Controllers\Admin\PatronController::class, 'index'])->name('admin.patrons.index');
@@ -878,7 +886,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
         Route::get('/statistics', [\App\Http\Controllers\Admin\MailManagementController::class, 'statistics'])->name('statistics');
         Route::get('/export', [\App\Http\Controllers\Admin\MailManagementController::class, 'export'])->name('export');
         Route::post('/save-template', [\App\Http\Controllers\Admin\MailManagementController::class, 'saveTemplate'])->name('save-template');
+        Route::post('/save-settings', [\App\Http\Controllers\Admin\MailManagementController::class, 'saveSettings'])->name('save-settings');
         Route::post('/send-overdue', [\App\Http\Controllers\Admin\MailManagementController::class, 'sendOverdueMails'])->name('send-overdue');
+        Route::post('/send-due-soon', [\App\Http\Controllers\Admin\MailManagementController::class, 'sendDueSoonMails'])->name('send-due-soon');
     });
 });
 

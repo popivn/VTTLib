@@ -270,18 +270,16 @@ $summary = $marcData['520']['a'] ?? 'Nội dung đang được cập nhật...';
                         <table class="w-full">
                             <thead>
                                 <tr class="text-left border-b border-slate-100">
-                                    <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Số đăng ký</th>
+                                    <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Mã vạch</th>
                                     <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Kho tài liệu</th>
-                                    <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Vị trí</th>
                                     <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Trạng thái</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
                                 @foreach($record->items as $item)
                                 <tr>
-                                    <td class="py-3 font-mono text-xs font-bold text-vttu-dark">{{ $item->accession_number }}</td>
+                                    <td class="py-3 font-mono text-xs font-bold text-vttu-dark">{{ $item->barcode }}</td>
                                     <td class="py-3 text-xs font-bold text-slate-600">{{ $item->storageLocation->name ?? 'N/A' }}</td>
-                                    <td class="py-3 text-xs font-bold text-slate-600">{{ $item->shelf ?? 'Đang cập nhật' }}</td>
                                     <td class="py-3 text-center">
                                         @if($item->status == 'available')
                                             <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-md">Có thể mượn</span>

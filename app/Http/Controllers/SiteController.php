@@ -717,6 +717,7 @@ class SiteController extends Controller
         }
 
         $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
+        $user->is_first_login = false;
         $user->save();
 
         return back()->with('success', 'Đổi mật khẩu thành công.');

@@ -2148,24 +2148,96 @@ class CirculationController extends Controller
     /**
      * Display circulation book management page (Quản lý sách)
      */
-    public function bookManagement()
+    public function bookManagement(Request $request)
     {
-        $overdueLoans = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy'])
-            ->overdue()
-            ->orderBy('due_date')
-            ->get();
+        // Get filter parameters
+        $filters = [
+            'loan_date_from' => $request->get('loan_date_from'),
+            'loan_date_to' => $request->get('loan_date_to'),
+            'patron_search' => trim($request->get('patron_search')),
+            'loaned_by' => $request->get('loaned_by'),
+            'remaining_days' => $request->get('remaining_days'),
+            'storage_location' => $request->get('storage_location'),
+            'storage_type' => $request->get('storage_type'),
+        ];
 
-        $activeLoans = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy'])
-            ->active()
-            ->orderBy('loan_date', 'desc')
-            ->get();
+        // Build base query with filters
+        $baseQuery = LoanTransaction::with(['patron.user', 'bookItem.bibliographicRecord', 'bookItem.storageLocation', 'loanedByUser', 'policy']);
+
+        // Apply loan_date range filter
+        if (!empty($filters['loan_date_from'])) {
+            $baseQuery->whereDate('loan_date', '>=', $filters['loan_date_from']);
+        }
+        if (!empty($filters['loan_date_to'])) {
+            $baseQuery->whereDate('loan_date', '<=', $filters['loan_date_to']);
+        }
+
+        // Apply patron search filter (name or patron_code)
+        if (!empty($filters['patron_search'])) {
+            $baseQuery->whereHas('patron', function ($q) use ($filters) {
+                $q->where('display_name', 'like', '%' . $filters['patron_search'] . '%')
+                  ->orWhere('patron_code', 'like', '%' . $filters['patron_search'] . '%');
+            });
+        }
+
+        // Apply loaned_by filter
+        if (!empty($filters['loaned_by'])) {
+            $baseQuery->where('loaned_by', $filters['loaned_by']);
+        }
+
+        // Apply storage_location filter
+        if (!empty($filters['storage_location'])) {
+            $baseQuery->whereHas('bookItem', function ($q) use ($filters) {
+                $q->where('storage_location_id', $filters['storage_location'])
+                  ->orWhere('location', $filters['storage_location']);
+            });
+        }
+
+        // Apply storage_type filter
+        if (!empty($filters['storage_type'])) {
+            $baseQuery->whereHas('bookItem', function ($q) use ($filters) {
+                $q->where('storage_type', $filters['storage_type']);
+            });
+        }
+
+        // Clone for overdue and active
+        $overdueQuery = (clone $baseQuery)->overdue();
+        $activeQuery = (clone $baseQuery)->active();
+
+        // Apply remaining_days filter (only meaningful for active loans)
+        if ($filters['remaining_days'] !== null && $filters['remaining_days'] !== '') {
+            $remainingDays = (int) $filters['remaining_days'];
+            $targetDate = Carbon::now()->addDays($remainingDays);
+            $activeQuery->where('due_date', '<=', $targetDate);
+            $overdueQuery->where('due_date', '<=', $targetDate);
+        }
+
+        $overdueLoans = $overdueQuery->orderBy('due_date')->get();
+        $activeLoans = $activeQuery->orderBy('loan_date', 'desc')->get();
 
         $loanRequests = Reservation::with(['patron.user', 'bibliographicRecord.fields.subfields', 'bookItem'])
             ->whereIn('status', ['pending', 'ready'])
             ->latest()
             ->get();
 
-        return view('admin.circulation.book-management', compact('overdueLoans', 'activeLoans', 'loanRequests'));
+        // Get filter dropdown data
+        $loanedByUserIds = LoanTransaction::whereNotNull('loaned_by')->distinct()->pluck('loaned_by')->toArray();
+        $loanedByUsers = \App\Models\User::whereIn('id', $loanedByUserIds)
+            ->orderBy('name')
+            ->pluck('name', 'id');
+
+        $storageLocations = \App\Models\StorageLocation::orderBy('name')->pluck('name', 'id');
+
+        $storageTypes = BookItem::whereNotNull('storage_type')
+            ->where('storage_type', '!=', '')
+            ->distinct()
+            ->pluck('storage_type', 'storage_type')
+            ->sort();
+
+        return view('admin.circulation.book-management', compact(
+            'overdueLoans', 'activeLoans', 'loanRequests',
+            'filters', 'loanedByUsers', 'storageLocations', 'storageTypes'
+        ));
     }
 
     private function cleanUtf8($data)

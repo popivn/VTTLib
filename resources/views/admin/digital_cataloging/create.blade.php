@@ -116,21 +116,31 @@
                 
                 @if($resource->file_path)
                 <div class="flex items-center gap-2 p-2 bg-background border border-border rounded-sm mb-2">
-                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i>
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>
                     <div class="min-w-0 flex-1 text-[10px]">
                         <div class="font-bold text-foreground truncate">{{ $resource->file_name }}</div>
                         <div class="text-muted-foreground uppercase">{{ number_format($resource->file_size / 1024, 1) }} KB</div>
                     </div>
+                    <a href="{{ route('admin.digital-resources.download', $resource->id) }}" 
+                       class="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold rounded border border-primary/20 transition-all"
+                       title="{{ __('Tải xuống tệp hiện tại') }}">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Tải xuống
+                    </a>
                 </div>
                 @endif
 
-                <label class="flex flex-col items-center justify-center w-full py-4 border-2 border-dashed border-primary/20 rounded-md bg-background hover:bg-primary/5 cursor-pointer transition-all group">
+                <label id="file-drop-label" class="flex flex-col items-center justify-center w-full py-4 border-2 border-dashed border-primary/20 rounded-md bg-background hover:bg-primary/5 cursor-pointer transition-all group">
                     <i data-lucide="upload-cloud" class="w-6 h-6 text-primary/50 group-hover:scale-110 transition-transform mb-2"></i>
-                    <span id="file-name-display" class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    <span id="file-name-display" class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-center px-2">
                         {{ $resource->id ? __('Thay đổi tệp PDF') : __('Tải lên tệp PDF') }}
                     </span>
-                    <input type="file" name="file_resource" class="hidden" accept=".pdf" onchange="displayFileName(this)">
+                    <input type="file" name="file_resource" id="file-resource-input" class="hidden" accept=".pdf,application/pdf" onchange="displayFileName(this)">
                 </label>
+                <div id="file-error" class="hidden text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-sm px-2 py-1.5 flex items-center gap-1.5">
+                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                    <span id="file-error-msg"></span>
+                </div>
             </div>
         </div>
 
@@ -272,9 +282,41 @@ function previewImage(input) {
 
 function displayFileName(input) {
     const display = document.getElementById('file-name-display');
-    if (input.files && input.files[0]) {
-        display.innerHTML = `<span class="text-primary font-bold">${input.files[0].name}</span>`;
+    const errorBox = document.getElementById('file-error');
+    const errorMsg = document.getElementById('file-error-msg');
+    const dropLabel = document.getElementById('file-drop-label');
+    const submitBtn = document.querySelector('button[type="submit"]');
+
+    // Reset lỗi
+    errorBox.classList.add('hidden');
+    dropLabel.classList.remove('border-rose-500', 'bg-rose-500/5');
+    dropLabel.classList.add('border-primary/20', 'bg-background', 'hover:bg-primary/5');
+
+    if (!input.files || !input.files[0]) {
+        return;
     }
+
+    const file = input.files[0];
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+    if (!isPdf) {
+        display.innerHTML = `<span class="text-rose-600">${input.files[0].name}</span>`;
+        errorMsg.textContent = 'Chỉ chấp nhận tệp PDF (.pdf).';
+        errorBox.classList.remove('hidden');
+        dropLabel.classList.remove('border-primary/20', 'bg-background', 'hover:bg-primary/5');
+        dropLabel.classList.add('border-rose-500', 'bg-rose-500/5');
+        input.setCustomValidity('invalid');
+        if (submitBtn) submitBtn.disabled = true;
+        if (window.lucide) lucide.createIcons();
+        return;
+    }
+
+    // Hợp lệ
+    input.setCustomValidity('');
+    if (submitBtn) submitBtn.disabled = false;
+    const sizeKb = (file.size / 1024).toLocaleString('vi-VN', { maximumFractionDigits: 1 });
+    display.innerHTML = `<i data-lucide="file-text" class="w-3.5 h-3.5 inline -mt-0.5 text-primary"></i> <span class="text-primary font-bold normal-case tracking-normal">${file.name}</span> <span class="text-muted-foreground normal-case tracking-normal">(${sizeKb} KB)</span>`;
+    if (window.lucide) lucide.createIcons();
 }
 
 // Form validation with SweetAlert2
@@ -307,6 +349,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.SwalHelper.showWarning('Thiếu tệp tin!', 'Vui lòng chọn tệp PDF để tải lên.');
                 } else {
                     alert('Vui lòng chọn tệp PDF để tải lên.');
+                }
+                return false;
+            }
+
+            // Chặn submit nếu file đã chọn nhưng không hợp lệ (không phải PDF)
+            if (fileInput && fileInput.files && fileInput.files.length > 0 && fileInput.checkValidity && !fileInput.checkValidity()) {
+                e.preventDefault();
+                if (window.SwalHelper) {
+                    window.SwalHelper.showWarning('Tệp không hợp lệ!', 'Vui lòng chọn tệp PDF (.pdf).');
+                } else {
+                    alert('Vui lòng chọn tệp PDF (.pdf).');
                 }
                 return false;
             }

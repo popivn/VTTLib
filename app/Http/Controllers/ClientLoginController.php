@@ -35,6 +35,11 @@ class ClientLoginController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
+            $user = Auth::user();
+            if ($user->is_first_login) {
+                return redirect()->route('password.change.form');
+            }
+
             return redirect()->intended('/');
         }
 
@@ -133,8 +138,9 @@ class ClientLoginController extends Controller
                         'name' => $apiData['name'] ?? $username,
                         'username' => $username,
                         'email' => $apiData['email'] ?? ($username . '@vttu.edu.vn'),
-                        'password' => bcrypt('Vttulib@2026'),
+                        'password' => bcrypt($username),
                         'status' => 'active',
+                        'is_first_login' => false,
                     ]);
 
                     // Gán vai trò vào bảng pivot role_user

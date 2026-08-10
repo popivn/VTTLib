@@ -33,7 +33,93 @@
         $pendingRequestsCount = $loanRequests->where('status', 'pending')->count();
         $readyRequestsCount = $loanRequests->where('status', 'ready')->count();
         $totalRequestsCount = $pendingRequestsCount + $readyRequestsCount;
+        $hasFilters = !empty($filters['loan_date_from']) || !empty($filters['loan_date_to']) || !empty($filters['patron_search']) || !empty($filters['loaned_by']) || ($filters['remaining_days'] !== null && $filters['remaining_days'] !== '') || !empty($filters['storage_location']) || !empty($filters['storage_type']);
     @endphp
+
+    <!-- Filter Bar -->
+    <div class="bg-card rounded-md border border-border shadow-sm">
+        <div class="p-3">
+            <form method="GET" action="{{ route('admin.circulation.book-management') }}" id="filterForm" class="space-y-3">
+                <input type="hidden" name="tab" id="filterTabInput" value="{{ request('tab', 'borrowed') }}">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="filter" class="w-4 h-4 text-muted-foreground"></i>
+                        <span class="text-xs font-bold text-foreground">{{ __('Bộ lọc') }}</span>
+                        @if($hasFilters)
+                            <span class="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full text-[9px] font-bold">{{ __('Đang lọc') }}</span>
+                        @endif
+                    </div>
+                    <div class="flex gap-2">
+                        @if($hasFilters)
+                            <a href="{{ route('admin.circulation.book-management') }}" class="px-2.5 py-1 text-[10px] font-semibold text-muted-foreground hover:text-destructive border border-border rounded-sm hover:bg-destructive/5 transition-colors">
+                                <i data-lucide="x" class="w-3 h-3 inline"></i> {{ __('Xóa lọc') }}
+                            </a>
+                        @endif
+                        <button type="submit" class="px-3 py-1 text-[10px] font-bold text-primary-foreground bg-primary hover:opacity-90 rounded-sm transition-opacity">
+                            <i data-lucide="search" class="w-3 h-3 inline"></i> {{ __('Áp dụng') }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2">
+                    <!-- Loan date from -->
+                    <div>
+                        <label class="block text-[10px] font-semibold text-muted-foreground mb-1">{{ __('Từ ngày mượn') }}</label>
+                        <input type="date" name="loan_date_from" value="{{ $filters['loan_date_from'] ?? '' }}"
+                               class="w-full px-2 py-1.5 text-xs border border-border rounded-sm bg-background focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                    </div>
+                    <!-- Loan date to -->
+                    <div>
+                        <label class="block text-[10px] font-semibold text-muted-foreground mb-1">{{ __('Đến ngày mượn') }}</label>
+                        <input type="date" name="loan_date_to" value="{{ $filters['loan_date_to'] ?? '' }}"
+                               class="w-full px-2 py-1.5 text-xs border border-border rounded-sm bg-background focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                    </div>
+                    <!-- Patron search -->
+                    <div>
+                        <label class="block text-[10px] font-semibold text-muted-foreground mb-1">{{ __('Người mượn') }}</label>
+                        <input type="text" name="patron_search" value="{{ $filters['patron_search'] ?? '' }}" placeholder="{{ __('Tên hoặc mã độc giả') }}"
+                               class="w-full px-2 py-1.5 text-xs border border-border rounded-sm bg-background focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                    </div>
+                    <!-- Loaned by -->
+                    <div>
+                        <label class="block text-[10px] font-semibold text-muted-foreground mb-1">{{ __('Người thực hiện') }}</label>
+                        <select name="loaned_by" class="w-full px-2 py-1.5 text-xs border border-border rounded-sm bg-background focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                            <option value="">{{ __('Tất cả') }}</option>
+                            @foreach($loanedByUsers as $id => $name)
+                                <option value="{{ $id }}" @selected($filters['loaned_by'] == $id)>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <!-- Remaining days -->
+                    <div>
+                        <label class="block text-[10px] font-semibold text-muted-foreground mb-1">{{ __('Còn hạn ≤ (ngày)') }}</label>
+                        <input type="number" name="remaining_days" value="{{ $filters['remaining_days'] ?? '' }}" placeholder="vd: 3" min="0"
+                               class="w-full px-2 py-1.5 text-xs border border-border rounded-sm bg-background focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                    </div>
+                    <!-- Storage location -->
+                    <div>
+                        <label class="block text-[10px] font-semibold text-muted-foreground mb-1">{{ __('Vị trí') }}</label>
+                        <select name="storage_location" class="w-full px-2 py-1.5 text-xs border border-border rounded-sm bg-background focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                            <option value="">{{ __('Tất cả') }}</option>
+                            @foreach($storageLocations as $id => $name)
+                                <option value="{{ $id }}" @selected($filters['storage_location'] == $id)>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <!-- Storage type -->
+                    <div>
+                        <label class="block text-[10px] font-semibold text-muted-foreground mb-1">{{ __('Loại') }}</label>
+                        <select name="storage_type" class="w-full px-2 py-1.5 text-xs border border-border rounded-sm bg-background focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+                            <option value="">{{ __('Tất cả') }}</option>
+                            @foreach($storageTypes as $value => $label)
+                                <option value="{{ $value }}" @selected($filters['storage_type'] == $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Tabs Navigation -->
     <div class="bg-card rounded-md border border-border shadow-sm overflow-hidden">
@@ -436,6 +522,10 @@ function switchTab(tabName) {
     const url = new URL(window.location);
     url.searchParams.set('tab', tabName);
     window.history.pushState({}, '', url);
+
+    // Sync hidden tab input in filter form
+    const tabInput = document.getElementById('filterTabInput');
+    if (tabInput) tabInput.value = tabName;
 
     // Hide all contents
     document.getElementById('borrowedContent').classList.add('hidden');

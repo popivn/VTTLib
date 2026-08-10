@@ -242,8 +242,10 @@ class PatronsImport implements ToModel, WithHeadingRow, WithBatchInserts, WithCh
                     // Create user
                     $user = User::create([
                         'name' => $mappedData['name'],
+                        'username' => $mappedData['patron_code'],
                         'email' => $mappedData['email'],
-                        'password' => Hash::make('password123'), // Default password
+                        'password' => Hash::make($mappedData['patron_code']),
+                        'is_first_login' => true,
                     ]);
 
                     \Log::info('Created user with ID: ' . $user->id);

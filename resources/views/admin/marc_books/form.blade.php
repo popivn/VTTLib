@@ -805,7 +805,7 @@ $initialItemsData = (isset($record) && $record->items->count() > 0)
                 document.getElementById('cover_image_input').value = '';
             },
 
-            addItem() {
+            async addItem() {
                 if (!this.newItem.storage_location_id) {
                     Swal.fire({
                         title: 'Cảnh báo',
@@ -829,9 +829,153 @@ $initialItemsData = (isset($record) && $record->items->count() > 0)
                     this.editingIndex = null;
                 } else {
                     const quantity = parseInt(this.batchQuantity) || 1;
+                    const baseBarcode = this.newItem.barcode || '';
+                    const baseAcc = this.newItem.accession_number || '';
+
+                    // Parse barcode: extract prefix and numeric suffix
+                    let bcPrefix = '', bcNum = null, bcPad = 0;
+                    if (baseBarcode) {
+                        const m = baseBarcode.match(/^(.*?)(\d+)$/);
+                        if (m) { bcPrefix = m[1]; bcNum = parseInt(m[2]); bcPad = m[2].length; }
+                    }
+
+                    // Parse accession_number: extract prefix and numeric suffix
+                    let accPrefix = '', accNum = null, accPad = 0;
+                    if (baseAcc) {
+                        const m = baseAcc.match(/^(.*?)(\d+)$/);
+                        if (m) { accPrefix = m[1]; accNum = parseInt(m[2]); accPad = m[2].length; }
+                    }
+
+                    // Generate all barcodes and accession numbers first
+                    const pendingItems = [];
+                    const pendingBarcodes = [];
+                    const pendingAccs = [];
+
                     for (let i = 0; i < quantity; i++) {
                         const itemToAdd = JSON.parse(JSON.stringify(this.newItem));
-                        this.items.push(itemToAdd);
+
+                        if (baseBarcode && bcNum !== null) {
+                            itemToAdd.barcode = bcPrefix + String(bcNum + i).padStart(bcPad, '0');
+                        }
+                        if (baseAcc && accNum !== null) {
+                            itemToAdd.accession_number = accPrefix + String(accNum + i).padStart(accPad, '0');
+                        }
+
+                        pendingItems.push(itemToAdd);
+                        if (itemToAdd.barcode) pendingBarcodes.push(itemToAdd.barcode);
+                        if (itemToAdd.accession_number) pendingAccs.push(itemToAdd.accession_number);
+                    }
+
+                    // Check duplicates within the pending batch itself
+                    const bcSet = new Set();
+                    const accSet = new Set();
+                    for (const bc of pendingBarcodes) {
+                        if (bcSet.has(bc)) {
+                            Swal.fire({
+                                title: '{{ __("Lỗi") }}',
+                                text: '{{ __("Mã vạch :bc bị trùng lặp trong danh sách.") }}'.replace(':bc', bc),
+                                icon: 'error',
+                                confirmButtonColor: 'hsl(var(--primary))',
+                                confirmButtonText: 'OK',
+                                customClass: { popup: 'bg-card text-foreground border border-border rounded-md p-4', title: 'text-foreground font-bold text-sm', htmlContainer: 'text-muted-foreground text-xs mt-2', confirmButton: 'px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm text-xs font-bold uppercase tracking-wider' },
+                                buttonsStyling: false
+                            });
+                            return;
+                        }
+                        bcSet.add(bc);
+                    }
+
+                    // Check duplicates against existing items in queue (excluding items being edited)
+                    for (const bc of pendingBarcodes) {
+                        const dup = this.items.find((it, idx) => it.barcode === bc);
+                        if (dup) {
+                            Swal.fire({
+                                title: '{{ __("Lỗi") }}',
+                                text: '{{ __("Mã vạch :bc đã tồn tại trong danh sách.") }}'.replace(':bc', bc),
+                                icon: 'error',
+                                confirmButtonColor: 'hsl(var(--primary))',
+                                confirmButtonText: 'OK',
+                                customClass: { popup: 'bg-card text-foreground border border-border rounded-md p-4', title: 'text-foreground font-bold text-sm', htmlContainer: 'text-muted-foreground text-xs mt-2', confirmButton: 'px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm text-xs font-bold uppercase tracking-wider' },
+                                buttonsStyling: false
+                            });
+                            return;
+                        }
+                    }
+
+                    for (const acc of pendingAccs) {
+                        const dup = this.items.find((it, idx) => it.accession_number === acc);
+                        if (dup) {
+                            Swal.fire({
+                                title: '{{ __("Lỗi") }}',
+                                text: '{{ __("Số đăng ký cá biệt :acc đã tồn tại trong danh sách.") }}'.replace(':acc', acc),
+                                icon: 'error',
+                                confirmButtonColor: 'hsl(var(--primary))',
+                                confirmButtonText: 'OK',
+                                customClass: { popup: 'bg-card text-foreground border border-border rounded-md p-4', title: 'text-foreground font-bold text-sm', htmlContainer: 'text-muted-foreground text-xs mt-2', confirmButton: 'px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm text-xs font-bold uppercase tracking-wider' },
+                                buttonsStyling: false
+                            });
+                            return;
+                        }
+                    }
+
+                    // Check duplicates against database via AJAX
+                    if (pendingBarcodes.length > 0) {
+                        Swal.fire({
+                            title: '{{ __("Đang kiểm tra...") }}',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading(),
+                            customClass: { popup: 'bg-card text-foreground border border-border rounded-md p-4' }
+                        });
+
+                        try {
+                            const checkPromises = [];
+                            for (const bc of pendingBarcodes) {
+                                const url = '{{ route("admin.marc.book.distribution.check") }}?barcode=' + encodeURIComponent(bc) + '&type=barcode';
+                                checkPromises.push(fetch(url).then(r => r.json()).then(data => ({ bc, exists: data.exists })));
+                            }
+                            for (const acc of pendingAccs) {
+                                const url = '{{ route("admin.marc.book.distribution.check") }}?barcode=' + encodeURIComponent(acc) + '&type=accession_number';
+                                checkPromises.push(fetch(url).then(r => r.json()).then(data => ({ acc, exists: data.exists })));
+                            }
+
+                            const results = await Promise.all(checkPromises);
+                            Swal.close();
+
+                            for (const r of results) {
+                                if (r.bc && r.exists) {
+                                    Swal.fire({
+                                        title: '{{ __("Lỗi") }}',
+                                        text: '{{ __("Mã vạch :bc đã tồn tại trong hệ thống.") }}'.replace(':bc', r.bc),
+                                        icon: 'error',
+                                        confirmButtonColor: 'hsl(var(--primary))',
+                                        confirmButtonText: 'OK',
+                                        customClass: { popup: 'bg-card text-foreground border border-border rounded-md p-4', title: 'text-foreground font-bold text-sm', htmlContainer: 'text-muted-foreground text-xs mt-2', confirmButton: 'px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm text-xs font-bold uppercase tracking-wider' },
+                                        buttonsStyling: false
+                                    });
+                                    return;
+                                }
+                                if (r.acc && r.exists) {
+                                    Swal.fire({
+                                        title: '{{ __("Lỗi") }}',
+                                        text: '{{ __("Số đăng ký cá biệt :acc đã tồn tại trong hệ thống.") }}'.replace(':acc', r.acc),
+                                        icon: 'error',
+                                        confirmButtonColor: 'hsl(var(--primary))',
+                                        confirmButtonText: 'OK',
+                                        customClass: { popup: 'bg-card text-foreground border border-border rounded-md p-4', title: 'text-foreground font-bold text-sm', htmlContainer: 'text-muted-foreground text-xs mt-2', confirmButton: 'px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm text-xs font-bold uppercase tracking-wider' },
+                                        buttonsStyling: false
+                                    });
+                                    return;
+                                }
+                            }
+                        } catch (e) {
+                            Swal.close();
+                            console.error('Check duplicate error:', e);
+                        }
+                    }
+
+                    // All checks passed, add items
+                    for (const item of pendingItems) {
+                        this.items.push(item);
                     }
                 }
                 this.resetNewItem();

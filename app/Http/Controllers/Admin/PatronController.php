@@ -520,7 +520,9 @@ class PatronController extends Controller
         // Merge all validated data
         $validated = array_merge($validated, $additionalValidated);
 
-        $patron = DB::transaction(function () use ($request, $validated) {
+        $newUserPassword = null;
+
+        $patron = DB::transaction(function () use ($request, $validated, &$newUserPassword) {
             // 1. Check user_id, if empty, auto-create a new user
             $userId = $request->input('user_id') ?: null;
             if (empty($userId)) {
@@ -541,8 +543,9 @@ class PatronController extends Controller
                     'name' => $validated['display_name'],
                     'username' => $username,
                     'email' => $userEmail,
-                    'password' => Hash::make('12345678'),
+                    'password' => Hash::make($username),
                     'status' => 'active',
+                    'is_first_login' => true,
                 ]);
 
                 $patronRole = Role::where('name', 'patron')->first();
@@ -551,6 +554,7 @@ class PatronController extends Controller
                 }
 
                 $userId = $newUser->id;
+                $newUserPassword = $username;
             }
 
             // 2. Image
@@ -619,7 +623,10 @@ class PatronController extends Controller
             return $patron;
         });
 
-        return redirect()->route('admin.patrons.index')->with('success', __('Patron created successfully.'));
+        return redirect()->route('admin.patrons.index')->with([
+            'success' => __('Patron created successfully.'),
+            'new_user_password' => $newUserPassword,
+        ]);
     }
 
     public function toggleStatus($id)

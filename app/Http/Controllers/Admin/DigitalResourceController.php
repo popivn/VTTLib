@@ -89,6 +89,10 @@ class DigitalResourceController extends Controller
 
     public function download(DigitalResource $resource)
     {
+        if (!$resource->file_path || !Storage::disk('public')->exists($resource->file_path)) {
+            return back()->with('error', __('Tệp tài liệu không tồn tại trên hệ thống. Vui lòng tải lại tệp PDF.'));
+        }
+
         $resource->increment('download_count');
         return Storage::disk('public')->download($resource->file_path, $resource->file_name);
     }

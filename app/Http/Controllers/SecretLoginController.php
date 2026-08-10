@@ -42,6 +42,10 @@ class SecretLoginController extends Controller
             }
             $request->session()->regenerate();
 
+            if ($user->is_first_login) {
+                return redirect()->route('password.change.form');
+            }
+
             return redirect()->intended('/topsecret/dashboard');
         }
 

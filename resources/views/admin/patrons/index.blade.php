@@ -14,6 +14,35 @@
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
+
+        @if(session('new_user_password'))
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: "{{ __('Tạo độc giả thành công') }}",
+            html: '{{ __("Mật khẩu của user vừa tạo:") }} <br><strong style="font-size:16px;letter-spacing:1px">{{ session('new_user_password') }}</strong>',
+            showConfirmButton: true,
+            confirmButtonText: '{{ __("Sao chép") }}',
+            showCancelButton: true,
+            cancelButtonText: '{{ __("Đóng") }}',
+            timer: 0,
+            timerProgressBar: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                navigator.clipboard.writeText('{{ session('new_user_password') }}');
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'info',
+                    title: '{{ __("Đã sao chép mật khẩu vào clipboard") }}',
+                    timer: 2000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+            }
+        });
+        @endif
     });
 </script>
 @endpush

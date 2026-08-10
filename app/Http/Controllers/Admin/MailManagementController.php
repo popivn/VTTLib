@@ -70,15 +70,47 @@ class MailManagementController extends Controller
                 ->groupBy('patron_details.id', 'users.name', 'users.email', 'patron_details.mssv')
                 ->get();
 
-            return view('admin.mails.index', compact('tab', 'stats', 'overdueStudents'));
+            $settingsRecord = DB::table('system_settings')
+                ->where('key', 'mail_due_soon_days')
+                ->first();
+            $dueSoonDays = $settingsRecord ? (int) $settingsRecord->value : 3;
+
+            $dueSoonStudents = DB::table('loan_transactions')
+                ->join('patron_details', 'loan_transactions.patron_detail_id', '=', 'patron_details.id')
+                ->join('users', 'patron_details.user_id', '=', 'users.id')
+                ->where('loan_transactions.status', 'borrowed')
+                ->where('loan_transactions.due_date', '>=', now())
+                ->where('loan_transactions.due_date', '<=', now()->addDays($dueSoonDays))
+                ->select(
+                    'patron_details.id as patron_detail_id',
+                    'users.name as student_name',
+                    'users.email as student_email',
+                    'patron_details.mssv as student_mssv',
+                    DB::raw('COUNT(loan_transactions.id) as due_soon_books_count'),
+                    DB::raw('MIN(loan_transactions.due_date) as nearest_due_date')
+                )
+                ->groupBy('patron_details.id', 'users.name', 'users.email', 'patron_details.mssv')
+                ->get();
+
+            return view('admin.mails.index', compact('tab', 'stats', 'overdueStudents', 'dueSoonStudents', 'dueSoonDays'));
         }
 
-        $template = DB::table('system_settings')
+        $overdueTemplate = DB::table('system_settings')
             ->where('key', 'mail_template_overdue')
             ->first();
-        $templateData = $template ? json_decode($template->value, true) : null;
+        $templateData = $overdueTemplate ? json_decode($overdueTemplate->value, true) : null;
 
-        return view('admin.mails.index', compact('tab', 'stats', 'templateData'));
+        $dueSoonTemplate = DB::table('system_settings')
+            ->where('key', 'mail_template_due_soon')
+            ->first();
+        $dueSoonTemplateData = $dueSoonTemplate ? json_decode($dueSoonTemplate->value, true) : null;
+
+        $settingsRecord = DB::table('system_settings')
+            ->where('key', 'mail_due_soon_days')
+            ->first();
+        $dueSoonDays = $settingsRecord ? (int) $settingsRecord->value : 3;
+
+        return view('admin.mails.index', compact('tab', 'stats', 'templateData', 'dueSoonTemplateData', 'dueSoonDays'));
     }
 
     /**
@@ -494,6 +526,211 @@ class MailManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Lưu cấu hình template email thành công!'
+        ]);
+    }
+
+    /**
+     * Save mail notification settings (e.g. due soon days).
+     */
+    public function saveSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'due_soon_days' => 'required|integer|min:1|max:30',
+        ]);
+
+        DB::table('system_settings')->updateOrInsert(
+            ['key' => 'mail_due_soon_days'],
+            [
+                'value' => (string) $validated['due_soon_days'],
+                'group' => 'email',
+                'updated_at' => now(),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Lưu cài đặt thành công!'
+        ]);
+    }
+
+    /**
+     * Send due-soon notifications to selected patrons.
+     */
+    public function sendDueSoonMails(Request $request)
+    {
+        $validated = $request->validate([
+            'patron_ids' => 'required|array',
+            'patron_ids.*' => 'integer',
+            'sender_channel' => 'nullable|string|in:system,library',
+        ]);
+
+        $senderChannel = $validated['sender_channel'] ?? 'system';
+
+        $settingsRecord = DB::table('system_settings')
+            ->where('key', 'mail_due_soon_days')
+            ->first();
+        $dueSoonDays = $settingsRecord ? (int) $settingsRecord->value : 3;
+
+        $template = DB::table('system_settings')
+            ->where('key', 'mail_template_due_soon')
+            ->first();
+        $tpl = $template ? json_decode($template->value, true) : [];
+
+        $libraryName = $tpl['library_name'] ?? 'Thư viện Đại học Võ Trường Toản';
+        $subtitle = $tpl['subtitle'] ?? 'Thông báo sắp đến hạn trả sách';
+        $greetingTpl = $tpl['greeting'] ?? 'Thân gửi sinh viên {name} (MSSV: {id}),';
+        $introTpl = $tpl['intro'] ?? 'Hệ thống ghi nhận bạn đang mượn tài liệu tại Thư viện sắp đến thời hạn trả quy định. Còn {days} ngày nữa là đến hạn trả sách. Đề nghị bạn chú ý hoàn trả đúng hạn hoặc gia hạn tài liệu để tránh phí phạt quá hạn.';
+        $noticeTitle = $tpl['notice_title'] ?? 'ℹ️ THÔNG TIN GIA HẠN:';
+        $noticeContent = $tpl['notice_content'] ?? "Bạn có thể gia hạn tài liệu trực tuyến qua hệ thống thư viện hoặc đến trực tiếp thư viện để gia hạn.\nMức phạt quá hạn áp dụng theo quy định hiện hành: 5.000 đ/ngày/cuốn sách.\nNếu bạn đã trả sách hoặc gia hạn tài liệu thành công trước thời gian nhận được email này, vui lòng bỏ qua thư thông báo này.";
+        $signature = $tpl['signature'] ?? 'Ban Quản lý Thư viện Đại học Võ Trường Toản';
+        $address = $tpl['address'] ?? 'Khu đô thị ĐH Võ Trường Toản, QL 1A, Châu Thành A, Hậu Giang';
+        $footerNote = $tpl['footer_note'] ?? 'Email tự động, vui lòng không phản hồi thư này.';
+
+        if ($senderChannel === 'library') {
+            $mailService = resolve(\App\Services\MailLibraryService::class);
+        } else {
+            $mailService = resolve(MailQueueService::class);
+        }
+        $successCount = 0;
+        $failCount = 0;
+
+        foreach ($validated['patron_ids'] as $patronId) {
+            $patron = DB::table('patron_details')
+                ->join('users', 'patron_details.user_id', '=', 'users.id')
+                ->where('patron_details.id', $patronId)
+                ->select('users.name', 'users.email', 'patron_details.mssv')
+                ->first();
+
+            if (!$patron) continue;
+
+            $loans = \App\Models\LoanTransaction::with(['bookItem.bibliographicRecord'])
+                ->where('patron_detail_id', $patronId)
+                ->where('status', 'borrowed')
+                ->where('due_date', '>=', now())
+                ->where('due_date', '<=', now()->addDays($dueSoonDays))
+                ->get();
+
+            if ($loans->isEmpty()) continue;
+
+            $minDaysLeft = 999;
+            $booksRowsHtml = '';
+            foreach ($loans as $index => $loan) {
+                $daysLeft = max(0, (int) now()->diffInDays($loan->due_date, false));
+                if ($daysLeft < $minDaysLeft) {
+                    $minDaysLeft = $daysLeft;
+                }
+                $bookTitle = $loan->bookItem->bibliographicRecord->title ?? 'Tài liệu không tên';
+                $bookCode = $loan->bookItem->barcode ?? '--';
+                $dueDateFormatted = \Carbon\Carbon::parse($loan->due_date)->format('d/m/Y');
+
+                $booksRowsHtml .= '
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px 10px; font-size: 13px; color: #1e293b; font-weight: 500;">' . ($index + 1) . '</td>
+                        <td style="padding: 12px 10px; font-size: 13px; color: #1e293b;">' . htmlspecialchars($bookTitle) . '</td>
+                        <td style="padding: 12px 10px; font-size: 13px; color: #475569; font-weight: 500; text-align: center;">' . htmlspecialchars($bookCode) . '</td>
+                        <td style="padding: 12px 10px; font-size: 13px; color: #f59e0b; font-weight: 600; text-align: center;">' . $dueDateFormatted . '</td>
+                    </tr>
+                ';
+            }
+
+            $greeting = str_replace(['{name}', '{id}'], [$patron->name, $patron->mssv], $greetingTpl);
+            $intro = str_replace('{days}', $minDaysLeft, $introTpl);
+
+            $noticeHtml = '';
+            $noticeItems = explode("\n", $noticeContent);
+            foreach ($noticeItems as $item) {
+                $item = trim($item);
+                if (empty($item)) continue;
+                $cleanItem = preg_replace('/^[\s\-\*\•\d\.\)]+/', '', $item);
+                $noticeHtml .= '<li style="margin-bottom: 6px;">' . htmlspecialchars($cleanItem) . '</li>';
+            }
+
+            $htmlBody = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 30px 10px;">
+        <tr>
+            <td align="center">
+                <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #b45309 0%, #92400e 100%); padding: 35px 40px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; text-transform: uppercase;">' . htmlspecialchars($libraryName) . '</h1>
+                            <p style="color: #fde68a; margin: 5px 0 0 0; font-size: 13px; font-weight: 500;">' . htmlspecialchars($subtitle) . '</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px 40px 30px 40px;">
+                            <p style="margin: 0 0 16px 0; font-size: 15px; color: #334155; line-height: 24px; font-weight: 500;">' . htmlspecialchars($greeting) . '</p>
+                            <p style="margin: 0 0 24px 0; font-size: 14px; color: #475569; line-height: 22px;">' . htmlspecialchars($intro) . '</p>
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                                <thead>
+                                    <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                                        <th width="8%" style="padding: 10px; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #475569; text-align: left;">STT</th>
+                                        <th width="45%" style="padding: 10px; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #475569; text-align: left;">Tên sách</th>
+                                        <th width="22%" style="padding: 10px; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #475569; text-align: center;">Mã sách</th>
+                                        <th width="25%" style="padding: 10px; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #475569; text-align: center;">Ngày trả</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ' . $booksRowsHtml . '
+                                </tbody>
+                            </table>
+                            ' . ($noticeHtml ? '
+                            <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                                <h4 style="margin: 0 0 6px 0; color: #92400e; font-size: 13px; font-weight: 750;">' . htmlspecialchars($noticeTitle) . '</h4>
+                                <ul style="margin: 0; padding-left: 18px; color: #92400e; font-size: 12px; line-height: 1.6;">
+                                    ' . $noticeHtml . '
+                                </ul>
+                            </div>
+                            ' : '') . '
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 25px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: bold; color: #334155;">' . htmlspecialchars($signature) . '</p>
+                            ' . ($address ? '<p style="margin: 0 0 6px 0; font-size: 11px; color: #64748b;">Địa chỉ: ' . htmlspecialchars($address) . '</p>' : '') . '
+                            <p style="margin: 0; font-size: 11px; color: #94a3b8;">' . htmlspecialchars($footerNote) . '</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>';
+
+            $result = $mailService->send(
+                $patron->email,
+                $subtitle,
+                $htmlBody,
+                'Thư viện Đại học Võ Trường Toản',
+                'trunghieu3832@vttu.edu.vn,ptnguyen@vttu.edu.vn'
+            );
+
+            DB::table('mail_logs')->insert([
+                'recipient' => $patron->email,
+                'subject' => $subtitle,
+                'body' => $htmlBody,
+                'cc' => 'trunghieu3832@vttu.edu.vn,ptnguyen@vttu.edu.vn',
+                'status' => (!empty($result['success'])) ? 'sent' : 'failed',
+                'sent_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            if (!empty($result['success'])) {
+                $successCount++;
+            } else {
+                $failCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Đã gửi thành công {$successCount} email, thất bại {$failCount} email."
         ]);
     }
 

@@ -703,6 +703,36 @@ class MarcBookController extends Controller
                         \Log::info('Updating existing item ID: ' . $itemData['id']);
                         $bookItem = BookItem::find($itemData['id']);
                         if ($bookItem && $bookItem->bibliographic_record_id == $record->id) {
+                            // Check duplicate barcode if changed
+                            if (!empty($itemPayload['barcode']) && $itemPayload['barcode'] !== $bookItem->barcode) {
+                                $existing = BookItem::where('barcode', $itemPayload['barcode'])
+                                    ->where('id', '!=', $bookItem->id)
+                                    ->exists();
+                                if ($existing) {
+                                    DB::rollBack();
+                                    $msg = __('Mã vạch :barcode đã tồn tại trong hệ thống.', ['barcode' => $itemPayload['barcode']]);
+                                    if ($request->expectsJson() || $request->ajax()) {
+                                        return response()->json(['success' => false, 'message' => $msg], 422);
+                                    }
+                                    return back()->with('error', $msg)->withInput();
+                                }
+                            }
+
+                            // Check duplicate accession_number if changed
+                            if (!empty($itemPayload['accession_number']) && $itemPayload['accession_number'] !== $bookItem->accession_number) {
+                                $existingAcc = BookItem::where('accession_number', $itemPayload['accession_number'])
+                                    ->where('id', '!=', $bookItem->id)
+                                    ->exists();
+                                if ($existingAcc) {
+                                    DB::rollBack();
+                                    $msg = __('Số đăng ký cá biệt :acc đã tồn tại trong hệ thống.', ['acc' => $itemPayload['accession_number']]);
+                                    if ($request->expectsJson() || $request->ajax()) {
+                                        return response()->json(['success' => false, 'message' => $msg], 422);
+                                    }
+                                    return back()->with('error', $msg)->withInput();
+                                }
+                            }
+
                             \Log::info('Found valid book item, updating...');
                             $bookItem->update($itemPayload);
                             $submittedItemIds[] = $bookItem->id;
@@ -728,10 +758,12 @@ class MarcBookController extends Controller
                         if (!empty($itemPayload['barcode'])) {
                             // Check if provided barcode already exists
                             if (BookItem::where('barcode', $itemPayload['barcode'])->exists()) {
-                                \Log::warning('Barcode already exists, generating new one. Original: ' . $itemPayload['barcode']);
-                                $itemPayload['barcode'] = $this->barcodeService->getNextCode('item');
-                                $this->barcodeService->incrementCounter('item', $itemPayload['barcode']);
-                                \Log::info('Generated new barcode: ' . $itemPayload['barcode']);
+                                DB::rollBack();
+                                $msg = __('Mã vạch :barcode đã tồn tại trong hệ thống.', ['barcode' => $itemPayload['barcode']]);
+                                if ($request->expectsJson() || $request->ajax()) {
+                                    return response()->json(['success' => false, 'message' => $msg], 422);
+                                }
+                                return back()->with('error', $msg)->withInput();
                             }
                         } else {
                             \Log::info('Generating new barcode...');
@@ -744,9 +776,12 @@ class MarcBookController extends Controller
                         if (!empty($itemPayload['accession_number'])) {
                             // Check if provided accession_number already exists
                             if (BookItem::where('accession_number', $itemPayload['accession_number'])->exists()) {
-                                \Log::warning('Accession number already exists, generating new one. Original: ' . $itemPayload['accession_number']);
-                                $itemPayload['accession_number'] = $this->generateAccessionNumber();
-                                \Log::info('Generated new accession number: ' . $itemPayload['accession_number']);
+                                DB::rollBack();
+                                $msg = __('Số đăng ký cá biệt :acc đã tồn tại trong hệ thống.', ['acc' => $itemPayload['accession_number']]);
+                                if ($request->expectsJson() || $request->ajax()) {
+                                    return response()->json(['success' => false, 'message' => $msg], 422);
+                                }
+                                return back()->with('error', $msg)->withInput();
                             }
                         } else {
                             \Log::info('Using generated accession number: ' . $itemPayload['accession_number']);
@@ -801,14 +836,34 @@ class MarcBookController extends Controller
                 'request_data' => $request->all()
             ]);
             
+            // Friendly message for duplicate entry errors
+            $errorMsg = $e->getMessage();
+            if (strpos($errorMsg, 'Duplicate entry') !== false && strpos($errorMsg, 'barcode') !== false) {
+                if (preg_match("/Duplicate entry '([^']+)'/", $errorMsg, $m)) {
+                    $errorMsg = __('Mã vạch :barcode đã tồn tại trong hệ thống.', ['barcode' => $m[1]]);
+                } else {
+                    $errorMsg = __('Mã vạch đã tồn tại trong hệ thống.');
+                }
+            } elseif (strpos($errorMsg, 'Duplicate entry') !== false && strpos($errorMsg, 'accession_number') !== false) {
+                if (preg_match("/Duplicate entry '([^']+)'/", $errorMsg, $m)) {
+                    $errorMsg = __('Số đăng ký cá biệt :acc đã tồn tại trong hệ thống.', ['acc' => $m[1]]);
+                } else {
+                    $errorMsg = __('Số đăng ký cá biệt đã tồn tại trong hệ thống.');
+                }
+            } elseif (strpos($errorMsg, 'Duplicate entry') !== false) {
+                $errorMsg = __('Dữ liệu đã tồn tại trong hệ thống. Vui lòng kiểm tra lại mã vạch và số đăng ký cá biệt.');
+            } else {
+                $errorMsg = __('Lỗi khi cập nhật: ') . $errorMsg;
+            }
+            
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => __('Lỗi khi cập nhật: ') . $e->getMessage(),
-                ], 500);
+                    'message' => $errorMsg,
+                ], 422);
             }
 
-            return back()->with('error', __('Lỗi khi cập nhật: ') . $e->getMessage())->withInput();
+            return back()->with('error', $errorMsg)->withInput();
         }
     }
 

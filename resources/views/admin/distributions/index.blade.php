@@ -39,6 +39,36 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="mb-6 animate-in slide-in-from-top-4 fade-in duration-300">
+            <div class="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-xl shadow-sm flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-rose-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-bold text-rose-800">{{ session('error') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if(session('warning'))
+        <div class="mb-6 animate-in slide-in-from-top-4 fade-in duration-300">
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.24 2.722-1.24 3.487 0l5.718 9.24c.753 1.22-.19 2.661-1.744 2.661H4.283c-1.554 0-2.497-1.44-1.744-2.661l5.718-9.24z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-bold text-amber-800">{{ session('warning') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if($errors->any())
         <div class="mb-6 animate-in slide-in-from-top-4 fade-in duration-300">
             <div class="bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-xl shadow-sm">

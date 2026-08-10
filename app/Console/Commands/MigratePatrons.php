@@ -148,7 +148,7 @@ class MigratePatrons extends Command
                 $barcodesMap = BookItem::pluck('id', 'barcode')->toArray();
             }
 
-            $password = Hash::make('123456'); // mặc định 123456
+            $defaultPassword = Hash::make('123456'); // fallback, sẽ bị override bởi username
 
             $bar = $this->output->createProgressBar($totalPatrons);
             $bar->start();
@@ -200,7 +200,7 @@ class MigratePatrons extends Command
                 if ($isDryRun) {
                     $patronIdMap[$patronId] = rand(100, 999);
                 } else {
-                    DB::transaction(function () use ($patronId, $fullName, $displayName, $password, $groupId, $patron, $parseDate, $gender, $profileImagePath, $cardStatus, &$patronIdMap, $cleanEmail) {
+                    DB::transaction(function () use ($patronId, $fullName, $displayName, $defaultPassword, $groupId, $patron, $parseDate, $gender, $profileImagePath, $cardStatus, &$patronIdMap, $cleanEmail) {
                         // 1. Tạo hoặc cập nhật User
                         $user = User::where('username', $patronId)->first();
                         if (!$user) {
@@ -210,8 +210,9 @@ class MigratePatrons extends Command
                                 'username' => $patronId,
                                 'full_name' => $fullName,
                                 'email' => $email,
-                                'password' => $password,
+                                'password' => Hash::make($patronId),
                                 'status' => 'active',
+                                'is_first_login' => true,
                             ]);
                         } else {
                             $user->update([
@@ -363,8 +364,9 @@ class MigratePatrons extends Command
                                 'username' => $patronId,
                                 'full_name' => $fullName,
                                 'email' => $email,
-                                'password' => Hash::make('123456'),
+                                'password' => Hash::make($patronId),
                                 'status' => 'inactive',
+                                'is_first_login' => true,
                             ]);
                         } else {
                             $user->update([
