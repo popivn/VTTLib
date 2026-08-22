@@ -1,6 +1,10 @@
 @extends('layouts.site')
 
-@section('title', $node->display_name . ' - VTTLib')
+@section('title', 'Tin tức & Sự kiện | Thư viện Võ Trường Toản')
+
+@section('meta-description')
+    <meta name="description" content="Cập nhật tin tức mới nhất, thông báo hoạt động, lịch nghỉ và giới thiệu sách chuyên ngành từ Thư viện Trường Đại học Võ Trường Toản.">
+@endsection
 
 @section('content')
 <div class="bg-slate-50 min-h-screen">

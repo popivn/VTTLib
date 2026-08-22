@@ -1,6 +1,10 @@
 @extends('layouts.site')
 
-@section('title', 'OPAC - Tra cứu mục lục trực tuyến - VTTLib')
+@section('title', 'Tra cứu OPAC | Thư viện Đại học Võ Trường Toản')
+
+@section('meta-description')
+    <meta name="description" content="Tra cứu mục lục trực tuyến OPAC Thư viện Võ Trường Toản. Tìm kiếm sách, giáo trình, luận văn, tài liệu chuyên ngành Y Dược nhanh chóng.">
+@endsection
 
 @section('content')
 <div class="bg-slate-50 min-h-screen pt-24 pb-12" x-data="{ loading: false }" x-init="$watch('loading', v => { if (v) document.body.style.cursor = 'wait' })">
@@ -176,14 +180,15 @@
                             $f700 = $book->fields->where('tag', '700')->first();
                             return $f700 ? $f700->subfields->where('code', 'a')->first()?->value : 'Đang cập nhật tác giả';
                         };
+                        $title = $getTitle($book);
                     @endphp
                     <div class="bg-white p-3 rounded-md border border-slate-100 hover:border-vttu-red/20 transition-all group flex flex-col shadow-sm hover:shadow-md">
                         <!-- Book Cover -->
                         <a href="{{ route('opac.book.show', $book->id) }}" class="block aspect-[3/4] bg-slate-100 rounded-md mb-3 border border-slate-100 group-hover:bg-vttu-red/5 transition-colors overflow-hidden relative">
                             @if($book->cover_image && \Storage::disk('public')->exists($book->cover_image))
-                                <img src="{{ asset('storage/' . $book->cover_image) }}" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500">
+                                <img src="{{ asset('storage/' . $book->cover_image) }}" alt="{{ $title }}" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500">
                             @else
-                                <img src="{{ asset('assets/imgs/books/noimage.png') }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
+                                <img src="{{ asset('assets/imgs/books/noimage.png') }}" alt="{{ $title }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
                             @endif
                             <div class="absolute top-2 right-2">
                                 <span class="px-2 py-0.5 bg-white/90 backdrop-blur text-vttu-dark rounded-sm text-[8px] font-bold uppercase tracking-widest shadow-sm">{{ $book->record_type ?? 'Sách' }}</span>
@@ -194,7 +199,7 @@
                         <div class="flex-grow flex flex-col gap-1.5">
                             <a href="{{ route('opac.book.show', $book->id) }}">
                                 <h3 class="text-xs font-bold text-vttu-dark group-hover:text-vttu-red transition-colors leading-tight line-clamp-2 min-h-[2rem]">
-                                    {{ $getTitle($book) }}
+                                    {{ $title }}
                                 </h3>
                             </a>
                             <p class="text-[10px] font-medium text-slate-500 flex items-center gap-1 truncate">
@@ -237,9 +242,9 @@
                             <!-- Cover Small -->
                             <div class="w-20 aspect-[3/4] bg-slate-100 rounded-sm overflow-hidden flex-shrink-0 border border-slate-100">
                                 @if($book->cover_image && \Storage::disk('public')->exists($book->cover_image))
-                                    <img src="{{ asset('storage/' . $book->cover_image) }}" class="w-full h-full object-contain mix-blend-multiply">
+                                    <img src="{{ asset('storage/' . $book->cover_image) }}" alt="{{ $title }}" class="w-full h-full object-contain mix-blend-multiply">
                                 @else
-                                    <img src="{{ asset('assets/imgs/books/noimage.png') }}" class="w-full h-full object-contain">
+                                    <img src="{{ asset('assets/imgs/books/noimage.png') }}" alt="{{ $title }}" class="w-full h-full object-contain">
                                 @endif
                             </div>
                             <!-- Content -->

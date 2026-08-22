@@ -76,6 +76,38 @@ export const showConfirm = async (
 };
 
 /**
+ * Show a confirmation dialog with HTML content (e.g. bold name, warning text)
+ * @param {string} title - Dialog title
+ * @param {string} html - HTML content for the dialog body
+ * @param {string} confirmText - Confirm button text
+ * @param {string} cancelText - Cancel button text
+ * @param {string} icon - Swal icon (warning|question|error|info|success)
+ * @param {string} confirmColor - Confirm button color (hex)
+ * @returns {Promise<boolean>} - True if confirmed, false if cancelled
+ */
+export const showConfirmHtml = async (
+    title = 'Xác nhận',
+    html = 'Bạn có chắc chắn muốn thực hiện hành động này?',
+    confirmText = 'Xác nhận',
+    cancelText = 'Hủy bỏ',
+    icon = 'warning',
+    confirmColor = '#dc2626'
+) => {
+    const result = await Swal.fire({
+        icon: icon,
+        title: title,
+        html: html,
+        showCancelButton: true,
+        confirmButtonText: confirmText,
+        cancelButtonText: cancelText,
+        confirmButtonColor: confirmColor,
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true
+    });
+    return result.isConfirmed;
+};
+
+/**
  * Show a confirmation dialog for approving loan requests
  * @returns {Promise<boolean>} - True if confirmed, false if cancelled
  */

@@ -56,7 +56,11 @@ $subjects = array_unique(array_filter($subjects));
 $summary = $marcData['520']['a'] ?? 'Nội dung đang được cập nhật...';
 @endphp
 
-@section('title', $fullTitle . ' - Chi tiết tài liệu - VTTLib')
+@section('title', Str::limit($displayTitle, 45) . ' | Thư viện VTTU')
+
+@section('meta-description')
+    <meta name="description" content="{{ Str::limit(strip_tags('Sách: ' . $displayTitle . ($author ? ' - Tác giả: ' . $author : '') . ($pubYear ? ' (' . $pubYear . ')' : '') . '. ' . ($summary !== 'Nội dung đang được cập nhật...' ? $summary : 'Thông tin tài liệu tại Thư viện Đại học Võ Trường Toản.')), 150) }}">
+@endsection
 
 @section('content')
 <div class="bg-slate-50 min-h-screen pt-16 pb-8">

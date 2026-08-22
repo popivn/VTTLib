@@ -191,9 +191,9 @@ Route::prefix('tin-tuc')->name('news.')->group(function () {
     Route::post('/{news}/like', [\App\Http\Controllers\NewsController::class, 'like'])->name('like');
 });
 
-Route::get('/{code}', [\App\Http\Controllers\SiteController::class, 'page'])->name('site.page');
 Route::get('/sitemap', [\App\Http\Controllers\SiteController::class, 'sitemap'])->name('site.sitemap');
 Route::get('/sitemap.xml', [\App\Http\Controllers\SiteController::class, 'xmlSitemap'])->name('site.sitemap.xml');
+Route::get('/{code}', [\App\Http\Controllers\SiteController::class, 'page'])->name('site.page');
 
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\Admin\UserController;
@@ -629,15 +629,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('topsecret')->group(function (
     Route::get('/patrons/create', [\App\Http\Controllers\Admin\PatronController::class, 'create'])->name('admin.patrons.create');
     Route::get('/patrons/search-users', [\App\Http\Controllers\Admin\PatronController::class, 'searchUsers'])->name('admin.patrons.search-users');
     Route::post('/patrons', [\App\Http\Controllers\Admin\PatronController::class, 'store'])->name('admin.patrons.store');
+
+    // Bulk Actions (must be declared BEFORE /patrons/{id} to avoid route param matching 'bulk-delete'/'bulk-update')
+    Route::post('/patrons/bulk-update', [\App\Http\Controllers\Admin\PatronController::class, 'bulkUpdate'])->name('admin.patrons.bulk.update');
+    Route::delete('/patrons/bulk-delete', [\App\Http\Controllers\Admin\PatronController::class, 'bulkDelete'])->name('admin.patrons.bulk.delete');
+
     Route::get('/patrons/{id}/edit', [\App\Http\Controllers\Admin\PatronController::class, 'edit'])->name('admin.patrons.edit');
     Route::patch('/patrons/{id}', [\App\Http\Controllers\Admin\PatronController::class, 'update'])->name('admin.patrons.update');
     Route::patch('/patrons/{id}/toggle-status', [\App\Http\Controllers\Admin\PatronController::class, 'toggleStatus'])->name('admin.patrons.toggle-status');
     Route::patch('/patrons/{id}/renew', [\App\Http\Controllers\Admin\PatronController::class, 'renew'])->name('admin.patrons.renew');
     Route::delete('/patrons/{id}', [\App\Http\Controllers\Admin\PatronController::class, 'destroy'])->name('admin.patrons.destroy');
-    
-    // Bulk Actions
-    Route::post('/patrons/bulk-update', [\App\Http\Controllers\Admin\PatronController::class, 'bulkUpdate'])->name('admin.patrons.bulk.update');
-    Route::delete('/patrons/bulk-delete', [\App\Http\Controllers\Admin\PatronController::class, 'bulkDelete'])->name('admin.patrons.bulk.delete');
 
     // Patron Import (Batch Import)
     Route::get('/patrons/import', [\App\Http\Controllers\Admin\PatronImportController::class, 'index'])->name('admin.patrons.import.index');

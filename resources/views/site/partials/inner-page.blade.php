@@ -656,8 +656,8 @@
                             <div>
                                 <p class="text-[10px] font-bold uppercase tracking-widest
                                           {{ $hasDarkBg ? 'text-white/70' : 'text-vttu-red/80' }}">{{ $sectionLabel }}</p>
-                                <h1 class="text-xl md:text-2xl font-black tracking-tight
-                                           {{ $hasDarkBg ? 'text-white' : 'text-vttu-red' }}">{{ $node->display_name }}</h1>
+                                <h2 class="text-xl md:text-2xl font-black tracking-tight
+                                           {{ $hasDarkBg ? 'text-white' : 'text-vttu-red' }}">{{ $node->display_name }}</h2>
                             </div>
                         </div>
                     </div>

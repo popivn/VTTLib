@@ -453,7 +453,7 @@
                             </a>
                             
                             <!-- Delete -->
-                            <button type="button" onclick="confirmDelete({{ $patron->id }}, '{{ $patron->display_name }}')" class="p-1.5 bg-muted hover:bg-muted/80 border border-border rounded text-muted-foreground hover:text-rose-500 shadow-xs">
+                            <button type="button" onclick='confirmDelete({{ $patron->id }}, {!! json_encode($patron->display_name, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!})' class="p-1.5 bg-muted hover:bg-muted/80 border border-border rounded text-muted-foreground hover:text-rose-500 shadow-xs">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
@@ -527,7 +527,7 @@
                                     class="p-1 bg-muted border border-border rounded text-muted-foreground hover:text-primary" title="{{ __('Renew') }}">
                                     <i data-lucide="calendar" class="w-3 h-3"></i>
                                 </button>
-                                <button type="button" onclick="confirmDelete({{ $patron->id }}, '{{ $patron->display_name }}')" class="p-1 bg-muted border border-border rounded text-muted-foreground hover:text-rose-500">
+                                <button type="button" onclick='confirmDelete({{ $patron->id }}, {!! json_encode($patron->display_name, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!})' class="p-1 bg-muted border border-border rounded text-muted-foreground hover:text-rose-500">
                                     <i data-lucide="trash-2" class="w-3 h-3"></i>
                                 </button>
                             </div>
@@ -661,7 +661,7 @@
                                             </a>
                                             
                                             <!-- Delete -->
-                                            <button type="button" onclick="confirmDelete({{ $patron->id }}, '{{ $patron->display_name }}')" class="text-muted-foreground hover:text-rose-500">
+                                            <button type="button" onclick='confirmDelete({{ $patron->id }}, {!! json_encode($patron->display_name, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!})' class="text-muted-foreground hover:text-rose-500">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         </div>
@@ -1077,32 +1077,63 @@ function clearSelection() {
     updateBulkActions();
 }
 
-function confirmBulkDelete() {
+async function confirmBulkDelete() {
     const checkboxes = document.querySelectorAll('input[name="selected_patrons[]"]:checked');
     const selectedPatrons = Array.from(checkboxes).map(cb => cb.value);
-    
+
     if (selectedPatrons.length === 0) {
-        alert('{{ __("Vui lòng chọn ít nhất một bạn đọc để xóa.") }}');
+        if (window.SwalHelper) {
+            window.SwalHelper.showWarning('{{ __("Cần chọn bạn đọc") }}', '{{ __("Vui lòng chọn ít nhất một bạn đọc để xóa.") }}');
+        } else {
+            alert('{{ __("Vui lòng chọn ít nhất một bạn đọc để xóa.") }}');
+        }
         return;
     }
-    
-    if (confirm(`{{ __("Bạn có chắc chắn muốn xóa") }} ${selectedPatrons.length} {{ __("bạn đọc không? Hành động này không thể hoàn tác!") }}`)) {
+
+    const message = `{{ __("Bạn có chắc chắn muốn xóa") }} <strong>${selectedPatrons.length}</strong> {{ __("bạn đọc không?") }}<br><br><small class="text-red-500 font-bold">{{ __("Hành động này không thể hoàn tác!") }}</small>`;
+
+    let confirmed = false;
+    if (window.SwalHelper && window.SwalHelper.showConfirmHtml) {
+        confirmed = await window.SwalHelper.showConfirmHtml(
+            '{{ __("Xác nhận xóa?") }}',
+            message,
+            '{{ __("Xóa") }}',
+            '{{ __("Hủy") }}'
+        );
+    } else if (window.Swal) {
+        const result = await Swal.fire({
+            title: '{{ __("Xác nhận xóa?") }}',
+            html: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '{{ __("Xóa") }}',
+            cancelButtonText: '{{ __("Hủy") }}',
+            reverseButtons: true
+        });
+        confirmed = result.isConfirmed;
+    } else {
+        confirmed = confirm(`{{ __("Bạn có chắc chắn muốn xóa") }} ${selectedPatrons.length} {{ __("bạn đọc không? Hành động này không thể hoàn tác!") }}`);
+    }
+
+    if (confirmed) {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ route("admin.patrons.bulk.delete") }}';
-        
+
         const csrfToken = document.createElement('input');
         csrfToken.type = 'hidden';
         csrfToken.name = '_token';
         csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         form.appendChild(csrfToken);
-        
+
         const methodField = document.createElement('input');
         methodField.type = 'hidden';
         methodField.name = '_method';
         methodField.value = 'DELETE';
         form.appendChild(methodField);
-        
+
         selectedPatrons.forEach(id => {
             const input = document.createElement('input');
             input.type = 'hidden';
@@ -1110,7 +1141,7 @@ function confirmBulkDelete() {
             input.value = id;
             form.appendChild(input);
         });
-        
+
         document.body.appendChild(form);
         form.submit();
     }
@@ -1132,40 +1163,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function confirmDelete(patronId, patronName) {
-    Swal.fire({
-        title: '{{ __("Xác nhận xóa?") }}',
-        html: `{{ __("Bạn có chắc chắn muốn xóa độc giả") }} <strong>${patronName}</strong> {{ __("không?") }}<br><br><small class="text-red-500 font-bold">{{ __("Hành động này không thể hoàn tác!") }}</small>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '{{ __("Xóa") }}',
-        cancelButtonText: '{{ __("Hủy") }}',
-        reverseButtons: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `{{ route('admin.patrons.destroy', ['id' => ':id']) }}`.replace(':id', patronId);
-            
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken;
-            form.appendChild(csrfInput);
-            
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'DELETE';
-            form.appendChild(methodInput);
-            
-            document.body.appendChild(form);
-            form.submit();
-        }
-    });
+async function confirmDelete(patronId, patronName) {
+    const message = `{{ __("Bạn có chắc chắn muốn xóa độc giả") }} <strong>${patronName}</strong> {{ __("không?") }}<br><br><small class="text-red-500 font-bold">{{ __("Hành động này không thể hoàn tác!") }}</small>`;
+
+    let confirmed = false;
+    if (window.SwalHelper && window.SwalHelper.showConfirmHtml) {
+        confirmed = await window.SwalHelper.showConfirmHtml(
+            '{{ __("Xác nhận xóa?") }}',
+            message,
+            '{{ __("Xóa") }}',
+            '{{ __("Hủy") }}'
+        );
+    } else if (window.Swal) {
+        const result = await Swal.fire({
+            title: '{{ __("Xác nhận xóa?") }}',
+            html: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '{{ __("Xóa") }}',
+            cancelButtonText: '{{ __("Hủy") }}',
+            reverseButtons: true
+        });
+        confirmed = result.isConfirmed;
+    }
+
+    if (confirmed) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `{{ route('admin.patrons.destroy', ['id' => ':id']) }}`.replace(':id', patronId);
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        form.appendChild(methodInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
 }
 
 function changeSort(sortOrder) {

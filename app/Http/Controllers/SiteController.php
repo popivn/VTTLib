@@ -798,7 +798,17 @@ class SiteController extends Controller
                 'co-so-du-lieu' => 'Cơ sở dữ liệu',
                 'sb-co-so-du-lieu' => 'Cơ sở dữ liệu',
                 'tai-lieu-so' => 'Tài liệu số',
+                'tra-cuu-tai-lieu-so' => 'Tài liệu số',
+                'tra-cuu-tai-lieu-giay' => 'Tra cứu OPAC',
+                'dang-nhap-tai-khoan' => 'Đăng nhập tài khoản',
+                'ban-do-website-thu-vien' => 'Sơ đồ trang',
+                'huong-dan' => 'Cẩm nang hướng dẫn',
+                'tai-app-mobile' => 'Tải ứng dụng trên điện thoại',
             ];
+
+            if ($code === 'ban-do-website-thu-vien') {
+                return $this->sitemap();
+            }
 
             if (isset($builtinPages[$code])) {
                 $siteNode = SiteNode::firstOrCreate(
@@ -825,8 +835,8 @@ class SiteController extends Controller
             }
         }
 
-        // Tự động chuyển hướng nếu có thiết lập redirect_to
-        if (!empty($siteNode->redirect_to)) {
+        // Tự động chuyển hướng nếu có thiết lập redirect_to (tránh vòng lặp chuyển hướng)
+        if (!empty($siteNode->redirect_to) && trim($siteNode->redirect_to, '/') !== $code && trim($siteNode->redirect_to, '/') !== request()->path()) {
             return redirect($siteNode->getUrl());
         }
 

@@ -9,9 +9,9 @@
     <a href="{{ route('opac.book.show', $book->id) }}" class="flex gap-3 group p-1 rounded-sm hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
         <div class="w-12 h-16 bg-slate-100 rounded-sm flex-shrink-0 overflow-hidden border border-slate-100 shadow-sm relative">
             @if($book->cover_image)
-                <img src="{{ asset('storage/' . $book->cover_image) }}" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500">
+                <img src="{{ asset('storage/' . $book->cover_image) }}" alt="{{ $title }}" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500">
             @else
-                <img src="{{ asset('assets/imgs/books/noimage.png') }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
+                <img src="{{ asset('assets/imgs/books/noimage.png') }}" alt="{{ $title }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
             @endif
         </div>
         <div class="flex-1 min-w-0 py-0.5">

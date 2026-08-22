@@ -1,6 +1,10 @@
 @extends('layouts.site')
 
-@section('title', 'VTTLib - Thư viện số hiện đại')
+@section('title', 'Thư viện Võ Trường Toản | Trang chủ VTTLib')
+
+@section('meta-description')
+    <meta name="description" content="Trang chủ Thư viện Trường Đại học Võ Trường Toản (VTTLib). Hệ thống tra cứu sách, giáo trình y dược, tài nguyên giáo dục mở và dữ liệu số hiện đại.">
+@endsection
 
 @section('content')
 <!-- 
@@ -562,7 +566,7 @@ Kiểm tra dịch 'Khai phá': {{ __('Khai phá') }}
                                     <span class="text-[10px] font-black uppercase tracking-wider">{{ __('Học liệu VTTU') }}</span>
                                 </a>
 
-                                <a href="{{ route('site.page', 'bgtt-vttu') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-lime-800 to-lime-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                <a href="{{ route('site.page', 'tin-tuc') }}" class="group flex items-center gap-3 p-2.5 rounded bg-gradient-to-r from-lime-800 to-lime-700 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
                                     <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
                                         <i class="fas fa-video text-[10px]"></i>
                                     </div>

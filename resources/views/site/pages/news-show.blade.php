@@ -1,6 +1,10 @@
 @extends('layouts.site')
 
-@section('title', $news->title . ' - VTTLib')
+@section('title', Str::limit($news->title, 45) . ' | Thư viện VTTU')
+
+@section('meta-description')
+    <meta name="description" content="{{ Str::limit(strip_tags($news->summary ?: $news->content), 150) }}">
+@endsection
 
 @section('content')
     @include('site.partials.inner-page', [

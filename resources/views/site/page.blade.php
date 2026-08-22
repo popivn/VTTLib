@@ -1,9 +1,16 @@
 @extends('layouts.site')
 
-@section('title', $node->meta_title ?: $node->display_name . ' - Thư viện')
+@section('title', Str::limit($node->meta_title ?: $node->display_name, 45) . ' | Thư viện VTTU')
 
-@section('meta-description', $node->meta_description)
-@section('meta-keywords', $node->meta_keywords)
+@if($node->meta_description)
+@section('meta-description')
+    <meta name="description" content="{{ Str::limit(strip_tags($node->meta_description), 150) }}">
+@endsection
+@elseif($node->description || $node->content)
+@section('meta-description')
+    <meta name="description" content="{{ Str::limit(strip_tags($node->description ?: $node->content), 150) }}">
+@endsection
+@endif
 
 @section('content')
     @if(str_starts_with($node->node_code, 'guide-') || ($node->parent && $node->parent->node_code === 'co-so-du-lieu'))

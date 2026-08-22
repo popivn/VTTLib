@@ -69,7 +69,7 @@
         <!-- Card 3: Cơ sở dữ liệu -->
         @php
             $csdlNode = \App\Models\SiteNode::where('node_code', 'co-so-du-lieu')->first();
-            $csdlUrl = $csdlNode ? $csdlNode->getUrl() : '/page/co-so-du-lieu';
+            $csdlUrl = $csdlNode ? $csdlNode->getUrl() : '/co-so-du-lieu';
         @endphp
         <div class="flex flex-col bg-card border border-border rounded shadow-sm hover:shadow hover:border-vttu-red/30 transition-all duration-300 overflow-hidden group">
             <div class="h-40 overflow-hidden relative bg-slate-100 dark:bg-slate-900">

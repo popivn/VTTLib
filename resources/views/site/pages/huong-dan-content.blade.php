@@ -58,7 +58,7 @@
         </a>
 
         <!-- Card 3: Đăng nhập -->
-        <a href="/dang-nhap-tai-khoan" class="group flex flex-col items-center p-3 bg-card border border-border rounded-md hover:bg-muted/50 active:scale-[0.98] transition-all duration-200">
+        <a href="{{ route('login') }}" class="group flex flex-col items-center p-3 bg-card border border-border rounded-md hover:bg-muted/50 active:scale-[0.98] transition-all duration-200">
             <div class="w-full h-32 flex items-center justify-center mb-3">
                 <svg viewBox="0 0 120 100" class="w-24 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="25" y="15" width="70" height="70" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
@@ -79,7 +79,7 @@
         </a>
 
         <!-- Card 4: Đổi mật khẩu -->
-        <a href="/doi-mat-khau" class="group flex flex-col items-center p-3 bg-card border border-border rounded-md hover:bg-muted/50 active:scale-[0.98] transition-all duration-200">
+        <a href="{{ route('site.page', 'doi-mat-khau') }}" class="group flex flex-col items-center p-3 bg-card border border-border rounded-md hover:bg-muted/50 active:scale-[0.98] transition-all duration-200">
             <div class="w-full h-32 flex items-center justify-center mb-3">
                 <svg viewBox="0 0 120 100" class="w-24 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="40" y="30" width="40" height="30" rx="8" fill="#475569" stroke="#1E293B" stroke-width="2"/>
@@ -100,7 +100,7 @@
         </a>
 
         <!-- Card 5: Tra cứu sách giấy -->
-        <a href="/tra-cuu-tai-lieu-giay" class="group flex flex-col items-center p-3 bg-card border border-border rounded-md hover:bg-muted/50 active:scale-[0.98] transition-all duration-200">
+        <a href="{{ url('opac') }}" class="group flex flex-col items-center p-3 bg-card border border-border rounded-md hover:bg-muted/50 active:scale-[0.98] transition-all duration-200">
             <div class="w-full h-32 flex items-center justify-center mb-3">
                 <svg viewBox="0 0 120 100" class="w-24 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="30" y="58" width="60" height="12" rx="1" fill="#EF4444" stroke="#DC2626" stroke-width="1"/>
@@ -118,7 +118,7 @@
         </a>
 
         <!-- Card 6: Tra cứu sách số -->
-        <a href="/tra-cuu-tai-lieu-so" class="group flex flex-col items-center p-3 bg-card border border-border rounded-md hover:bg-muted/50 active:scale-[0.98] transition-all duration-200">
+        <a href="{{ route('site.page', 'tai-lieu-so') }}" class="group flex flex-col items-center p-3 bg-card border border-border rounded-md hover:bg-muted/50 active:scale-[0.98] transition-all duration-200">
             <div class="w-full h-32 flex items-center justify-center mb-3">
                 <svg viewBox="0 0 120 100" class="w-24 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="25" y="15" width="70" height="46" rx="4" fill="#475569" stroke="#334155" stroke-width="1.5"/>

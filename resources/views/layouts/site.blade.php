@@ -4,20 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Thư viện số')</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/imgs/logo-vttu.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/imgs/logo-vttu.png') }}?v=3">
+    <link rel="icon" type="image/png" href="{{ asset('assets/imgs/logo-vttu.png') }}?v=3">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/imgs/logo-vttu.png') }}?v=3">
+    <link rel="apple-touch-icon" href="{{ asset('assets/imgs/logo-vttu.png') }}?v=3">
     
     <!-- SEO Meta Tags -->
-    @if(isset($node))
-        @section('meta-description')
-            <meta name="description" content="{{ $node->meta_description ?: Str::limit(strip_tags($node->content ?? ''), 160) }}">
-        @show
-        @section('meta-keywords')
-            <meta name="keywords" content="{{ $node->meta_keywords ?: 'thư viện, số, quản lý, sách' }}">
-        @show
+    @hasSection('meta-description')
+        @yield('meta-description')
     @else
-        <meta name="description" content="Thư viện số - Nền tảng quản lý thư viện hiện đại">
-        <meta name="keywords" content="thư viện, số, quản lý, sách, OPAC">
+        @if(isset($node) && !empty($node->meta_description))
+            <meta name="description" content="{{ Str::limit(strip_tags($node->meta_description), 150) }}">
+        @elseif(isset($node) && !empty($node->content))
+            <meta name="description" content="{{ Str::limit(strip_tags($node->content), 150) }}">
+        @else
+            <meta name="description" content="Thư viện Trường Đại học Võ Trường Toản - Tra cứu tài liệu, giáo trình, sách chuyên ngành Y Dược và tài nguyên số.">
+        @endif
     @endif
+
+    @hasSection('meta-keywords')
+        @yield('meta-keywords')
+    @else
+        <meta name="keywords" content="{{ isset($node) && !empty($node->meta_keywords) ? $node->meta_keywords : 'thư viện, võ trường toản, VTTU, opac, giáo trình, tài liệu y dược' }}">
+    @endif
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ url()->current() }}">
     
     <!-- CSS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -163,7 +175,7 @@
                         @if($siteLogo)
                             <img src="{{ asset('storage/' . $siteLogo) }}" alt="Logo" class="h-full w-auto max-h-16 object-contain transition-all duration-500" id="headerLogo">
                         @else
-                            <i class="fas fa-book-open text-vttu-yellow text-4xl transition-all duration-500" id="headerLogoIcon"></i>
+                            <img src="{{ asset('assets/imgs/logo-vttu.png') }}" alt="VTTU Logo" class="h-12 w-auto object-contain transition-all duration-500" id="headerLogo">
                         @endif
                         @if($siteName)
                             <span class="font-black text-xl text-white tracking-tighter transition-all duration-500 whitespace-nowrap" id="headerTitle">{{ $siteName }}</span>
@@ -509,7 +521,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('site.sitemap') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
+                            <a href="{{ route('site.page', 'ban-do-website-thu-vien') }}" class="text-xs text-white/50 hover:text-vttu-yellow hover:pl-1 flex items-center group transition-all">
                                 <i class="fas fa-chevron-right text-[8px] mr-1.5 opacity-0 group-hover:opacity-100 transition-all text-vttu-yellow"></i>
                                 {{ __('Sơ đồ trang (Sitemap)') }}
                             </a>

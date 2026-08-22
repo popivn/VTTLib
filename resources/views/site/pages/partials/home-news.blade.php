@@ -12,10 +12,10 @@
                                         $vImg = $item->featured_image ?? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80';
                                     @endphp
                                     <!-- Blurred Backdrop Image Fill -->
-                                    <img src="{{ $vImg }}" class="absolute inset-0 w-full h-full object-cover blur-lg scale-125 opacity-50 pointer-events-none">
+                                    <img src="{{ $vImg }}" alt="" class="absolute inset-0 w-full h-full object-cover blur-lg scale-125 opacity-50 pointer-events-none">
                                     <div class="absolute inset-0 bg-black/20"></div>
                                     <!-- Main Foreground Image -->
-                                    <img src="{{ $vImg }}" class="relative z-10 w-full h-full object-contain group-hover/img:scale-105 transition-transform duration-500">
+                                    <img src="{{ $vImg }}" alt="{{ $item->title }}" class="relative z-10 w-full h-full object-contain group-hover/img:scale-105 transition-transform duration-500">
                                     <!-- Play Icon Overlay -->
                                     <div class="absolute inset-0 z-20 flex items-center justify-center bg-black/20 group-hover/img:bg-black/10 transition-colors">
                                         <div class="w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-vttu-red shadow-md group-hover/img:scale-110 transition-transform">
@@ -49,10 +49,10 @@
                                         $newsImg = $item->featured_image ?? 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=400&q=80';
                                     @endphp
                                     <!-- Blurred Backdrop Image Fill -->
-                                    <img src="{{ $newsImg }}" class="absolute inset-0 w-full h-full object-cover blur-lg scale-125 opacity-50 pointer-events-none">
+                                    <img src="{{ $newsImg }}" alt="" class="absolute inset-0 w-full h-full object-cover blur-lg scale-125 opacity-50 pointer-events-none">
                                     <div class="absolute inset-0 bg-black/10"></div>
                                     <!-- Main Foreground Image -->
-                                    <img src="{{ $newsImg }}" class="relative z-10 w-full h-full object-contain group-hover/img:scale-105 transition-transform duration-500">
+                                    <img src="{{ $newsImg }}" alt="{{ $item->title }}" class="relative z-10 w-full h-full object-contain group-hover/img:scale-105 transition-transform duration-500">
                                 </a>
                                 <div class="flex-grow flex flex-col justify-between gap-2">
                                     <a href="{{ $item->url }}" class="block">

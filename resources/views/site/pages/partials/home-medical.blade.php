@@ -16,10 +16,10 @@
                                 $medImgUrl = $book->cover_image ? asset('storage/' . $book->cover_image) : asset('assets/imgs/books/noimage.png');
                             @endphp
                             <!-- Blurred Backdrop Image Fill -->
-                            <img src="{{ $medImgUrl }}" class="absolute inset-0 w-full h-full object-cover blur-lg scale-125 opacity-50 pointer-events-none">
+                            <img src="{{ $medImgUrl }}" alt="" class="absolute inset-0 w-full h-full object-cover blur-lg scale-125 opacity-50 pointer-events-none">
                             <div class="absolute inset-0 bg-black/10"></div>
                             <!-- Main Foreground Image -->
-                            <img src="{{ $medImgUrl }}" class="relative z-10 w-full h-full object-contain group-hover/img:scale-105 transition-transform duration-500">
+                            <img src="{{ $medImgUrl }}" alt="{{ $title }}" class="relative z-10 w-full h-full object-contain group-hover/img:scale-105 transition-transform duration-500">
                             <div class="absolute top-1.5 right-1.5 z-10">
                                 @php
                                     $lang = app()->getLocale();
