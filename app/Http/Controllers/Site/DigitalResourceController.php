@@ -87,36 +87,47 @@ class DigitalResourceController extends Controller
      */
     public function streamPdf($id)
     {
-        $resource = DigitalResource::findOrFail($id);
+        try {
+            $resource = DigitalResource::findOrFail($id);
 
-        // Đường dẫn file PDF trong storage
-        $filePath = storage_path('app/public/' . $resource->file_path);
+            // Đường dẫn file PDF trong storage
+            $filePath = storage_path('app/public/' . $resource->file_path);
 
-        if (!file_exists($filePath)) {
-            abort(404, 'File not found');
-        }
+            \Log::info('streamPdf attempt', ['id' => $id, 'file_path' => $filePath, 'exists' => file_exists($filePath)]);
 
-        // Người có quyền download: stream file gốc thẳng (dùng cho iframe)
-        if ($this->canDownload()) {
-            return response()->file($filePath, [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . $resource->file_name . '"',
+            if (!file_exists($filePath)) {
+                \Log::error('PDF file not found', ['id' => $id, 'file_path' => $filePath]);
+                abort(404, 'File not found');
+            }
+
+            // Người có quyền download: stream file gốc thẳng (dùng cho iframe)
+            if ($this->canDownload()) {
+                \Log::info('streamPdf direct (has download permission)', ['id' => $id]);
+                return response()->file($filePath, [
+                    'Content-Type'        => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="' . $resource->file_name . '"',
+                    'Cache-Control'       => 'no-store, no-cache, must-revalidate, max-age=0',
+                ]);
+            }
+
+            // Người không có quyền: mã hóa XOR + stream binary
+            \Log::info('streamPdf encrypting (no download permission)', ['id' => $id, 'file_size' => filesize($filePath)]);
+
+            $pdfBytes  = file_get_contents($filePath);
+            $key       = $this->getEncryptionKey();
+            $encrypted = $this->xorEncrypt($pdfBytes, $key);
+
+            return response($encrypted, 200, [
+                'Content-Type'        => 'application/octet-stream',
+                'Content-Disposition' => 'inline',
+                'X-Enc-Mode'          => 'xor-session',
                 'Cache-Control'       => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma'              => 'no-cache',
             ]);
+        } catch (\Exception $e) {
+            \Log::error('streamPdf error', ['id' => $id, 'error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            throw $e;
         }
-
-        // Người không có quyền: mã hóa XOR + stream binary
-        $pdfBytes  = file_get_contents($filePath);
-        $key       = $this->getEncryptionKey();
-        $encrypted = $this->xorEncrypt($pdfBytes, $key);
-
-        return response($encrypted, 200, [
-            'Content-Type'        => 'application/octet-stream',
-            'Content-Disposition' => 'inline',
-            'X-Enc-Mode'          => 'xor-session',
-            'Cache-Control'       => 'no-store, no-cache, must-revalidate, max-age=0',
-            'Pragma'              => 'no-cache',
-        ]);
     }
 
     /**
